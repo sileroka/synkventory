@@ -16,7 +16,8 @@
         migrate-up migrate-down migrate-create migrate-history migrate-current \
         prod prod-build prod-down \
         do-build do-push do-deploy \
-        test lint format clean
+        test test-cov test-file test-match test-marker \
+        lint format clean
 
 # Default target
 help:
@@ -36,6 +37,13 @@ help:
 	@echo "  make migrate-history  - Show migration history"
 	@echo "  make migrate-current  - Show current migration version"
 	@echo ""
+	@echo "Testing:"
+	@echo "  make test             - Run all tests"
+	@echo "  make test-cov         - Run tests with coverage report"
+	@echo "  make test-file file=path  - Run specific test file"
+	@echo "  make test-match pattern=xxx  - Run tests matching pattern"
+	@echo "  make local-test       - Run tests locally (no Docker)"
+	@echo ""
 	@echo "Production:"
 	@echo "  make prod             - Start production environment"
 	@echo "  make prod-build       - Build and start production environment"
@@ -47,7 +55,6 @@ help:
 	@echo "  make do-deploy        - Deploy to DO App Platform"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  make test             - Run tests"
 	@echo "  make lint             - Run linters"
 	@echo "  make format           - Format code"
 	@echo ""
@@ -179,11 +186,51 @@ do-compose-down:
 	docker-compose -f docker-compose.digitalocean.yml down
 
 # =============================================================================
-# Code Quality Commands
+# Testing Commands
 # =============================================================================
 
+# Run all tests
 test:
 	docker-compose exec backend pytest -v
+
+# Run tests with coverage report
+test-cov:
+	docker-compose exec backend pytest -v --cov=app --cov-report=term-missing --cov-report=html
+
+# Run specific test file
+# Usage: make test-file file=tests/api/v1/test_inventory.py
+test-file:
+ifndef file
+	$(error file is required. Usage: make test-file file=tests/api/v1/test_inventory.py)
+endif
+	docker-compose exec backend pytest -v $(file)
+
+# Run tests matching a pattern
+# Usage: make test-match pattern=test_create
+test-match:
+ifndef pattern
+	$(error pattern is required. Usage: make test-match pattern=test_create)
+endif
+	docker-compose exec backend pytest -v -k "$(pattern)"
+
+# Run tests with specific marker
+# Usage: make test-marker marker=unit
+test-marker:
+ifndef marker
+	$(error marker is required. Usage: make test-marker marker=unit)
+endif
+	docker-compose exec backend pytest -v -m "$(marker)"
+
+# Run tests locally (without Docker)
+local-test:
+	cd backend && pytest -v
+
+local-test-cov:
+	cd backend && pytest -v --cov=app --cov-report=term-missing --cov-report=html
+
+# =============================================================================
+# Code Quality Commands
+# =============================================================================
 
 lint:
 	docker-compose exec backend ruff check app/
