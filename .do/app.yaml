@@ -133,7 +133,7 @@ static_sites:
 
     # Build configuration
     source_dir: frontend
-    build_command: npm ci && npm run build -- --configuration=production
+    build_command: npm ci --include=dev && npm run build -- --configuration=production
     output_dir: dist/frontend/browser
 
     # Routes - frontend serves all other routes
@@ -143,11 +143,12 @@ static_sites:
     # SPA routing - serve index.html for all routes
     catchall_document: index.html
 
-    # Environment variables for build
+    # Environment variables for build - don't set NODE_ENV to production during build
+    # so devDependencies are available
     envs:
-      - key: NODE_ENV
+      - key: NODE_OPTIONS
         scope: BUILD_TIME
-        value: "production"
+        value: "--max-old-space-size=4096"
 
 # =============================================================================
 # Alerts (Optional)
