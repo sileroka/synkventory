@@ -22,7 +22,7 @@ services:
   - name: backend
     # Source configuration
     github:
-      repo: your-github-username/synkventory
+      repo: sileroka/synkventory
       branch: main
       deploy_on_push: true
 
@@ -127,7 +127,7 @@ services:
   - name: frontend
     # Source configuration
     github:
-      repo: your-github-username/synkventory
+      repo: sileroka/synkventory
       branch: main
       deploy_on_push: true
 
@@ -175,7 +175,7 @@ alerts:
 # =============================================================================
 # Notes:
 # =============================================================================
-# 1. Replace 'your-github-username/synkventory' with your actual repo
+# 1. Repository: sileroka/synkventory (configured)
 # 2. Generate a secure SECRET_KEY before deploying
 # 3. Adjust instance_size_slug based on your needs:
 #    - basic-xxs: $5/mo (512MB RAM, 1 vCPU)
