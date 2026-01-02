@@ -11,7 +11,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
-import { SelectModule } from 'primeng/select';
+import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToolbarModule } from 'primeng/toolbar';
@@ -48,7 +48,7 @@ interface IMultiSelectOption {
     ToastModule,
     ConfirmDialogModule,
     TagModule,
-    SelectModule,
+    DropdownModule,
     MultiSelectModule,
     TooltipModule,
     ToolbarModule

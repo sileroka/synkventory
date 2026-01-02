@@ -38,7 +38,7 @@
       </div>
       <div class="filter-field">
         <label>Inventory Item</label>
-        <p-multiselect
+        <p-multiSelect
           [options]="itemOptions"
           [(ngModel)]="selectedItems"
           placeholder="All Items"
@@ -47,29 +47,29 @@
           filterPlaceholder="Search items..."
           (onChange)="onFilterChange()"
           styleClass="w-full"
-        ></p-multiselect>
+        ></p-multiSelect>
       </div>
       <div class="filter-field">
         <label>Location</label>
-        <p-multiselect
+        <p-multiSelect
           [options]="locationOptions"
           [(ngModel)]="selectedLocations"
           placeholder="All Locations"
           [showClear]="true"
           (onChange)="onFilterChange()"
           styleClass="w-full"
-        ></p-multiselect>
+        ></p-multiSelect>
       </div>
       <div class="filter-field">
         <label>Movement Type</label>
-        <p-multiselect
+        <p-multiSelect
           [options]="movementTypeOptions"
           [(ngModel)]="selectedMovementTypes"
           placeholder="All Types"
           [showClear]="true"
           (onChange)="onFilterChange()"
           styleClass="w-full"
-        ></p-multiselect>
+        ></p-multiSelect>
       </div>
       <div class="filter-actions">
         <p-button

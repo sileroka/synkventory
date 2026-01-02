@@ -24,25 +24,25 @@
     <div class="filter-row">
       <div class="filter-field">
         <label>Filter by Category</label>
-        <p-multiselect
+        <p-multiSelect
           [options]="categoryOptions"
           [(ngModel)]="selectedCategories"
           placeholder="All Categories"
           [showClear]="true"
           (onChange)="onFilterChange()"
           styleClass="w-full"
-        ></p-multiselect>
+        ></p-multiSelect>
       </div>
       <div class="filter-field">
         <label>Filter by Location</label>
-        <p-multiselect
+        <p-multiSelect
           [options]="locationOptions"
           [(ngModel)]="selectedLocations"
           placeholder="All Locations"
           [showClear]="true"
           (onChange)="onFilterChange()"
           styleClass="w-full"
-        ></p-multiselect>
+        ></p-multiSelect>
       </div>
       <div class="filter-actions">
         <p-button

@@ -12,7 +12,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
+import { DropdownModule } from 'primeng/dropdown';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -45,7 +45,7 @@ interface ILocationOption {
     DialogModule,
     InputNumberModule,
     InputTextModule,
-    SelectModule,
+    DropdownModule,
     BreadcrumbModule,
     TooltipModule,
     SkeletonModule
@@ -189,10 +189,10 @@ export class InventoryDetailComponent implements OnInit {
     return labels[status] || status;
   }
 
-  getStatusSeverity(status: InventoryStatus): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
-    const severities: Record<InventoryStatus, 'success' | 'warn' | 'danger' | 'info' | 'secondary'> = {
+  getStatusSeverity(status: InventoryStatus): 'success' | 'warning' | 'danger' | 'info' | 'secondary' {
+    const severities: Record<InventoryStatus, 'success' | 'warning' | 'danger' | 'info' | 'secondary'> = {
       [InventoryStatus.IN_STOCK]: 'success',
-      [InventoryStatus.LOW_STOCK]: 'warn',
+      [InventoryStatus.LOW_STOCK]: 'warning',
       [InventoryStatus.OUT_OF_STOCK]: 'danger',
       [InventoryStatus.ON_ORDER]: 'info',
       [InventoryStatus.DISCONTINUED]: 'secondary'

@@ -322,12 +322,12 @@ export class StockMovementReportComponent implements OnInit {
     return labels[type] || type;
   }
 
-  getMovementTypeSeverity(type: MovementType): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    const severities: Record<MovementType, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
+  getMovementTypeSeverity(type: MovementType): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<MovementType, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
       receive: 'success',
       ship: 'danger',
       transfer: 'info',
-      adjust: 'warn',
+      adjust: 'warning',
       count: 'secondary'
     };
     return severities[type] || 'secondary';

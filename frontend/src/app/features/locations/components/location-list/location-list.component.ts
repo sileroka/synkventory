@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableModule } from 'primeng/table';
+import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -75,9 +75,9 @@ export class LocationListComponent implements OnInit {
     });
   }
 
-  onPageChange(event: { first: number; rows: number }) {
-    this.currentPage = Math.floor(event.first / event.rows) + 1;
-    this.pageSize = event.rows;
+  onPageChange(event: TableLazyLoadEvent) {
+    this.currentPage = Math.floor((event.first || 0) / (event.rows || this.pageSize)) + 1;
+    this.pageSize = event.rows || this.pageSize;
     this.loadLocations();
   }
 

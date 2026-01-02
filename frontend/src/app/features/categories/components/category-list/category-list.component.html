@@ -7,7 +7,7 @@
     <p-button label="Add Category" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
   </div>
 
-  <p-treetable
+  <p-treeTable
     [value]="categories"
     [loading]="loading"
     [tableStyle]="{'min-width': '50rem'}"
@@ -26,7 +26,7 @@
     <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
       <tr [ttRow]="rowNode">
         <td>
-          <p-treetable-toggler [rowNode]="rowNode"></p-treetable-toggler>
+          <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
           {{ rowData.name }}
         </td>
         <td>{{ rowData.code }}</td>
@@ -68,7 +68,7 @@
         <td colspan="5" class="text-center">No categories found. Click "Add Category" to create one.</td>
       </tr>
     </ng-template>
-  </p-treetable>
+  </p-treeTable>
 </div>
 
 <p-dialog
@@ -98,10 +98,10 @@
 
     <div>
       <label for="parentId" class="block mb-2">Parent Category</label>
-      <p-select id="parentId" [(ngModel)]="selectedCategory.parentId"
+      <p-dropdown id="parentId" [(ngModel)]="selectedCategory.parentId"
         [options]="parentOptions" optionLabel="label" optionValue="value"
         placeholder="Select Parent Category"
-        class="w-full" styleClass="w-full"></p-select>
+        class="w-full" styleClass="w-full"></p-dropdown>
     </div>
 
     <div class="flex align-items-center">

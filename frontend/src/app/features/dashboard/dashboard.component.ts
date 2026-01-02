@@ -59,10 +59,10 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/inventory'], { queryParams: { highlight: id } });
   }
 
-  getStatusSeverity(status: InventoryStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    const severities: Record<InventoryStatus, 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast'> = {
+  getStatusSeverity(status: InventoryStatus): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<InventoryStatus, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
       [InventoryStatus.IN_STOCK]: 'success',
-      [InventoryStatus.LOW_STOCK]: 'warn',
+      [InventoryStatus.LOW_STOCK]: 'warning',
       [InventoryStatus.OUT_OF_STOCK]: 'danger',
       [InventoryStatus.ON_ORDER]: 'info',
       [InventoryStatus.DISCONTINUED]: 'secondary'

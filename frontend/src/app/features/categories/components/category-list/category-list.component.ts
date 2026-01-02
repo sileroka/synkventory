@@ -10,7 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { CheckboxModule } from 'primeng/checkbox';
-import { SelectModule } from 'primeng/select';
+import { DropdownModule } from 'primeng/dropdown';
 import { MessageService, ConfirmationService, TreeNode } from 'primeng/api';
 import { CategoryService } from '../../services/category.service';
 import { ICategory, ICategoryTreeNode } from '../../models/category.model';
@@ -30,7 +30,7 @@ import { ICategory, ICategoryTreeNode } from '../../models/category.model';
     ConfirmDialogModule,
     TagModule,
     CheckboxModule,
-    SelectModule
+    DropdownModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './category-list.component.html',

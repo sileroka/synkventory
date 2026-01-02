@@ -299,7 +299,7 @@
 
     <div>
       <label for="fromLocation" class="block mb-2 font-medium">From Location *</label>
-      <p-select
+      <p-dropdown
         id="fromLocation"
         [(ngModel)]="transferFromLocationId"
         [options]="getAvailableFromLocations()"
@@ -308,7 +308,7 @@
         placeholder="Select source location"
         class="w-full"
         styleClass="w-full">
-      </p-select>
+      </p-dropdown>
       <small class="text-color-secondary" *ngIf="transferFromLocationId">
         Available: {{ getMaxTransferQuantity() }}
       </small>
@@ -316,7 +316,7 @@
 
     <div>
       <label for="toLocation" class="block mb-2 font-medium">To Location *</label>
-      <p-select
+      <p-dropdown
         id="toLocation"
         [(ngModel)]="transferToLocationId"
         [options]="locationOptions"
@@ -325,7 +325,7 @@
         placeholder="Select destination location"
         class="w-full"
         styleClass="w-full">
-      </p-select>
+      </p-dropdown>
     </div>
 
     <div>
