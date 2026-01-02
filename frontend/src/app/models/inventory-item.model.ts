@@ -1,5 +1,5 @@
-export interface InventoryItem {
-  id?: number;
+export interface IInventoryItem {
+  id?: string;
   name: string;
   sku: string;
   description?: string;

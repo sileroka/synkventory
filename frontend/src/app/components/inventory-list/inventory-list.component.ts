@@ -11,7 +11,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { InventoryService } from '../../services/inventory.service';
-import { InventoryItem } from '../../models/inventory-item.model';
+import { IInventoryItem } from '../../models/inventory-item.model';
 
 @Component({
   selector: 'app-inventory-list',
@@ -33,9 +33,9 @@ import { InventoryItem } from '../../models/inventory-item.model';
   styleUrl: './inventory-list.component.scss'
 })
 export class InventoryListComponent implements OnInit {
-  items: InventoryItem[] = [];
+  items: IInventoryItem[] = [];
   displayDialog: boolean = false;
-  selectedItem: InventoryItem = this.getEmptyItem();
+  selectedItem: IInventoryItem = this.getEmptyItem();
   isEditMode: boolean = false;
   loading: boolean = false;
 
@@ -73,7 +73,7 @@ export class InventoryListComponent implements OnInit {
     this.displayDialog = true;
   }
 
-  showEditDialog(item: InventoryItem) {
+  showEditDialog(item: IInventoryItem) {
     this.selectedItem = { ...item };
     this.isEditMode = true;
     this.displayDialog = true;
@@ -121,7 +121,7 @@ export class InventoryListComponent implements OnInit {
     }
   }
 
-  deleteItem(item: InventoryItem) {
+  deleteItem(item: IInventoryItem) {
     this.confirmationService.confirm({
       message: `Are you sure you want to delete ${item.name}?`,
       accept: () => {
@@ -148,7 +148,7 @@ export class InventoryListComponent implements OnInit {
     });
   }
 
-  getEmptyItem(): InventoryItem {
+  getEmptyItem(): IInventoryItem {
     return {
       name: '',
       sku: '',

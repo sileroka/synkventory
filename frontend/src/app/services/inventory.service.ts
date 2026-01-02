@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { InventoryItem } from '../models/inventory-item.model';
+import { IInventoryItem } from '../models/inventory-item.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,23 +11,23 @@ export class InventoryService {
 
   constructor(private http: HttpClient) { }
 
-  getItems(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItem[]>(this.apiUrl);
+  getItems(): Observable<IInventoryItem[]> {
+    return this.http.get<IInventoryItem[]>(this.apiUrl);
   }
 
-  getItem(id: number): Observable<InventoryItem> {
-    return this.http.get<InventoryItem>(`${this.apiUrl}/${id}`);
+  getItem(id: string): Observable<IInventoryItem> {
+    return this.http.get<IInventoryItem>(`${this.apiUrl}/${id}`);
   }
 
-  createItem(item: InventoryItem): Observable<InventoryItem> {
-    return this.http.post<InventoryItem>(this.apiUrl, item);
+  createItem(item: IInventoryItem): Observable<IInventoryItem> {
+    return this.http.post<IInventoryItem>(this.apiUrl, item);
   }
 
-  updateItem(id: number, item: Partial<InventoryItem>): Observable<InventoryItem> {
-    return this.http.put<InventoryItem>(`${this.apiUrl}/${id}`, item);
+  updateItem(id: string, item: Partial<IInventoryItem>): Observable<IInventoryItem> {
+    return this.http.put<IInventoryItem>(`${this.apiUrl}/${id}`, item);
   }
 
-  deleteItem(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  deleteItem(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
