@@ -7,10 +7,10 @@
 # Documentation: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
 # =============================================================================
 
-name: synkventory
+name: synkventory-app
 
 # Region - choose closest to your users
-region: nyc
+region: sfo
 
 # =============================================================================
 # Services
@@ -19,7 +19,7 @@ services:
   # ---------------------------------------------------------------------------
   # Backend API
   # ---------------------------------------------------------------------------
-  - name: backend
+  - name: synkventory-backend
     # Source configuration
     github:
       repo: sileroka/synkventory
@@ -56,7 +56,7 @@ services:
       # Database - references the managed database
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
 
       # Application settings
       - key: PROJECT_NAME
@@ -79,7 +79,6 @@ services:
       - key: SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-        value: "CHANGE_ME_GENERATE_SECURE_KEY"
 
       # CORS - will be auto-set to app URL
       - key: CORS_ORIGINS
@@ -111,20 +110,16 @@ services:
       # For pg_isready in entrypoint
       - key: POSTGRES_SERVER
         scope: RUN_TIME
-        value: ${db.HOSTNAME}
       
       - key: POSTGRES_PORT
         scope: RUN_TIME
-        value: ${db.PORT}
       
       - key: POSTGRES_USER
         scope: RUN_TIME
-        value: ${db.USERNAME}
-
   # ---------------------------------------------------------------------------
   # Frontend Web
   # ---------------------------------------------------------------------------
-  - name: frontend
+  - name: synkventory-frontend
     # Source configuration
     github:
       repo: sileroka/synkventory
@@ -154,16 +149,6 @@ services:
       timeout_seconds: 10
       success_threshold: 1
       failure_threshold: 3
-
-# =============================================================================
-# Database
-# =============================================================================
-databases:
-  - name: db
-    engine: PG
-    version: "15"
-    size: db-s-dev-database
-    num_nodes: 1
 
 # =============================================================================
 # Alerts (Optional)
