@@ -23,7 +23,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY requirements.txt .
+# Note: Path is relative to repo root when using dockerfile_path with source_dir: /
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
@@ -67,7 +68,8 @@ RUN groupadd --gid 1000 synkventory && \
 COPY --from=builder /opt/venv /opt/venv
 
 # Copy application code
-COPY --chown=synkventory:synkventory . .
+# Note: Path is relative to repo root when using dockerfile_path with source_dir: /
+COPY --chown=synkventory:synkventory backend/ .
 
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
