@@ -64,11 +64,12 @@ COPY frontend/nginx.prod.conf /etc/nginx/nginx.conf
 COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
 
 # Set proper permissions
+# Note: /var/run is a symlink to /run in Alpine, create pid file in /tmp instead
 RUN chown -R synkventory:synkventory /usr/share/nginx/html && \
     chown -R synkventory:synkventory /var/cache/nginx && \
     chown -R synkventory:synkventory /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R synkventory:synkventory /var/run/nginx.pid
+    mkdir -p /run/nginx && \
+    chown -R synkventory:synkventory /run/nginx
 
 # Switch to non-root user
 USER synkventory
