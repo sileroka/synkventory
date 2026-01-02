@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"chat.agent.maxRequests": 500,
+		"workbench.colorTheme": "Default Dark+",
+		"editor.wordWrap": "on",
+		"workbench.tree.indent": 15,
+		"workbench.tree.renderIndentGuides": "always",
+		"editor.indentSize": "tabSize",
+		"editor.tabSize": 4,
+		"editor.detectIndentation": true,
+		"editor.insertSpaces": true,
+		"files.eol": "\n",
+		"editor.formatOnSave": true,
+		"workbench.colorCustomizations": {
+			"titleBar.activeBackground": "#F87171",
+			"titleBar.activeForeground": "#000000",
+			"activityBar.background": "#F87171",
+			"activityBar.foreground": "#000000",
+			"statusBar.background": "#F87171",
+			"statusBar.foreground": "#000000",
+			"editor.useEditorConfig": true,
+			"editor.insertSpaces": true,
+			"files.eol": "\n",
+			"editor.formatOnSave": true
+		}
+	}
+}
