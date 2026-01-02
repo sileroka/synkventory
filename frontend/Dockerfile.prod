@@ -14,10 +14,10 @@ WORKDIR /app
 
 # Copy package files
 # Note: Path is relative to repo root when using dockerfile_path with source_dir: /
-COPY frontend/package*.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
 # Install dependencies (clean install for reproducible builds)
-RUN npm ci --only=production=false
+RUN npm ci
 
 # -----------------------------------------------------------------------------
 # Stage 2: Builder - Build the Angular application
