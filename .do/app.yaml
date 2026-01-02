@@ -133,7 +133,7 @@ static_sites:
 
     # Build configuration
     source_dir: frontend
-    build_command: npm ci --include=dev && npm run build -- --configuration=production
+    build_command: npm install && npx ng build --configuration=production
     output_dir: dist/frontend/browser
 
     # Routes - frontend serves all other routes
