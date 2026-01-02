@@ -23,7 +23,14 @@ echo "Database is ready!"
 # Run database migrations
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     echo "Running database migrations..."
-    alembic upgrade head
+    # Use admin database URL for migrations if provided (for RLS setup)
+    # Otherwise fall back to regular DATABASE_URL
+    if [ -n "${DATABASE_URL_ADMIN}" ]; then
+        echo "Using admin credentials for migrations..."
+        DATABASE_URL="${DATABASE_URL_ADMIN}" alembic upgrade head
+    else
+        alembic upgrade head
+    fi
     echo "Migrations complete!"
 else
     echo "Skipping migrations (RUN_MIGRATIONS=${RUN_MIGRATIONS})"
@@ -32,7 +39,10 @@ fi
 # Run database seeds
 if [ "${RUN_SEEDS:-true}" = "true" ]; then
     echo "Running database seeds..."
-    python -c "
+    # Use admin database URL for seeds if provided
+    if [ -n "${DATABASE_URL_ADMIN}" ]; then
+        echo "Using admin credentials for seeds..."
+        DATABASE_URL="${DATABASE_URL_ADMIN}" python -c "
 from app.db.session import SessionLocal
 from app.db.seed import run_seeds
 db = SessionLocal()
@@ -41,6 +51,17 @@ try:
 finally:
     db.close()
 "
+    else
+        python -c "
+from app.db.session import SessionLocal
+from app.db.seed import run_seeds
+db = SessionLocal()
+try:
+    run_seeds(db)
+finally:
+    db.close()
+"
+    fi
     echo "Seeds complete!"
 else
     echo "Skipping seeds (RUN_SEEDS=${RUN_SEEDS})"

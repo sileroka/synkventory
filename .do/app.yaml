@@ -53,8 +53,13 @@ services:
 
     # Environment variables
     envs:
-      # Database - references the managed database
+      # Database - app runtime (use RLS-enforced user)
       - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+
+      # Database - admin for migrations (doadmin or synkventory_admin)
+      - key: DATABASE_URL_ADMIN
         scope: RUN_TIME
         type: SECRET
 
@@ -83,7 +88,7 @@ services:
       # CORS - will be auto-set to app URL
       - key: CORS_ORIGINS
         scope: RUN_TIME
-        value: "${APP_URL}"
+        value: "https://synkventory.com,https://*.synkventory.com"
 
       # Server settings
       - key: HOST
