@@ -1,0 +1,105 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h1>Location Management</h1>
+    <p-button label="Add Location" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
+  </div>
+
+  <p-table
+    [value]="locations"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    (onLazyLoad)="onPageChange($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [tableStyle]="{'min-width': '50rem'}"
+    styleClass="p-datatable-striped">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-location>
+      <tr>
+        <td>{{ location.code }}</td>
+        <td>{{ location.name }}</td>
+        <td>{{ location.address }}</td>
+        <td>
+          <span class="status-badge" [ngClass]="location.isActive ? 'status-active' : 'status-inactive'">
+            {{ location.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            severity="info"
+            (onClick)="showEditDialog(location)">
+          </p-button>
+          <p-button
+            icon="pi pi-trash"
+            [rounded]="true"
+            [text]="true"
+            severity="danger"
+            (onClick)="deleteLocation(location)">
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center">No locations found. Click "Add Location" to create one.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [(visible)]="displayDialog"
+  [header]="isEditMode ? 'Edit Location' : 'Add Location'"
+  [modal]="true"
+  [style]="{width: '450px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="flex flex-column gap-3">
+    <div>
+      <label for="name" class="block mb-2">Name *</label>
+      <input pInputText id="name" [(ngModel)]="selectedLocation.name" class="w-full" required />
+    </div>
+
+    <div>
+      <label for="code" class="block mb-2">Code *</label>
+      <input pInputText id="code" [(ngModel)]="selectedLocation.code" class="w-full" required />
+    </div>
+
+    <div>
+      <label for="address" class="block mb-2">Address</label>
+      <textarea pInputTextarea id="address" [(ngModel)]="selectedLocation.address"
+        class="w-full" rows="3"></textarea>
+    </div>
+
+    <div class="flex align-items-center">
+      <p-checkbox [(ngModel)]="selectedLocation.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+      <label for="isActive" class="ml-2">Active</label>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayDialog = false"
+      severity="secondary"></p-button>
+    <p-button label="Save" icon="pi pi-check" (onClick)="saveLocation()"></p-button>
+  </ng-template>
+</p-dialog>

@@ -9,9 +9,20 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { InventoryService } from '../../services/inventory.service';
-import { IInventoryItem } from '../../models/inventory-item.model';
+import { LocationService } from '../../features/locations/services/location.service';
+import { CategoryService } from '../../features/categories/services/category.service';
+import { IInventoryItem, InventoryStatus } from '../../models/inventory-item.model';
+import { ILocation } from '../../features/locations/models/location.model';
+import { ICategory } from '../../features/categories/models/category.model';
+
+interface ISelectOption {
+  label: string;
+  value: string | null;
+}
 
 @Component({
   selector: 'app-inventory-list',
@@ -26,7 +37,9 @@ import { IInventoryItem } from '../../models/inventory-item.model';
     InputNumberModule,
     InputTextareaModule,
     ToastModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    TagModule,
+    SelectModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-list.component.html',
@@ -39,24 +52,46 @@ export class InventoryListComponent implements OnInit {
   isEditMode: boolean = false;
   loading: boolean = false;
 
+  // Pagination
+  totalRecords: number = 0;
+  currentPage: number = 1;
+  pageSize: number = 25;
+
+  // Dropdown options
+  locationOptions: ISelectOption[] = [];
+  categoryOptions: ISelectOption[] = [];
+
+  statusOptions = [
+    { label: 'In Stock', value: InventoryStatus.IN_STOCK },
+    { label: 'Low Stock', value: InventoryStatus.LOW_STOCK },
+    { label: 'Out of Stock', value: InventoryStatus.OUT_OF_STOCK },
+    { label: 'On Order', value: InventoryStatus.ON_ORDER },
+    { label: 'Discontinued', value: InventoryStatus.DISCONTINUED }
+  ];
+
   constructor(
     private inventoryService: InventoryService,
+    private locationService: LocationService,
+    private categoryService: CategoryService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit() {
     this.loadItems();
+    this.loadLocations();
+    this.loadCategories();
   }
 
   loadItems() {
     this.loading = true;
-    this.inventoryService.getItems().subscribe({
-      next: (data) => {
-        this.items = data;
+    this.inventoryService.getItems(this.currentPage, this.pageSize).subscribe({
+      next: (result) => {
+        this.items = result.items;
+        this.totalRecords = result.pagination.totalItems;
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -67,6 +102,54 @@ export class InventoryListComponent implements OnInit {
     });
   }
 
+  loadLocations() {
+    this.locationService.getLocations(1, 100, true).subscribe({
+      next: (result) => {
+        this.locationOptions = [
+          { label: 'None', value: null },
+          ...result.items.map((loc: ILocation) => ({
+            label: loc.name,
+            value: loc.id!
+          }))
+        ];
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load locations'
+        });
+      }
+    });
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories(1, 100, true).subscribe({
+      next: (result) => {
+        this.categoryOptions = [
+          { label: 'None', value: null },
+          ...result.items.map((cat: ICategory) => ({
+            label: cat.name,
+            value: cat.id!
+          }))
+        ];
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load categories'
+        });
+      }
+    });
+  }
+
+  onPageChange(event: { first: number; rows: number }) {
+    this.currentPage = Math.floor(event.first / event.rows) + 1;
+    this.pageSize = event.rows;
+    this.loadItems();
+  }
+
   showAddDialog() {
     this.selectedItem = this.getEmptyItem();
     this.isEditMode = false;
@@ -74,7 +157,11 @@ export class InventoryListComponent implements OnInit {
   }
 
   showEditDialog(item: IInventoryItem) {
-    this.selectedItem = { ...item };
+    this.selectedItem = {
+      ...item,
+      categoryId: item.category?.id || item.categoryId || null,
+      locationId: item.location?.id || item.locationId || null
+    };
     this.isEditMode = true;
     this.displayDialog = true;
   }
@@ -154,9 +241,22 @@ export class InventoryListComponent implements OnInit {
       sku: '',
       description: '',
       quantity: 0,
-      unit_price: 0,
-      category: '',
-      location: ''
+      reorderPoint: 0,
+      unitPrice: 0,
+      status: InventoryStatus.IN_STOCK,
+      categoryId: null,
+      locationId: null
     };
+  }
+
+  getStatusLabel(status: InventoryStatus): string {
+    const labels: Record<InventoryStatus, string> = {
+      [InventoryStatus.IN_STOCK]: 'In Stock',
+      [InventoryStatus.LOW_STOCK]: 'Low Stock',
+      [InventoryStatus.OUT_OF_STOCK]: 'Out of Stock',
+      [InventoryStatus.ON_ORDER]: 'On Order',
+      [InventoryStatus.DISCONTINUED]: 'Discontinued'
+    };
+    return labels[status] || status;
   }
 }
