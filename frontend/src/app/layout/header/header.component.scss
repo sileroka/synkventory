@@ -1,0 +1,82 @@
+@use 'sass:color';
+
+$primary: #0D9488;
+$secondary: #F87171;
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 1rem;
+  background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: -5%) 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+
+  .brand-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-tagline {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    font-style: italic;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+:host ::ng-deep {
+  .header-menu-btn,
+  .header-icon-btn {
+    .p-button {
+      color: white !important;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+
+  .user-avatar {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+}

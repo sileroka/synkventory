@@ -1,0 +1,40 @@
+<header class="app-header">
+  <div class="header-left">
+    <p-button
+      icon="pi pi-bars"
+      [text]="true"
+      [rounded]="true"
+      (onClick)="onToggleSidebar()"
+      styleClass="header-menu-btn">
+    </p-button>
+    <div class="brand">
+      <span class="brand-name">Synkventory</span>
+      <span class="brand-tagline">Stock in sync.</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <p-button
+      icon="pi pi-bell"
+      [text]="true"
+      [rounded]="true"
+      [badge]="'3'"
+      badgeSeverity="danger"
+      styleClass="header-icon-btn">
+    </p-button>
+    <p-button
+      icon="pi pi-cog"
+      [text]="true"
+      [rounded]="true"
+      styleClass="header-icon-btn">
+    </p-button>
+    <div class="user-section">
+      <p-avatar
+        icon="pi pi-user"
+        shape="circle"
+        styleClass="user-avatar">
+      </p-avatar>
+      <span class="user-name">Admin User</span>
+    </div>
+  </div>
+</header>

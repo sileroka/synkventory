@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -94,3 +94,71 @@ class InventoryItem(InventoryItemBase):
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+
+
+class LowStockAlert(BaseModel):
+    """Schema for low stock alert items."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        from_attributes=True,
+    )
+
+    id: str
+    name: str
+    sku: str
+    quantity: int
+    reorder_point: int
+    suggested_order_quantity: int
+    status: InventoryStatus
+    category: Optional[RelatedCategory] = None
+    location: Optional[RelatedLocation] = None
+
+
+class BulkDeleteRequest(BaseModel):
+    """Request schema for bulk delete operation."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+    ids: List[str]
+
+
+class BulkStatusUpdateRequest(BaseModel):
+    """Request schema for bulk status update operation."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+    ids: List[str]
+    status: InventoryStatus
+
+
+class QuickAdjustRequest(BaseModel):
+    """Request schema for quick quantity adjustment."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+    quantity: int
+    reason: Optional[str] = None
+
+
+class BulkOperationResult(BaseModel):
+    """Response schema for bulk operations."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+    success_count: int
+    failed_count: int
+    failed_ids: List[str] = []

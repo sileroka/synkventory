@@ -7,6 +7,119 @@
     <p-button label="Add Item" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
   </div>
 
+  <!-- Filter Panel -->
+  <div class="filter-panel surface-card p-4 border-round mb-4">
+    <div class="grid">
+      <div class="col-12 md:col-3">
+        <label for="search" class="block mb-2 font-medium">Search</label>
+        <span class="p-input-icon-left w-full">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            id="search"
+            [(ngModel)]="searchTerm"
+            placeholder="Search name or SKU..."
+            class="w-full"
+            (keyup.enter)="onSearch()" />
+        </span>
+      </div>
+      <div class="col-12 md:col-2">
+        <label for="categoryFilter" class="block mb-2 font-medium">Category</label>
+        <p-multiselect
+          id="categoryFilter"
+          [(ngModel)]="selectedCategories"
+          [options]="categoryMultiOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Categories"
+          [showClear]="true"
+          class="w-full"
+          styleClass="w-full"
+          (onChange)="onFilterChange()">
+        </p-multiselect>
+      </div>
+      <div class="col-12 md:col-2">
+        <label for="locationFilter" class="block mb-2 font-medium">Location</label>
+        <p-multiselect
+          id="locationFilter"
+          [(ngModel)]="selectedLocations"
+          [options]="locationMultiOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Locations"
+          [showClear]="true"
+          class="w-full"
+          styleClass="w-full"
+          (onChange)="onFilterChange()">
+        </p-multiselect>
+      </div>
+      <div class="col-12 md:col-2">
+        <label for="statusFilter" class="block mb-2 font-medium">Status</label>
+        <p-multiselect
+          id="statusFilter"
+          [(ngModel)]="selectedStatuses"
+          [options]="statusMultiOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Statuses"
+          [showClear]="true"
+          class="w-full"
+          styleClass="w-full"
+          (onChange)="onFilterChange()">
+        </p-multiselect>
+      </div>
+      <div class="col-12 md:col-3 flex align-items-end gap-2">
+        <p-button label="Search" icon="pi pi-search" (onClick)="onSearch()"></p-button>
+        <p-button
+          label="Clear"
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="clearFilters()"
+          [disabled]="!hasActiveFilters()">
+        </p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Toolbar -->
+  <p-toolbar *ngIf="selectedItems.length > 0" styleClass="mb-4">
+    <ng-template #start>
+      <span class="font-semibold mr-3">{{ selectedItems.length }} item(s) selected</span>
+      <p-button
+        label="Delete"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        class="mr-2"
+        (onClick)="bulkDelete()">
+      </p-button>
+      <p-button
+        label="Set In Stock"
+        icon="pi pi-check-circle"
+        severity="success"
+        [outlined]="true"
+        class="mr-2"
+        (onClick)="bulkStatusChange('in_stock')">
+      </p-button>
+      <p-button
+        label="Set Out of Stock"
+        icon="pi pi-times-circle"
+        severity="warn"
+        [outlined]="true"
+        class="mr-2"
+        (onClick)="bulkStatusChange('out_of_stock')">
+      </p-button>
+      <p-button
+        label="Export CSV"
+        icon="pi pi-download"
+        severity="info"
+        [outlined]="true"
+        (onClick)="exportSelectedToCsv()">
+      </p-button>
+    </ng-template>
+  </p-toolbar>
+
   <p-table
     [value]="items"
     [loading]="loading"
@@ -14,32 +127,51 @@
     [rows]="pageSize"
     [totalRecords]="totalRecords"
     [lazy]="true"
-    (onLazyLoad)="onPageChange($event)"
+    (onLazyLoad)="onLazyLoad($event)"
     [rowsPerPageOptions]="[10, 25, 50]"
-    [tableStyle]="{'min-width': '60rem'}"
-    styleClass="p-datatable-striped">
+    [tableStyle]="{'min-width': '70rem'}"
+    [(selection)]="selectedItems"
+    [rowHover]="true"
+    dataKey="id"
+    styleClass="p-datatable-striped p-datatable-gridlines">
 
     <ng-template pTemplate="header">
       <tr>
-        <th>SKU</th>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Quantity</th>
-        <th>Reorder Point</th>
-        <th>Status</th>
-        <th>Unit Price</th>
-        <th>Category</th>
-        <th>Location</th>
-        <th>Actions</th>
+        <th style="width: 3rem">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th pSortableColumn="sku" style="width: 8rem">SKU <p-sortIcon field="sku"></p-sortIcon></th>
+        <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+        <th style="width: 12rem">Description</th>
+        <th pSortableColumn="quantity" style="width: 7rem">Quantity <p-sortIcon field="quantity"></p-sortIcon></th>
+        <th pSortableColumn="reorderPoint" style="width: 8rem">Reorder Pt <p-sortIcon field="reorderPoint"></p-sortIcon></th>
+        <th pSortableColumn="status" style="width: 8rem">Status <p-sortIcon field="status"></p-sortIcon></th>
+        <th pSortableColumn="unitPrice" style="width: 7rem">Price <p-sortIcon field="unitPrice"></p-sortIcon></th>
+        <th style="width: 8rem">Category</th>
+        <th style="width: 8rem">Location</th>
+        <th style="width: 12rem">Actions</th>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-item>
-      <tr>
+      <tr [ngClass]="getRowClass(item)">
+        <td>
+          <p-tableCheckbox [value]="item"></p-tableCheckbox>
+        </td>
         <td>{{ item.sku }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.description }}</td>
-        <td>{{ item.quantity }}</td>
+        <td>
+          <span class="flex align-items-center gap-2">
+            <i *ngIf="item.status === 'low_stock'" class="pi pi-exclamation-triangle text-orange-500" pTooltip="Low Stock - Reorder Needed"></i>
+            <i *ngIf="item.status === 'out_of_stock'" class="pi pi-times-circle text-red-500" pTooltip="Out of Stock"></i>
+            <a class="item-name-link cursor-pointer text-primary hover:underline" (click)="viewItemDetail(item)">{{ item.name }}</a>
+          </span>
+        </td>
+        <td class="text-overflow-ellipsis white-space-nowrap overflow-hidden" style="max-width: 12rem" [pTooltip]="item.description">
+          {{ item.description || '-' }}
+        </td>
+        <td [class.text-orange-500]="item.status === 'low_stock'" [class.text-red-500]="item.status === 'out_of_stock'" [class.font-semibold]="item.status === 'low_stock' || item.status === 'out_of_stock'">
+          {{ item.quantity }}
+        </td>
         <td>{{ item.reorderPoint }}</td>
         <td>
           <span class="status-badge" [ngClass]="'status-' + item.status">
@@ -51,10 +183,27 @@
         <td>{{ item.location?.name || '-' }}</td>
         <td>
           <p-button
+            icon="pi pi-eye"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            pTooltip="View Details"
+            (onClick)="viewItemDetail(item)">
+          </p-button>
+          <p-button
+            icon="pi pi-sliders-h"
+            [rounded]="true"
+            [text]="true"
+            severity="help"
+            pTooltip="Quick Adjust"
+            (onClick)="showQuickAdjustDialog(item)">
+          </p-button>
+          <p-button
             icon="pi pi-pencil"
             [rounded]="true"
             [text]="true"
             severity="info"
+            pTooltip="Edit"
             (onClick)="showEditDialog(item)">
           </p-button>
           <p-button
@@ -62,6 +211,7 @@
             [rounded]="true"
             [text]="true"
             severity="danger"
+            pTooltip="Delete"
             (onClick)="deleteItem(item)">
           </p-button>
         </td>
@@ -70,7 +220,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="10" class="text-center">No items found. Click "Add Item" to create one.</td>
+        <td colspan="11" class="text-center">No items found. Click "Add Item" to create one.</td>
       </tr>
     </ng-template>
   </p-table>
@@ -147,5 +297,125 @@
     <p-button label="Cancel" icon="pi pi-times" (onClick)="displayDialog = false"
       severity="secondary"></p-button>
     <p-button label="Save" icon="pi pi-check" (onClick)="saveItem()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Detail Dialog with Location Quantities -->
+<p-dialog
+  [(visible)]="displayDetailDialog"
+  [header]="detailItem?.name || 'Item Details'"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="flex flex-column gap-4" *ngIf="detailItem">
+    <!-- Item Summary -->
+    <div class="grid">
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">SKU</div>
+        <div class="font-semibold">{{ detailItem.sku }}</div>
+      </div>
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">Status</div>
+        <span class="status-badge" [ngClass]="'status-' + detailItem.status">
+          {{ getStatusLabel(detailItem.status) }}
+        </span>
+      </div>
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">Total Quantity</div>
+        <div class="font-semibold text-xl">{{ detailItem.quantity }}</div>
+      </div>
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">Reorder Point</div>
+        <div class="font-semibold">{{ detailItem.reorderPoint }}</div>
+      </div>
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">Unit Price</div>
+        <div class="font-semibold">{{ detailItem.unitPrice | currency }}</div>
+      </div>
+      <div class="col-6">
+        <div class="text-sm text-color-secondary mb-1">Category</div>
+        <div class="font-semibold">{{ detailItem.category?.name || '-' }}</div>
+      </div>
+    </div>
+
+    <!-- Location Quantities -->
+    <div>
+      <h3 class="text-lg font-semibold mb-3">Quantity by Location</h3>
+      <p-table [value]="locationQuantities" [loading]="loadingDetail" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Location</th>
+            <th>Bin/Shelf</th>
+            <th class="text-right">Quantity</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-locQty>
+          <tr>
+            <td>{{ locQty.location?.name || 'Unknown' }}</td>
+            <td>{{ locQty.binLocation || '-' }}</td>
+            <td class="text-right font-semibold">{{ locQty.quantity }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3" class="text-center text-color-secondary">
+              No location quantities recorded. Use stock movements to add inventory to locations.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" icon="pi pi-times" (onClick)="displayDetailDialog = false"
+      severity="secondary"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Quick Adjust Dialog -->
+<p-dialog
+  [(visible)]="displayQuickAdjustDialog"
+  header="Quick Adjust Quantity"
+  [modal]="true"
+  [style]="{width: '350px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="flex flex-column gap-3" *ngIf="quickAdjustItem">
+    <div class="surface-ground border-round p-3">
+      <div class="text-sm text-color-secondary mb-1">Item</div>
+      <div class="font-semibold">{{ quickAdjustItem.name }}</div>
+      <div class="text-sm text-color-secondary mt-1">SKU: {{ quickAdjustItem.sku }}</div>
+    </div>
+
+    <div>
+      <label for="quickQty" class="block mb-2 font-medium">New Quantity</label>
+      <p-inputNumber
+        id="quickQty"
+        [(ngModel)]="quickAdjustQuantity"
+        class="w-full"
+        [min]="0"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        incrementButtonIcon="pi pi-plus"
+        decrementButtonIcon="pi pi-minus">
+      </p-inputNumber>
+      <small class="text-color-secondary">Current: {{ quickAdjustItem.quantity }}</small>
+    </div>
+
+    <div>
+      <label for="quickReason" class="block mb-2">Reason (optional)</label>
+      <input pInputText id="quickReason" [(ngModel)]="quickAdjustReason"
+        class="w-full" placeholder="e.g., Inventory count adjustment" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayQuickAdjustDialog = false"
+      severity="secondary"></p-button>
+    <p-button label="Adjust" icon="pi pi-check" (onClick)="saveQuickAdjust()"></p-button>
   </ng-template>
 </p-dialog>

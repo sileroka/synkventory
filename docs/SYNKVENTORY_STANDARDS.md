@@ -12,31 +12,31 @@
 
 ### Primary Colors
 
-| Role | Name | Hex | RGB | Usage |
-|------|------|-----|-----|-------|
-| Primary | Deep Teal | `#0D9488` | 13, 148, 136 | Brand color, navigation, headers, primary buttons |
-| Secondary | Slate Blue | `#6366F1` | 99, 102, 241 | Secondary actions, links, data visualizations, selected states |
-| Alert/Action | Coral | `#F87171` | 248, 113, 113 | Warnings, low stock alerts, urgent actions, destructive actions |
+| Role      | Name       | Hex       | RGB           | Usage                                                          |
+| --------- | ---------- | --------- | ------------- | -------------------------------------------------------------- |
+| Primary   | Deep Teal  | `#0D9488` | 13, 148, 136  | Brand color, navigation, headers, primary buttons              |
+| Secondary | Coral      | `#F87171` | 248, 113, 113 | Secondary actions, accents, interactive elements, hover states |
+| Tertiary  | Slate Blue | `#6366F1` | 99, 102, 241  | Links, data visualizations, informational highlights           |
 
 ### Neutral Colors
 
-| Role | Name | Hex | Usage |
-|------|------|-----|-------|
-| Neutral 900 | Slate Dark | `#0F172A` | Primary text, headings |
-| Neutral 700 | Slate 700 | `#334155` | Secondary text |
-| Neutral 500 | Slate Mid | `#64748B` | Muted text, placeholders |
-| Neutral 300 | Slate 300 | `#CBD5E1` | Borders, dividers |
-| Neutral 100 | Slate Light | `#F1F5F9` | Backgrounds, cards |
-| White | White | `#FFFFFF` | Page background, card backgrounds |
+| Role        | Name        | Hex       | Usage                             |
+| ----------- | ----------- | --------- | --------------------------------- |
+| Neutral 900 | Slate Dark  | `#0F172A` | Primary text, headings            |
+| Neutral 700 | Slate 700   | `#334155` | Secondary text                    |
+| Neutral 500 | Slate Mid   | `#64748B` | Muted text, placeholders          |
+| Neutral 300 | Slate 300   | `#CBD5E1` | Borders, dividers                 |
+| Neutral 100 | Slate Light | `#F1F5F9` | Backgrounds, cards                |
+| White       | White       | `#FFFFFF` | Page background, card backgrounds |
 
 ### Semantic Colors
 
-| State | Hex | Usage |
-|-------|-----|-------|
+| State   | Hex       | Usage                                                 |
+| ------- | --------- | ----------------------------------------------------- |
 | Success | `#10B981` | Confirmations, in-stock indicators, completed actions |
-| Warning | `#F59E0B` | Caution states, expiring items, reorder points |
-| Error | `#EF4444` | Errors, validation failures, critical stock levels |
-| Info | `#6366F1` | Informational messages (uses Secondary) |
+| Warning | `#F59E0B` | Caution states, expiring items, reorder points        |
+| Error   | `#EF4444` | Errors, validation failures, critical stock levels    |
+| Info    | `#6366F1` | Informational messages (uses Tertiary)                |
 
 ---
 
@@ -45,21 +45,21 @@
 ### Font Stack
 
 ```css
---font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+--font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+--font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
 ```
 
 ### Scale
 
-| Element | Size | Weight | Line Height |
-|---------|------|--------|-------------|
-| H1 | 2rem (32px) | 700 | 1.2 |
-| H2 | 1.5rem (24px) | 600 | 1.3 |
-| H3 | 1.25rem (20px) | 600 | 1.4 |
-| H4 | 1rem (16px) | 600 | 1.4 |
-| Body | 0.875rem (14px) | 400 | 1.5 |
-| Small | 0.75rem (12px) | 400 | 1.5 |
-| Caption | 0.625rem (10px) | 500 | 1.4 |
+| Element | Size            | Weight | Line Height |
+| ------- | --------------- | ------ | ----------- |
+| H1      | 2rem (32px)     | 700    | 1.2         |
+| H2      | 1.5rem (24px)   | 600    | 1.3         |
+| H3      | 1.25rem (20px)  | 600    | 1.4         |
+| H4      | 1rem (16px)     | 600    | 1.4         |
+| Body    | 0.875rem (14px) | 400    | 1.5         |
+| Small   | 0.75rem (12px)  | 400    | 1.5         |
+| Caption | 0.625rem (10px) | 500    | 1.4         |
 
 ---
 
@@ -68,23 +68,25 @@
 ### Button Hierarchy
 
 1. **Primary:** Deep Teal (`#0D9488`) — Main actions (Save, Submit, Create)
-2. **Secondary:** Slate Blue (`#6366F1`) — Secondary actions (Edit, View Details)
-3. **Outlined:** Teal border, transparent fill — Tertiary actions
-4. **Danger:** Coral (`#F87171`) — Destructive actions (Delete, Remove)
-5. **Text:** No background — Minimal actions (Cancel, Close)
+2. **Secondary:** Coral (`#F87171`) — Secondary actions (Edit, View Details)
+3. **Tertiary:** Slate Blue (`#6366F1`) — Tertiary actions, links
+4. **Outlined:** Teal border, transparent fill — Minimal emphasis actions
+5. **Danger:** Error Red (`#EF4444`) — Destructive actions (Delete, Remove)
+6. **Text:** No background — Minimal actions (Cancel, Close)
 
 ### Component Styling
 
 ```scss
 // PrimeNG theme overrides
-$primaryColor: #0D9488;
-$primaryDarkColor: #0F766E;
-$primaryLightColor: #14B8A6;
+$primaryColor: #0d9488;
+$primaryDarkColor: #0f766e;
+$primaryLightColor: #14b8a6;
 
-$secondaryColor: #6366F1;
-$dangerColor: #F87171;
-$successColor: #10B981;
-$warningColor: #F59E0B;
+$secondaryColor: #f87171;
+$tertiaryColor: #6366f1;
+$dangerColor: #ef4444;
+$successColor: #10b981;
+$warningColor: #f59e0b;
 
 // Border radius
 $borderRadius: 0.5rem;
@@ -101,17 +103,17 @@ $shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 - Highlight on hover: Teal at 10% opacity
 - Selected row: Teal at 15% opacity with left border accent
 - Low stock rows: Coral left border indicator
-- Sortable columns: Slate Blue icons
+- Sortable columns: Tertiary Slate Blue icons
 
 ### Status Badges
 
-| Status | Background | Text |
-|--------|------------|------|
-| In Stock | `#D1FAE5` | `#065F46` |
-| Low Stock | `#FEF3C7` | `#92400E` |
-| Out of Stock | `#FEE2E2` | `#991B1B` |
-| On Order | `#E0E7FF` | `#3730A3` |
-| Discontinued | `#E2E8F0` | `#475569` |
+| Status       | Background | Text      |
+| ------------ | ---------- | --------- |
+| In Stock     | `#D1FAE5`  | `#065F46` |
+| Low Stock    | `#FEF3C7`  | `#92400E` |
+| Out of Stock | `#FEE2E2`  | `#991B1B` |
+| On Order     | `#E0E7FF`  | `#3730A3` |
+| Discontinued | `#E2E8F0`  | `#475569` |
 
 ---
 
@@ -296,7 +298,7 @@ chore: update dependencies
 
 ```json
 {
-  "data": { },
+  "data": {},
   "meta": {
     "timestamp": "2025-01-02T10:00:00Z",
     "requestId": "uuid"

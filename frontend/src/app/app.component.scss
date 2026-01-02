@@ -1,21 +1,2 @@
-// Navigation styles
-.nav-link {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-
-  &:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  &.nav-active {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.2);
-    font-weight: 600;
-  }
-}
+// App root component styles
+// Layout styles are handled by the layout module

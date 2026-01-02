@@ -1,0 +1,87 @@
+// Inventory Detail Component Styles
+
+// Status-specific quantity colors are handled inline
+
+// Timeline customization
+:host ::ng-deep {
+  .p-timeline {
+    .p-timeline-event-opposite {
+      display: none;
+    }
+
+    .p-timeline-event-content {
+      padding-left: 1rem;
+    }
+  }
+
+  // Card header styling
+  .p-card-header {
+    padding-bottom: 0;
+  }
+}
+
+// Value cards
+.surface-ground {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+}
+
+// Action buttons spacing
+.p-card-footer {
+  border-top: 1px solid #E2E8F0;
+  padding-top: 1rem;
+}
+
+// Breadcrumb styling
+:host ::ng-deep .p-breadcrumb {
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  .p-breadcrumb-list {
+    .p-menuitem-link {
+      color: #64748B;
+
+      &:hover {
+        color: #0D9488;
+      }
+    }
+
+    .p-menuitem-separator {
+      color: #CBD5E1;
+    }
+  }
+}
+
+// Table footer styling
+:host ::ng-deep .p-datatable {
+  .p-datatable-tfoot {
+    tr {
+      background-color: #F1F5F9;
+    }
+  }
+}
+
+// Movement quantity colors
+.text-green-500 {
+  color: #10B981 !important;
+}
+
+.text-red-500 {
+  color: #EF4444 !important;
+}
+
+// Primary color for total value
+.text-primary {
+  color: #0D9488 !important;
+}
+
+// Link styling
+a.text-primary {
+  color: #0D9488;
+
+  &:hover {
+    color: #0F766E;
+    text-decoration: underline !important;
+  }
+}

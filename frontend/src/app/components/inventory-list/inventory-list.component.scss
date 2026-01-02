@@ -38,3 +38,101 @@
   background-color: #E2E8F0;
   color: #475569;
 }
+
+// Filter Panel
+.filter-panel {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+}
+
+// Row Status Color-Coding per Synkventory Standards
+:host ::ng-deep {
+  // In Stock - Default/Success (subtle)
+  .row-in-stock {
+    background-color: rgba(16, 185, 129, 0.03) !important;
+
+    &:hover {
+      background-color: rgba(13, 148, 136, 0.1) !important;
+    }
+  }
+
+  // Low Stock - Warning with left border accent
+  .row-low-stock {
+    border-left: 4px solid #F59E0B !important;
+    background-color: rgba(245, 158, 11, 0.08) !important;
+
+    &:hover {
+      background-color: rgba(245, 158, 11, 0.15) !important;
+    }
+  }
+
+  // Out of Stock - Error/Critical with left border accent
+  .row-out-of-stock {
+    border-left: 4px solid #EF4444 !important;
+    background-color: rgba(239, 68, 68, 0.08) !important;
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.15) !important;
+    }
+  }
+
+  // On Order - Info
+  .row-on-order {
+    border-left: 4px solid #6366F1 !important;
+    background-color: rgba(99, 102, 241, 0.05) !important;
+
+    &:hover {
+      background-color: rgba(99, 102, 241, 0.12) !important;
+    }
+  }
+
+  // Discontinued - Muted/Neutral
+  .row-discontinued {
+    border-left: 4px solid #64748B !important;
+    background-color: rgba(100, 116, 139, 0.08) !important;
+    opacity: 0.75;
+
+    &:hover {
+      background-color: rgba(100, 116, 139, 0.15) !important;
+      opacity: 1;
+    }
+  }
+
+  // Table enhancements
+  .p-datatable {
+    .p-datatable-tbody > tr {
+      transition: background-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    // Selected row styling
+    .p-datatable-tbody > tr.p-highlight {
+      background-color: rgba(13, 148, 136, 0.15) !important;
+      border-left-color: #0D9488 !important;
+    }
+  }
+
+  // Checkbox column styling
+  .p-checkbox .p-checkbox-box.p-highlight {
+    background-color: #0D9488;
+    border-color: #0D9488;
+  }
+}
+
+// Bulk actions toolbar
+:host ::ng-deep .p-toolbar {
+  background-color: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+}
+
+// Item name link styling
+.item-name-link {
+  color: #0D9488;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    color: #0F766E;
+    text-decoration: underline;
+  }
+}

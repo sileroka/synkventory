@@ -1,0 +1,360 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Breadcrumb -->
+<p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" styleClass="mb-4"></p-breadcrumb>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="grid">
+  <div class="col-12 lg:col-8">
+    <p-card>
+      <p-skeleton width="60%" height="2rem" styleClass="mb-3"></p-skeleton>
+      <p-skeleton width="30%" height="1.5rem" styleClass="mb-4"></p-skeleton>
+      <div class="grid">
+        <div class="col-6 md:col-3" *ngFor="let _ of [1,2,3,4]">
+          <p-skeleton width="100%" height="4rem"></p-skeleton>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div *ngIf="!loading && item" class="grid">
+  <!-- Left Column - Item Details -->
+  <div class="col-12 lg:col-8">
+    <!-- Main Details Card -->
+    <p-card styleClass="mb-4">
+      <ng-template pTemplate="header">
+        <div class="flex justify-content-between align-items-start p-4 pb-0">
+          <div>
+            <h1 class="text-2xl font-bold m-0 mb-2">{{ item.name }}</h1>
+            <span class="text-color-secondary">SKU: {{ item.sku }}</span>
+          </div>
+          <p-tag
+            [value]="getStatusLabel(item.status)"
+            [severity]="getStatusSeverity(item.status)"
+            styleClass="text-lg px-3 py-2">
+          </p-tag>
+        </div>
+      </ng-template>
+
+      <div class="grid mt-3">
+        <!-- Quantity -->
+        <div class="col-6 md:col-3">
+          <div class="surface-ground border-round p-3 h-full">
+            <div class="text-sm text-color-secondary mb-1">Quantity</div>
+            <div class="text-3xl font-bold"
+              [class.text-red-500]="item.status === 'out_of_stock'"
+              [class.text-orange-500]="item.status === 'low_stock'">
+              {{ item.quantity }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Reorder Point -->
+        <div class="col-6 md:col-3">
+          <div class="surface-ground border-round p-3 h-full">
+            <div class="text-sm text-color-secondary mb-1">Reorder Point</div>
+            <div class="text-3xl font-bold">{{ item.reorderPoint }}</div>
+          </div>
+        </div>
+
+        <!-- Unit Price -->
+        <div class="col-6 md:col-3">
+          <div class="surface-ground border-round p-3 h-full">
+            <div class="text-sm text-color-secondary mb-1">Unit Price</div>
+            <div class="text-3xl font-bold">{{ item.unitPrice | currency }}</div>
+          </div>
+        </div>
+
+        <!-- Total Value -->
+        <div class="col-6 md:col-3">
+          <div class="surface-ground border-round p-3 h-full">
+            <div class="text-sm text-color-secondary mb-1">Total Value</div>
+            <div class="text-3xl font-bold text-primary">{{ item.quantity * item.unitPrice | currency }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mt-4" *ngIf="item.description">
+        <div class="text-sm text-color-secondary mb-1">Description</div>
+        <p class="m-0 text-color">{{ item.description }}</p>
+      </div>
+
+      <!-- Additional Details -->
+      <div class="grid mt-4">
+        <div class="col-6 md:col-3">
+          <div class="text-sm text-color-secondary mb-1">Category</div>
+          <div class="font-semibold">{{ item.category?.name || '-' }}</div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="text-sm text-color-secondary mb-1">Default Location</div>
+          <div class="font-semibold">{{ item.location?.name || '-' }}</div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="text-sm text-color-secondary mb-1">Created</div>
+          <div class="font-semibold">{{ formatDate(item.createdAt) }}</div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="text-sm text-color-secondary mb-1">Last Updated</div>
+          <div class="font-semibold">{{ formatDate(item.updatedAt) }}</div>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="flex flex-wrap gap-2">
+          <p-button
+            label="Edit"
+            icon="pi pi-pencil"
+            severity="info"
+            (onClick)="editItem()">
+          </p-button>
+          <p-button
+            label="Adjust Stock"
+            icon="pi pi-sliders-h"
+            severity="help"
+            (onClick)="openQuickAdjust()">
+          </p-button>
+          <p-button
+            label="Transfer"
+            icon="pi pi-arrows-h"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="openTransfer()"
+            [disabled]="locationQuantities.length === 0">
+          </p-button>
+          <p-button
+            label="Delete"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            (onClick)="deleteItem()">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Location Quantities Card -->
+    <p-card header="Quantity by Location" styleClass="mb-4">
+      <p-table [value]="locationQuantities" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Location</th>
+            <th>Bin/Shelf</th>
+            <th class="text-right">Quantity</th>
+            <th class="text-right">Value</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-locQty>
+          <tr>
+            <td>
+              <span class="font-semibold">{{ locQty.location?.name || 'Unknown' }}</span>
+              <span class="text-color-secondary ml-2" *ngIf="locQty.location?.code">({{ locQty.location?.code }})</span>
+            </td>
+            <td>{{ locQty.binLocation || '-' }}</td>
+            <td class="text-right font-semibold">{{ locQty.quantity }}</td>
+            <td class="text-right">{{ locQty.quantity * (item?.unitPrice || 0) | currency }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="text-center text-color-secondary p-4">
+              <i class="pi pi-info-circle mr-2"></i>
+              No location quantities recorded. Use stock movements to add inventory to locations.
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="footer" *ngIf="locationQuantities.length > 0">
+          <tr>
+            <td colspan="2" class="font-bold">Total</td>
+            <td class="text-right font-bold">{{ item?.quantity }}</td>
+            <td class="text-right font-bold">{{ (item?.quantity || 0) * (item?.unitPrice || 0) | currency }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+
+  <!-- Right Column - Stock Movements -->
+  <div class="col-12 lg:col-4">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="flex justify-content-between align-items-center p-4 pb-0">
+          <h3 class="m-0">Recent Activity</h3>
+          <a routerLink="/stock-movements" [queryParams]="{itemId: item.id}" class="text-primary no-underline text-sm" *ngIf="totalMovements > 10">
+            View all ({{ totalMovements }})
+          </a>
+        </div>
+      </ng-template>
+
+      <div *ngIf="loadingMovements" class="p-3">
+        <div *ngFor="let _ of [1,2,3]" class="mb-3">
+          <p-skeleton width="100%" height="3rem"></p-skeleton>
+        </div>
+      </div>
+
+      <p-timeline [value]="recentMovements" *ngIf="!loadingMovements && recentMovements.length > 0">
+        <ng-template pTemplate="marker" let-movement>
+          <span
+            class="flex align-items-center justify-content-center border-circle"
+            [style.backgroundColor]="getMovementColor(movement.movementType)"
+            style="width: 2rem; height: 2rem;">
+            <i [class]="getMovementIcon(movement.movementType)" class="text-white text-sm"></i>
+          </span>
+        </ng-template>
+        <ng-template pTemplate="content" let-movement>
+          <div class="mb-3">
+            <div class="flex align-items-center gap-2 mb-1">
+              <span class="font-semibold">{{ getMovementLabel(movement.movementType) }}</span>
+              <span
+                class="font-bold"
+                [class.text-green-500]="movement.movementType === 'receive'"
+                [class.text-red-500]="movement.movementType === 'ship'">
+                {{ movement.movementType === 'ship' ? '-' : '+' }}{{ movement.quantity }}
+              </span>
+            </div>
+            <div class="text-sm text-color-secondary" *ngIf="movement.fromLocation || movement.toLocation">
+              <span *ngIf="movement.fromLocation">From: {{ movement.fromLocation.name }}</span>
+              <span *ngIf="movement.fromLocation && movement.toLocation"> → </span>
+              <span *ngIf="movement.toLocation">To: {{ movement.toLocation.name }}</span>
+            </div>
+            <div class="text-sm text-color-secondary" *ngIf="movement.notes">
+              {{ movement.notes }}
+            </div>
+            <div class="text-xs text-color-secondary mt-1">
+              {{ formatDate(movement.createdAt) }}
+            </div>
+          </div>
+        </ng-template>
+      </p-timeline>
+
+      <div *ngIf="!loadingMovements && recentMovements.length === 0" class="text-center text-color-secondary p-4">
+        <i class="pi pi-history text-4xl mb-3 block"></i>
+        <p class="m-0">No stock movements recorded yet.</p>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Quick Adjust Dialog -->
+<p-dialog
+  [(visible)]="displayQuickAdjustDialog"
+  header="Adjust Quantity"
+  [modal]="true"
+  [style]="{width: '350px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="flex flex-column gap-3" *ngIf="item">
+    <div class="surface-ground border-round p-3 text-center">
+      <div class="text-sm text-color-secondary mb-1">Current Quantity</div>
+      <div class="text-2xl font-bold">{{ item.quantity }}</div>
+    </div>
+
+    <div>
+      <label for="adjustQty" class="block mb-2 font-medium">New Quantity</label>
+      <p-inputNumber
+        id="adjustQty"
+        [(ngModel)]="quickAdjustQuantity"
+        class="w-full"
+        [min]="0"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        incrementButtonIcon="pi pi-plus"
+        decrementButtonIcon="pi pi-minus">
+      </p-inputNumber>
+    </div>
+
+    <div>
+      <label for="adjustReason" class="block mb-2">Reason (optional)</label>
+      <input pInputText id="adjustReason" [(ngModel)]="quickAdjustReason"
+        class="w-full" placeholder="e.g., Inventory count correction" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayQuickAdjustDialog = false"
+      severity="secondary"></p-button>
+    <p-button label="Save" icon="pi pi-check" (onClick)="saveQuickAdjust()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Transfer Dialog -->
+<p-dialog
+  [(visible)]="displayTransferDialog"
+  header="Transfer Stock"
+  [modal]="true"
+  [style]="{width: '400px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="flex flex-column gap-3" *ngIf="item">
+    <div class="surface-ground border-round p-3">
+      <div class="text-sm text-color-secondary mb-1">Item</div>
+      <div class="font-semibold">{{ item.name }}</div>
+      <div class="text-sm text-color-secondary">SKU: {{ item.sku }}</div>
+    </div>
+
+    <div>
+      <label for="fromLocation" class="block mb-2 font-medium">From Location *</label>
+      <p-select
+        id="fromLocation"
+        [(ngModel)]="transferFromLocationId"
+        [options]="getAvailableFromLocations()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select source location"
+        class="w-full"
+        styleClass="w-full">
+      </p-select>
+      <small class="text-color-secondary" *ngIf="transferFromLocationId">
+        Available: {{ getMaxTransferQuantity() }}
+      </small>
+    </div>
+
+    <div>
+      <label for="toLocation" class="block mb-2 font-medium">To Location *</label>
+      <p-select
+        id="toLocation"
+        [(ngModel)]="transferToLocationId"
+        [options]="locationOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select destination location"
+        class="w-full"
+        styleClass="w-full">
+      </p-select>
+    </div>
+
+    <div>
+      <label for="transferQty" class="block mb-2 font-medium">Quantity *</label>
+      <p-inputNumber
+        id="transferQty"
+        [(ngModel)]="transferQuantity"
+        class="w-full"
+        [min]="1"
+        [max]="getMaxTransferQuantity()"
+        [showButtons]="true">
+      </p-inputNumber>
+    </div>
+
+    <div>
+      <label for="transferNotes" class="block mb-2">Notes (optional)</label>
+      <input pInputText id="transferNotes" [(ngModel)]="transferNotes"
+        class="w-full" placeholder="Transfer notes..." />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayTransferDialog = false"
+      severity="secondary"></p-button>
+    <p-button
+      label="Transfer"
+      icon="pi pi-arrows-h"
+      (onClick)="saveTransfer()"
+      [disabled]="!transferFromLocationId || !transferToLocationId || transferQuantity < 1 || transferFromLocationId === transferToLocationId">
+    </p-button>
+  </ng-template>
+</p-dialog>

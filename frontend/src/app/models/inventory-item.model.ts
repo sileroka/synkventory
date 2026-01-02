@@ -14,6 +14,17 @@ export interface IRelatedCategory {
 export interface IRelatedLocation {
   id: string;
   name: string;
+  code?: string;
+}
+
+export interface IInventoryLocationQuantity {
+  inventoryItemId: string;
+  locationId: string;
+  quantity: number;
+  binLocation?: string | null;
+  location?: IRelatedLocation | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IInventoryItem {
@@ -33,4 +44,16 @@ export interface IInventoryItem {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+}
+
+export interface ILowStockAlert {
+  id: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  reorderPoint: number;
+  suggestedOrderQuantity: number;
+  status: InventoryStatus;
+  category?: IRelatedCategory | null;
+  location?: IRelatedLocation | null;
 }

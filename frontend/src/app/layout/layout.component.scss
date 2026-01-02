@@ -1,0 +1,28 @@
+$sidebar-width: 240px;
+$sidebar-collapsed-width: 60px;
+$header-height: 60px;
+
+.app-layout {
+  min-height: 100vh;
+  background: #F1F5F9;
+}
+
+.main-content {
+  margin-left: $sidebar-width;
+  margin-top: $header-height;
+  padding: 1.5rem;
+  min-height: calc(100vh - #{$header-height});
+  transition: margin-left 0.3s ease;
+
+  .sidebar-collapsed & {
+    margin-left: $sidebar-collapsed-width;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}

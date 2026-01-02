@@ -51,6 +51,10 @@ async def startup_event():
     from app.models.inventory import InventoryItem  # Import models to register them
     from app.models.location import Location  # Import Location model
     from app.models.category import Category  # Import Category model
+    from app.models.stock_movement import StockMovement  # Import StockMovement model
+    from app.models.inventory_location_quantity import (
+        InventoryLocationQuantity,
+    )  # Import InventoryLocationQuantity model
 
     Base.metadata.create_all(bind=engine)
 

@@ -1,0 +1,26 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      @for (item of navItems; track item.route) {
+        <li class="nav-item">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            class="nav-link"
+            [attr.title]="collapsed ? item.label : null">
+            <i class="pi {{ item.icon }} nav-icon"></i>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+            <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer" *ngIf="!collapsed">
+    <div class="version-info">
+      <span class="version">v1.0.0</span>
+      <span class="company">Synkadia</span>
+    </div>
+  </div>
+</aside>
