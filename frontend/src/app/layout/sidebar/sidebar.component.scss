@@ -39,6 +39,22 @@ $sidebar-collapsed-width: 60px;
   overflow-y: auto;
 }
 
+.nav-section-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748B;
+  padding: 1.5rem 1rem 0.5rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.nav-section-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 1rem 0.75rem 0.5rem;
+}
+
 .nav-list {
   list-style: none;
   padding: 0;

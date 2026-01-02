@@ -1,0 +1,122 @@
+# =============================================================================
+# Synkventory Production Docker Compose
+# =============================================================================
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+#   1. Copy backend/.env.example to backend/.env and configure for production
+#   2. Set DATABASE_URL if using external database (recommended)
+#   3. Update CORS_ORIGINS with your production frontend URL
+#   4. Generate a secure SECRET_KEY
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  # Note: For production, consider using a managed database service like:
+  # - Digital Ocean Managed PostgreSQL
+  # - AWS RDS
+  # - Google Cloud SQL
+  # If using managed database, remove this service and set DATABASE_URL
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: synkventory-db-prod
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-synkventory}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Do not expose ports in production - only allow internal network access
+    # ports:
+    #   - "5432:5432"
+    networks:
+      - synkventory-network
+
+  # ---------------------------------------------------------------------------
+  # Backend API Server
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: synkventory-backend-prod
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override for docker networking (if using local db service)
+      POSTGRES_SERVER: db
+      # Production settings
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+    depends_on:
+      db:
+        condition: service_healthy
+    # No volume mounts in production - use built image
+    # No --reload flag - use gunicorn with multiple workers
+    command: >
+      gunicorn app.main:app
+      --bind 0.0.0.0:8000
+      --workers ${WORKERS:-2}
+      --worker-class uvicorn.workers.UvicornWorker
+      --access-logfile -
+      --error-logfile -
+      --capture-output
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - synkventory-network
+    # Expose only on internal network - nginx handles external traffic
+    expose:
+      - "8000"
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Nginx serving Angular static files)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: synkventory-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      # Mount SSL certificates if using HTTPS
+      # - ./ssl:/etc/nginx/ssl:ro
+      # Mount custom nginx config if needed
+      # - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      # No source code mounts - use built image
+      []
+    networks:
+      - synkventory-network
+
+volumes:
+  postgres_data_prod:
+    driver: local
+
+networks:
+  synkventory-network:
+    driver: bridge

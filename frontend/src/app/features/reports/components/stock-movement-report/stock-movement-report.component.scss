@@ -1,0 +1,351 @@
+// Brand colors
+$primary-teal: #0d9488;
+$primary-teal-dark: #0f766e;
+$primary-teal-light: #14b8a6;
+$secondary-coral: #f87171;
+$tertiary-slate-blue: #6366f1;
+$success-green: #10b981;
+$warning-amber: #f59e0b;
+$error-red: #ef4444;
+
+$neutral-900: #0f172a;
+$neutral-700: #334155;
+$neutral-500: #64748b;
+$neutral-300: #cbd5e1;
+$neutral-100: #f1f5f9;
+
+.movement-report {
+  padding: 0;
+}
+
+// Page Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  .header-content {
+    h1 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: $neutral-900;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: $neutral-500;
+      font-size: 0.875rem;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// Filter Section
+.filter-section {
+  background: white;
+  border: 1px solid $neutral-300;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  .filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    .filter-field {
+      flex: 1;
+      min-width: 180px;
+      max-width: 250px;
+
+      &.date-range-field {
+        min-width: 260px;
+        max-width: 280px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $neutral-700;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      padding-bottom: 0.25rem;
+    }
+  }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: $neutral-500;
+
+  p {
+    margin-top: 1rem;
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: white;
+  border: 1px solid $neutral-300;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.25rem;
+      color: white;
+    }
+  }
+
+  .card-content {
+    display: flex;
+    flex-direction: column;
+
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $neutral-500;
+      margin-bottom: 0.125rem;
+    }
+
+    .card-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $neutral-900;
+    }
+  }
+
+  // Card variants
+  &.movements-card .card-icon {
+    background: linear-gradient(135deg, $tertiary-slate-blue, darken($tertiary-slate-blue, 10%));
+  }
+
+  &.in-card {
+    .card-icon {
+      background: linear-gradient(135deg, $success-green, darken($success-green, 10%));
+    }
+    .card-value {
+      color: darken($success-green, 10%);
+    }
+  }
+
+  &.out-card {
+    .card-icon {
+      background: linear-gradient(135deg, $secondary-coral, darken($secondary-coral, 10%));
+    }
+    .card-value {
+      color: darken($secondary-coral, 10%);
+    }
+  }
+
+  &.net-card {
+    &.positive {
+      .card-icon {
+        background: linear-gradient(135deg, $primary-teal, $primary-teal-dark);
+      }
+      .card-value {
+        color: $primary-teal-dark;
+      }
+    }
+
+    &.negative {
+      .card-icon {
+        background: linear-gradient(135deg, $warning-amber, darken($warning-amber, 10%));
+      }
+      .card-value {
+        color: darken($warning-amber, 15%);
+      }
+    }
+  }
+}
+
+// Table Container
+.table-container {
+  background: white;
+  border: 1px solid $neutral-300;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+// Table Styles
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: $neutral-100;
+      border-color: $neutral-300;
+      color: $neutral-700;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+    }
+
+    .p-datatable-tbody > tr {
+      > td {
+        border-color: $neutral-300;
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+      }
+
+      &:nth-child(even) {
+        background: $neutral-100;
+      }
+
+      &:hover {
+        background: rgba($primary-teal, 0.05);
+      }
+    }
+  }
+
+  .p-paginator {
+    background: white;
+    border: none;
+    border-top: 1px solid $neutral-300;
+    padding: 0.75rem 1rem;
+
+    .p-paginator-current {
+      color: $neutral-500;
+    }
+  }
+
+  .p-calendar {
+    .p-inputtext {
+      width: 100%;
+    }
+  }
+}
+
+// Text utilities
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.muted {
+  color: $neutral-300;
+}
+
+// Date cell
+.date-cell {
+  font-size: 0.8125rem;
+  color: $neutral-700;
+  white-space: nowrap;
+}
+
+// Item info
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  .item-sku {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: $neutral-500;
+    background: $neutral-100;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    width: fit-content;
+  }
+
+  .item-name {
+    font-weight: 500;
+    color: $neutral-900;
+    font-size: 0.875rem;
+  }
+}
+
+// Quantity styles
+.quantity-positive {
+  color: darken($success-green, 10%);
+  font-weight: 600;
+}
+
+.quantity-negative {
+  color: darken($secondary-coral, 10%);
+  font-weight: 600;
+}
+
+// Location badge
+.location-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: $neutral-100;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  color: $neutral-700;
+}
+
+// Reference code
+.reference {
+  background: $neutral-100;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  color: $neutral-700;
+}
+
+// Running balance
+.running-balance {
+  font-weight: 600;
+  color: $neutral-900;
+  font-family: monospace;
+}

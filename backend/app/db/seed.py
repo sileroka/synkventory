@@ -1,0 +1,97 @@
+"""
+Database seed utilities for initial data setup.
+"""
+
+from sqlalchemy.orm import Session
+from app.models.user import User, SYSTEM_USER_ID
+from app.models.tenant import Tenant, DEFAULT_TENANT_ID
+
+
+def seed_default_tenant(db: Session) -> Tenant:
+    """
+    Create or get the default tenant.
+
+    The default tenant is used for:
+    - Single-tenant deployments
+    - Development and testing
+    - Initial setup before tenant creation
+
+    Returns:
+        Tenant: The default tenant instance
+    """
+    # Check if default tenant already exists
+    default_tenant = db.query(Tenant).filter(Tenant.id == DEFAULT_TENANT_ID).first()
+
+    if default_tenant is None:
+        default_tenant = Tenant(
+            id=DEFAULT_TENANT_ID,
+            name="Default Tenant",
+            slug="default",
+            is_active=True,
+        )
+        db.add(default_tenant)
+        db.commit()
+        db.refresh(default_tenant)
+        print(f"Created default tenant: {default_tenant.name}")
+    else:
+        print(f"Default tenant already exists: {default_tenant.name}")
+
+    return default_tenant
+
+
+def seed_system_user(db: Session) -> User:
+    """
+    Create or get the system user.
+
+    The system user is used for:
+    - Migrations and schema changes
+    - Automated processes and cron jobs
+    - Seed data creation
+    - Any operation that isn't triggered by a real user
+
+    Returns:
+        User: The system user instance
+    """
+    # Check if system user already exists
+    system_user = db.query(User).filter(User.id == SYSTEM_USER_ID).first()
+
+    if system_user is None:
+        system_user = User(
+            id=SYSTEM_USER_ID,
+            email="system@synkventory.local",
+            name="System",
+            is_active=True,
+        )
+        db.add(system_user)
+        db.commit()
+        db.refresh(system_user)
+        print(f"Created system user: {system_user.email}")
+    else:
+        print(f"System user already exists: {system_user.email}")
+
+    return system_user
+
+
+def run_seeds(db: Session) -> None:
+    """
+    Run all database seeds.
+
+    This function should be called after database migrations to ensure
+    all required seed data exists.
+    """
+    print("Running database seeds...")
+    # Tenant must be seeded first since users and other entities reference it
+    seed_default_tenant(db)
+    seed_system_user(db)
+    print("Database seeding complete.")
+
+
+if __name__ == "__main__":
+    # Allow running seeds directly: python -m app.db.seed
+    from app.db.session import SessionLocal
+
+    db = SessionLocal()
+    try:
+        run_seeds(db)
+    finally:
+        db.close()

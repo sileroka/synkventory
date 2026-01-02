@@ -1,0 +1,244 @@
+<p-toast></p-toast>
+
+<div class="valuation-report">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Inventory Valuation Report</h1>
+      <p class="subtitle">Overview of inventory value by category and location</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Export CSV"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="exportToCsv()"
+        [disabled]="!report || report.items.length === 0"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="filter-row">
+      <div class="filter-field">
+        <label>Filter by Category</label>
+        <p-multiselect
+          [options]="categoryOptions"
+          [(ngModel)]="selectedCategories"
+          placeholder="All Categories"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+          styleClass="w-full"
+        ></p-multiselect>
+      </div>
+      <div class="filter-field">
+        <label>Filter by Location</label>
+        <p-multiselect
+          [options]="locationOptions"
+          [(ngModel)]="selectedLocations"
+          placeholder="All Locations"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+          styleClass="w-full"
+        ></p-multiselect>
+      </div>
+      <div class="filter-actions">
+        <p-button
+          label="Clear Filters"
+          icon="pi pi-times"
+          severity="secondary"
+          [text]="true"
+          (onClick)="clearFilters()"
+          [disabled]="selectedCategories.length === 0 && selectedLocations.length === 0"
+        ></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="4" ariaLabel="Loading report"></p-progressSpinner>
+      <p>Loading valuation report...</p>
+    </div>
+  }
+
+  <!-- Report Content -->
+  @if (!loading && report) {
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card items-card">
+        <div class="card-icon">
+          <i class="pi pi-box"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total Items</span>
+          <span class="card-value">{{ formatNumber(report.totalItems) }}</span>
+        </div>
+      </div>
+      <div class="summary-card units-card">
+        <div class="card-icon">
+          <i class="pi pi-hashtag"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total Units</span>
+          <span class="card-value">{{ formatNumber(report.totalUnits) }}</span>
+        </div>
+      </div>
+      <div class="summary-card value-card">
+        <div class="card-icon">
+          <i class="pi pi-dollar"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total Value</span>
+          <span class="card-value">{{ formatCurrency(report.totalValue) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breakdown Tables -->
+    <p-tabView>
+      <!-- Item Detail Tab -->
+      <p-tabPanel header="Item Details">
+        <p-table
+          [value]="report.items"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} items"
+          styleClass="p-datatable-sm p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="sku">SKU <p-sortIcon field="sku"></p-sortIcon></th>
+              <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+              <th>Category</th>
+              <th>Location</th>
+              <th pSortableColumn="quantity" class="text-right">
+                Quantity <p-sortIcon field="quantity"></p-sortIcon>
+              </th>
+              <th pSortableColumn="unitPrice" class="text-right">
+                Unit Price <p-sortIcon field="unitPrice"></p-sortIcon>
+              </th>
+              <th pSortableColumn="totalValue" class="text-right">
+                Total Value <p-sortIcon field="totalValue"></p-sortIcon>
+              </th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td><code>{{ item.sku }}</code></td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.category?.name || 'Uncategorized' }}</td>
+              <td>{{ item.location?.name || 'Unassigned' }}</td>
+              <td class="text-right">{{ formatNumber(item.quantity) }}</td>
+              <td class="text-right">{{ formatCurrency(item.unitPrice) }}</td>
+              <td class="text-right font-semibold">{{ formatCurrency(item.totalValue) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center p-4">
+                <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                <p>No inventory items found</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- By Category Tab -->
+      <p-tabPanel header="By Category">
+        <p-table
+          [value]="report.byCategory"
+          styleClass="p-datatable-sm p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Category</th>
+              <th class="text-right">Items</th>
+              <th class="text-right">Total Units</th>
+              <th class="text-right">Total Value</th>
+              <th class="text-right">% of Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-cat>
+            <tr>
+              <td>
+                <span class="category-name">{{ cat.categoryName }}</span>
+                @if (cat.categoryCode) {
+                  <span class="category-code">{{ cat.categoryCode }}</span>
+                }
+              </td>
+              <td class="text-right">{{ formatNumber(cat.itemCount) }}</td>
+              <td class="text-right">{{ formatNumber(cat.totalUnits) }}</td>
+              <td class="text-right font-semibold">{{ formatCurrency(cat.totalValue) }}</td>
+              <td class="text-right">
+                <span class="percentage">
+                  {{ report.totalValue > 0 ? ((cat.totalValue / report.totalValue) * 100).toFixed(1) : '0' }}%
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="totals-row">
+              <td><strong>Total</strong></td>
+              <td class="text-right"><strong>{{ formatNumber(report.totalItems) }}</strong></td>
+              <td class="text-right"><strong>{{ formatNumber(report.totalUnits) }}</strong></td>
+              <td class="text-right"><strong>{{ formatCurrency(report.totalValue) }}</strong></td>
+              <td class="text-right"><strong>100%</strong></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- By Location Tab -->
+      <p-tabPanel header="By Location">
+        <p-table
+          [value]="report.byLocation"
+          styleClass="p-datatable-sm p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Location</th>
+              <th class="text-right">Items</th>
+              <th class="text-right">Total Units</th>
+              <th class="text-right">Total Value</th>
+              <th class="text-right">% of Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-loc>
+            <tr>
+              <td>
+                <span class="location-name">{{ loc.locationName }}</span>
+                @if (loc.locationCode) {
+                  <span class="location-code">{{ loc.locationCode }}</span>
+                }
+              </td>
+              <td class="text-right">{{ formatNumber(loc.itemCount) }}</td>
+              <td class="text-right">{{ formatNumber(loc.totalUnits) }}</td>
+              <td class="text-right font-semibold">{{ formatCurrency(loc.totalValue) }}</td>
+              <td class="text-right">
+                <span class="percentage">
+                  {{ report.totalValue > 0 ? ((loc.totalValue / report.totalValue) * 100).toFixed(1) : '0' }}%
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="totals-row">
+              <td><strong>Total</strong></td>
+              <td class="text-right"><strong>{{ formatNumber(report.totalItems) }}</strong></td>
+              <td class="text-right"><strong>{{ formatNumber(report.totalUnits) }}</strong></td>
+              <td class="text-right"><strong>{{ formatCurrency(report.totalValue) }}</strong></td>
+              <td class="text-right"><strong>100%</strong></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  }
+</div>

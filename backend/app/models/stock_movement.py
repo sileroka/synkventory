@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, Enum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -23,6 +23,12 @@ class StockMovement(Base):
         primary_key=True,
         default=uuid.uuid4,
         server_default=func.gen_random_uuid(),
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
     )
     inventory_item_id = Column(
         UUID(as_uuid=True),
@@ -51,9 +57,19 @@ class StockMovement(Base):
     reference_number = Column(String(100), nullable=True, index=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(UUID(as_uuid=True), nullable=True)
+    created_by = Column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True
+    )
+
+    # Indexes for multi-tenancy queries
+    __table_args__ = (
+        Index("ix_stock_movements_tenant_item", "tenant_id", "inventory_item_id"),
+        Index("ix_stock_movements_tenant_type", "tenant_id", "movement_type"),
+        Index("ix_stock_movements_tenant_created", "tenant_id", "created_at"),
+    )
 
     # Relationships
+    tenant = relationship("Tenant", backref="stock_movements")
     inventory_item = relationship("InventoryItem", backref="stock_movements")
     from_location = relationship(
         "Location", foreign_keys=[from_location_id], backref="outbound_movements"
@@ -61,3 +77,4 @@ class StockMovement(Base):
     to_location = relationship(
         "Location", foreign_keys=[to_location_id], backref="inbound_movements"
     )
+    creator = relationship("User", foreign_keys=[created_by], backref="stock_movements")

@@ -1,0 +1,317 @@
+// Brand colors
+$primary-teal: #0d9488;
+$primary-teal-dark: #0f766e;
+$primary-teal-light: #14b8a6;
+$secondary-coral: #f87171;
+$tertiary-slate-blue: #6366f1;
+
+$neutral-900: #0f172a;
+$neutral-700: #334155;
+$neutral-500: #64748b;
+$neutral-300: #cbd5e1;
+$neutral-100: #f1f5f9;
+
+.valuation-report {
+  padding: 0;
+}
+
+// Page Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  .header-content {
+    h1 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: $neutral-900;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: $neutral-500;
+      font-size: 0.875rem;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// Filter Section
+.filter-section {
+  background: white;
+  border: 1px solid $neutral-300;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  .filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+
+    .filter-field {
+      flex: 1;
+      max-width: 300px;
+
+      label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $neutral-700;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      padding-bottom: 0.25rem;
+    }
+  }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: $neutral-500;
+
+  p {
+    margin-top: 1rem;
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: white;
+  border: 1px solid $neutral-300;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.5rem;
+      color: white;
+    }
+  }
+
+  .card-content {
+    display: flex;
+    flex-direction: column;
+
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $neutral-500;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: $neutral-900;
+    }
+  }
+
+  // Card variants with brand colors
+  &.items-card .card-icon {
+    background: linear-gradient(135deg, $primary-teal, $primary-teal-dark);
+  }
+
+  &.units-card .card-icon {
+    background: linear-gradient(135deg, $tertiary-slate-blue, darken($tertiary-slate-blue, 10%));
+  }
+
+  &.value-card .card-icon {
+    background: linear-gradient(135deg, $secondary-coral, darken($secondary-coral, 10%));
+  }
+}
+
+// Table Styles
+:host ::ng-deep {
+  .p-tabview {
+    .p-tabview-nav {
+      background: transparent;
+      border-bottom: 2px solid $neutral-300;
+
+      li {
+        .p-tabview-nav-link {
+          background: transparent;
+          border: none;
+          border-bottom: 2px solid transparent;
+          margin-bottom: -2px;
+          color: $neutral-500;
+          font-weight: 500;
+
+          &:hover {
+            color: $primary-teal;
+            border-color: rgba($primary-teal, 0.3);
+          }
+        }
+
+        &.p-highlight {
+          .p-tabview-nav-link {
+            color: $primary-teal;
+            border-color: $primary-teal;
+          }
+        }
+      }
+    }
+
+    .p-tabview-panels {
+      padding: 1rem 0 0 0;
+      background: transparent;
+    }
+  }
+
+  .p-datatable {
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0 0 1rem 0;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: $neutral-100;
+      border-color: $neutral-300;
+      color: $neutral-700;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+    }
+
+    .p-datatable-tbody > tr {
+      > td {
+        border-color: $neutral-300;
+        padding: 0.75rem 1rem;
+
+        code {
+          background: $neutral-100;
+          padding: 0.125rem 0.5rem;
+          border-radius: 0.25rem;
+          font-size: 0.8125rem;
+          color: $neutral-700;
+        }
+      }
+
+      &:nth-child(even) {
+        background: $neutral-100;
+      }
+
+      &:hover {
+        background: rgba($primary-teal, 0.05);
+      }
+    }
+
+    .p-datatable-tfoot > tr > td {
+      background: $neutral-100;
+      border-color: $neutral-300;
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .p-paginator {
+    background: transparent;
+    border: none;
+    padding: 1rem 0 0 0;
+
+    .p-paginator-current {
+      color: $neutral-500;
+    }
+  }
+}
+
+// Text utilities
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+// Category/Location display
+.category-name,
+.location-name {
+  font-weight: 500;
+  color: $neutral-900;
+}
+
+.category-code,
+.location-code {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: $neutral-100;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: $neutral-500;
+  font-family: monospace;
+}
+
+// Percentage display
+.percentage {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background: rgba($primary-teal, 0.1);
+  color: $primary-teal-dark;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+// Totals row
+.totals-row {
+  background: $neutral-100 !important;
+
+  td {
+    border-top: 2px solid $neutral-300 !important;
+  }
+}

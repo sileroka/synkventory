@@ -1,0 +1,187 @@
+# =============================================================================
+# Synkventory - Digital Ocean App Platform Specification
+# =============================================================================
+# Deploy with: doctl apps create --spec .do/app.yaml
+# Update with: doctl apps update <app-id> --spec .do/app.yaml
+#
+# Documentation: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+# =============================================================================
+
+name: synkventory
+
+# Region - choose closest to your users
+region: nyc
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  # ---------------------------------------------------------------------------
+  # Backend API
+  # ---------------------------------------------------------------------------
+  - name: backend
+    # Source configuration
+    github:
+      repo: your-github-username/synkventory
+      branch: main
+      deploy_on_push: true
+
+    # Build configuration
+    dockerfile_path: backend/Dockerfile.prod
+    source_dir: /
+
+    # Instance configuration
+    instance_size_slug: basic-xxs
+    instance_count: 1
+
+    # HTTP configuration
+    http_port: 8000
+    
+    # Routes
+    routes:
+      - path: /api
+      - path: /health
+
+    # Health check
+    health_check:
+      http_path: /api/v1/health/live
+      initial_delay_seconds: 15
+      period_seconds: 30
+      timeout_seconds: 10
+      success_threshold: 1
+      failure_threshold: 3
+
+    # Environment variables
+    envs:
+      # Database - references the managed database
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+
+      # Application settings
+      - key: PROJECT_NAME
+        scope: RUN_TIME
+        value: "Synkventory API"
+      
+      - key: VERSION
+        scope: RUN_TIME
+        value: "1.0.0"
+      
+      - key: DEBUG
+        scope: RUN_TIME
+        value: "false"
+      
+      - key: LOG_LEVEL
+        scope: RUN_TIME
+        value: "INFO"
+
+      # Security - use encrypted secret
+      - key: SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: "CHANGE_ME_GENERATE_SECURE_KEY"
+
+      # CORS - will be auto-set to app URL
+      - key: CORS_ORIGINS
+        scope: RUN_TIME
+        value: "${APP_URL}"
+
+      # Server settings
+      - key: HOST
+        scope: RUN_TIME
+        value: "0.0.0.0"
+      
+      - key: PORT
+        scope: RUN_TIME
+        value: "8000"
+      
+      - key: WORKERS
+        scope: RUN_TIME
+        value: "2"
+
+      # Database migrations
+      - key: RUN_MIGRATIONS
+        scope: RUN_TIME
+        value: "true"
+      
+      - key: RUN_SEEDS
+        scope: RUN_TIME
+        value: "true"
+
+      # For pg_isready in entrypoint
+      - key: POSTGRES_SERVER
+        scope: RUN_TIME
+        value: ${db.HOSTNAME}
+      
+      - key: POSTGRES_PORT
+        scope: RUN_TIME
+        value: ${db.PORT}
+      
+      - key: POSTGRES_USER
+        scope: RUN_TIME
+        value: ${db.USERNAME}
+
+  # ---------------------------------------------------------------------------
+  # Frontend Web
+  # ---------------------------------------------------------------------------
+  - name: frontend
+    # Source configuration
+    github:
+      repo: your-github-username/synkventory
+      branch: main
+      deploy_on_push: true
+
+    # Build configuration
+    dockerfile_path: frontend/Dockerfile.prod
+    source_dir: /
+
+    # Instance configuration
+    instance_size_slug: basic-xxs
+    instance_count: 1
+
+    # HTTP configuration
+    http_port: 80
+
+    # Routes - frontend serves all other routes
+    routes:
+      - path: /
+
+    # Health check
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+      timeout_seconds: 10
+      success_threshold: 1
+      failure_threshold: 3
+
+# =============================================================================
+# Database
+# =============================================================================
+databases:
+  - name: db
+    engine: PG
+    version: "15"
+    size: db-s-dev-database
+    num_nodes: 1
+
+# =============================================================================
+# Alerts (Optional)
+# =============================================================================
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+
+# =============================================================================
+# Notes:
+# =============================================================================
+# 1. Replace 'your-github-username/synkventory' with your actual repo
+# 2. Generate a secure SECRET_KEY before deploying
+# 3. Adjust instance_size_slug based on your needs:
+#    - basic-xxs: $5/mo (512MB RAM, 1 vCPU)
+#    - basic-xs: $10/mo (1GB RAM, 1 vCPU)
+#    - basic-s: $20/mo (2GB RAM, 1 vCPU)
+# 4. Database sizes:
+#    - db-s-dev-database: $15/mo (1GB RAM, 10GB storage)
+#    - db-s-1vcpu-1gb: $15/mo (1GB RAM, 10GB storage)
+# =============================================================================

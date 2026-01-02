@@ -1,0 +1,99 @@
+# =============================================================================
+# Synkventory Backend - Production Dockerfile
+# =============================================================================
+# Multi-stage build for minimal image size and security
+# Uses gunicorn with uvicorn workers for production performance
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Builder - Install dependencies
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# -----------------------------------------------------------------------------
+# Stage 2: Production - Minimal runtime image
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim as production
+
+# Labels for container metadata
+LABEL org.opencontainers.image.title="Synkventory Backend"
+LABEL org.opencontainers.image.description="Synkventory Inventory Management API"
+LABEL org.opencontainers.image.vendor="Synkadia"
+
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONFAULTHANDLER=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    APP_HOME=/app \
+    # Gunicorn settings
+    GUNICORN_WORKERS=2 \
+    GUNICORN_THREADS=4 \
+    GUNICORN_TIMEOUT=120 \
+    GUNICORN_KEEPALIVE=5
+
+WORKDIR $APP_HOME
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN groupadd --gid 1000 synkventory && \
+    useradd --uid 1000 --gid synkventory --shell /bin/bash --create-home synkventory
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Copy application code
+COPY --chown=synkventory:synkventory . .
+
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
+# Switch to non-root user
+USER synkventory
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health/live || exit 1
+
+# Set entrypoint
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Production command using gunicorn with uvicorn workers
+CMD ["gunicorn", "app.main:app", \
+    "--bind", "0.0.0.0:8000", \
+    "--worker-class", "uvicorn.workers.UvicornWorker", \
+    "--workers", "2", \
+    "--threads", "4", \
+    "--timeout", "120", \
+    "--keep-alive", "5", \
+    "--access-logfile", "-", \
+    "--error-logfile", "-", \
+    "--capture-output", \
+    "--enable-stdio-inheritance"]

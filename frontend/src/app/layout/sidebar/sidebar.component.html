@@ -1,20 +1,28 @@
 <aside class="sidebar" [class.collapsed]="collapsed">
   <nav class="sidebar-nav">
-    <ul class="nav-list">
-      @for (item of navItems; track item.route) {
-        <li class="nav-item">
-          <a
-            [routerLink]="item.route"
-            routerLinkActive="active"
-            class="nav-link"
-            [attr.title]="collapsed ? item.label : null">
-            <i class="pi {{ item.icon }} nav-icon"></i>
-            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-            <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
-          </a>
-        </li>
+    @for (section of navSections; track $index) {
+      @if (section.title && !collapsed) {
+        <div class="nav-section-title">{{ section.title }}</div>
       }
-    </ul>
+      @if (section.title && collapsed) {
+        <div class="nav-section-divider"></div>
+      }
+      <ul class="nav-list">
+        @for (item of section.items; track item.route) {
+          <li class="nav-item">
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              class="nav-link"
+              [attr.title]="collapsed ? item.label : null">
+              <i class="pi {{ item.icon }} nav-icon"></i>
+              <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+              <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
   </nav>
 
   <div class="sidebar-footer" *ngIf="!collapsed">

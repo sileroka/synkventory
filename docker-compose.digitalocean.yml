@@ -1,0 +1,111 @@
+# =============================================================================
+# Synkventory - Digital Ocean App Platform Configuration
+# =============================================================================
+# This docker-compose file is designed to work with Digital Ocean App Platform.
+#
+# Deployment Options:
+# 1. Use this file with `doctl apps create` for container-based deployment
+# 2. Or use the app.yaml spec directly with DO App Platform
+#
+# Prerequisites:
+# - Digital Ocean Managed PostgreSQL database (recommended)
+# - Container Registry (DO Container Registry or Docker Hub)
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend API Service
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    image: ${DO_REGISTRY:-registry.digitalocean.com/synkventory}/synkventory-backend:${VERSION:-latest}
+    environment:
+      # Database - DO provides DATABASE_URL automatically for managed databases
+      DATABASE_URL: ${DATABASE_URL}
+      
+      # Application settings
+      PROJECT_NAME: ${PROJECT_NAME:-Synkventory API}
+      VERSION: ${VERSION:-1.0.0}
+      DEBUG: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY}
+      
+      # CORS - set to your DO app URL
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://synkventory.ondigitalocean.app}
+      
+      # Server settings
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      WORKERS: ${WORKERS:-2}
+      
+      # Migrations
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      RUN_SEEDS: ${RUN_SEEDS:-true}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ---------------------------------------------------------------------------
+  # Frontend Web Service
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    image: ${DO_REGISTRY:-registry.digitalocean.com/synkventory}/synkventory-frontend:${VERSION:-latest}
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+# =============================================================================
+# Note: No database service defined - use Digital Ocean Managed PostgreSQL
+# This provides:
+# - Automatic backups
+# - High availability options
+# - Managed updates
+# - Connection pooling
+# - SSL/TLS encryption
+# =============================================================================

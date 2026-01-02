@@ -9,6 +9,11 @@ interface NavItem {
   badge?: number;
 }
 
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -19,12 +24,25 @@ interface NavItem {
 export class SidebarComponent {
   @Input() collapsed: boolean = false;
 
-  navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' },
-    { label: 'Inventory', icon: 'pi-box', route: '/inventory' },
-    { label: 'Locations', icon: 'pi-map-marker', route: '/locations' },
-    { label: 'Categories', icon: 'pi-tags', route: '/categories' },
-    { label: 'Stock Movements', icon: 'pi-arrows-h', route: '/stock-movements' },
-    { label: 'Reports', icon: 'pi-chart-bar', route: '/reports' }
+  navSections: NavSection[] = [
+    {
+      items: [
+        { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' },
+        { label: 'Inventory', icon: 'pi-box', route: '/inventory' },
+        { label: 'Locations', icon: 'pi-map-marker', route: '/locations' },
+        { label: 'Categories', icon: 'pi-tags', route: '/categories' },
+        { label: 'Stock Movements', icon: 'pi-arrows-h', route: '/stock-movements' }
+      ]
+    },
+    {
+      title: 'Reports',
+      items: [
+        { label: 'Inventory Valuation', icon: 'pi-chart-bar', route: '/reports/valuation' },
+        { label: 'Stock Movements', icon: 'pi-history', route: '/reports/movements' }
+      ]
+    }
   ];
+
+  // Keep navItems for backwards compatibility
+  navItems: NavItem[] = this.navSections.flatMap(section => section.items);
 }

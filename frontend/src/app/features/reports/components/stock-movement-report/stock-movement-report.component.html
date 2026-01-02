@@ -1,0 +1,218 @@
+<p-toast></p-toast>
+
+<div class="movement-report">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Stock Movement Report</h1>
+      <p class="subtitle">Track inventory movements with running balances</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Export CSV"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="exportToCsv()"
+        [disabled]="!report || report.movements.length === 0"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="filter-row">
+      <div class="filter-field date-range-field">
+        <label>Date Range</label>
+        <p-calendar
+          [(ngModel)]="dateRange"
+          selectionMode="range"
+          [readonlyInput]="true"
+          [showIcon]="true"
+          [maxDate]="maxDate"
+          dateFormat="M d, yy"
+          placeholder="Select date range"
+          (onClose)="onFilterChange()"
+          styleClass="w-full"
+        ></p-calendar>
+      </div>
+      <div class="filter-field">
+        <label>Inventory Item</label>
+        <p-multiselect
+          [options]="itemOptions"
+          [(ngModel)]="selectedItems"
+          placeholder="All Items"
+          [showClear]="true"
+          [filter]="true"
+          filterPlaceholder="Search items..."
+          (onChange)="onFilterChange()"
+          styleClass="w-full"
+        ></p-multiselect>
+      </div>
+      <div class="filter-field">
+        <label>Location</label>
+        <p-multiselect
+          [options]="locationOptions"
+          [(ngModel)]="selectedLocations"
+          placeholder="All Locations"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+          styleClass="w-full"
+        ></p-multiselect>
+      </div>
+      <div class="filter-field">
+        <label>Movement Type</label>
+        <p-multiselect
+          [options]="movementTypeOptions"
+          [(ngModel)]="selectedMovementTypes"
+          placeholder="All Types"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+          styleClass="w-full"
+        ></p-multiselect>
+      </div>
+      <div class="filter-actions">
+        <p-button
+          label="Clear"
+          icon="pi pi-times"
+          severity="secondary"
+          [text]="true"
+          (onClick)="clearFilters()"
+        ></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="4" ariaLabel="Loading report"></p-progressSpinner>
+      <p>Loading movement report...</p>
+    </div>
+  }
+
+  <!-- Report Content -->
+  @if (!loading && report) {
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card movements-card">
+        <div class="card-icon">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total Movements</span>
+          <span class="card-value">{{ formatNumber(report.summary.totalMovements) }}</span>
+        </div>
+      </div>
+      <div class="summary-card in-card">
+        <div class="card-icon">
+          <i class="pi pi-arrow-down"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total In</span>
+          <span class="card-value">+{{ formatNumber(report.summary.totalIn) }}</span>
+        </div>
+      </div>
+      <div class="summary-card out-card">
+        <div class="card-icon">
+          <i class="pi pi-arrow-up"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Total Out</span>
+          <span class="card-value">-{{ formatNumber(report.summary.totalOut) }}</span>
+        </div>
+      </div>
+      <div class="summary-card net-card" [class.positive]="report.summary.netChange >= 0" [class.negative]="report.summary.netChange < 0">
+        <div class="card-icon">
+          <i class="pi" [class.pi-plus]="report.summary.netChange >= 0" [class.pi-minus]="report.summary.netChange < 0"></i>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Net Change</span>
+          <span class="card-value">
+            {{ report.summary.netChange >= 0 ? '+' : '' }}{{ formatNumber(report.summary.netChange) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Movements Table -->
+    <div class="table-container">
+      <p-table
+        [value]="report.movements"
+        [paginator]="true"
+        [rows]="15"
+        [rowsPerPageOptions]="[10, 15, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} movements"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="date">Date <p-sortIcon field="date"></p-sortIcon></th>
+            <th>Item</th>
+            <th>Type</th>
+            <th class="text-right">Quantity</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Reference</th>
+            <th class="text-right">Running Balance</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-movement>
+          <tr>
+            <td class="date-cell">{{ formatDate(movement.date) }}</td>
+            <td>
+              <div class="item-info">
+                <span class="item-sku">{{ movement.inventoryItem.sku }}</span>
+                <span class="item-name">{{ movement.inventoryItem.name }}</span>
+              </div>
+            </td>
+            <td>
+              <p-tag
+                [value]="getMovementTypeLabel(movement.movementType)"
+                [severity]="getMovementTypeSeverity(movement.movementType)"
+              ></p-tag>
+            </td>
+            <td class="text-right">
+              <span [class]="getQuantityClass(movement.quantity)">
+                {{ movement.quantity > 0 ? '+' : '' }}{{ formatNumber(movement.quantity) }}
+              </span>
+            </td>
+            <td>
+              @if (movement.fromLocation) {
+                <span class="location-badge">{{ movement.fromLocation.name }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td>
+              @if (movement.toLocation) {
+                <span class="location-badge">{{ movement.toLocation.name }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td>
+              @if (movement.referenceNumber) {
+                <code class="reference">{{ movement.referenceNumber }}</code>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="text-right">
+              <span class="running-balance">{{ formatNumber(movement.runningBalance) }}</span>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="text-center p-4">
+              <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+              <p>No stock movements found for the selected filters</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

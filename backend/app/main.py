@@ -29,7 +29,7 @@ async def add_request_id(request: Request, call_next):
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,17 +46,27 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.on_event("startup")
 async def startup_event():
-    """Create database tables on startup"""
-    from app.db.session import engine, Base
-    from app.models.inventory import InventoryItem  # Import models to register them
-    from app.models.location import Location  # Import Location model
-    from app.models.category import Category  # Import Category model
-    from app.models.stock_movement import StockMovement  # Import StockMovement model
-    from app.models.inventory_location_quantity import (
-        InventoryLocationQuantity,
-    )  # Import InventoryLocationQuantity model
+    """
+    Application startup event.
 
-    Base.metadata.create_all(bind=engine)
+    Note: Database migrations and seeds are now handled by the entrypoint.sh script
+    to ensure they run before the application starts. This event is kept for any
+    additional startup tasks that don't require database access.
+    """
+    # Import models to register them with SQLAlchemy (needed for any ORM operations)
+    from app.models.tenant import Tenant  # Import Tenant model first
+    from app.models.user import User  # Import User model (for FK references)
+    from app.models.inventory import InventoryItem
+    from app.models.location import Location
+    from app.models.category import Category
+    from app.models.stock_movement import StockMovement
+    from app.models.inventory_location_quantity import InventoryLocationQuantity
+
+    # Log startup
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
 
 
 @app.get("/")
@@ -66,8 +76,3 @@ def root():
         "version": settings.VERSION,
         "docs": f"{settings.API_V1_STR}/docs",
     }
-
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
