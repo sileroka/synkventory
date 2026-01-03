@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { Routes, CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { InventoryListComponent } from './components/inventory-list/inventory-list.component';
 import { InventoryDetailComponent } from './components/inventory-detail/inventory-detail.component';
@@ -12,6 +13,7 @@ import { LandingComponent } from './features/landing/landing.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
+import { TenantService } from './core/services/tenant.service';
 
 // Admin components
 import { AdminLoginComponent } from './features/admin/login/admin-login.component';
@@ -19,6 +21,21 @@ import { AdminLayoutComponent } from './features/admin/layout/admin-layout.compo
 import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
 import { TenantListComponent } from './features/admin/tenants/tenant-list.component';
 import { TenantDetailComponent } from './features/admin/tenants/tenant-detail.component';
+
+/**
+ * Guard for catch-all route - redirects appropriately based on portal
+ */
+const catchAllGuard: CanActivateFn = () => {
+  const tenantService = inject(TenantService);
+  const router = inject(Router);
+
+  if (tenantService.isAdminPortal()) {
+    router.navigate(['/admin/login']);
+  } else {
+    router.navigate(['/login']);
+  }
+  return false;
+};
 
 export const routes: Routes = [
   // Landing page (root domain only) - also handles redirect for admin portal
@@ -58,6 +75,6 @@ export const routes: Routes = [
     ]
   },
 
-  // Catch-all - different behavior for admin portal
-  { path: '**', redirectTo: '/login' }
+  // Catch-all redirect - handled by a guard that checks portal type
+  { path: '**', canActivate: [catchAllGuard], component: LoginComponent }
 ];
