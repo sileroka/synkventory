@@ -65,9 +65,11 @@
       <p-avatar
         icon="pi pi-user"
         shape="circle"
-        styleClass="user-avatar">
+        styleClass="user-avatar"
+        (click)="userMenu.toggle($event)">
       </p-avatar>
-      <span class="user-name">Admin User</span>
+      <span class="user-name" (click)="userMenu.toggle($event)">{{ userName() }}</span>
+      <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body"></p-menu>
     </div>
   </div>
 </header>

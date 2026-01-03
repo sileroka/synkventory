@@ -1,1 +1,5 @@
-<app-layout></app-layout>
+@if (isLoginPage()) {
+  <router-outlet></router-outlet>
+} @else {
+  <app-layout></app-layout>
+}

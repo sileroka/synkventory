@@ -8,8 +8,8 @@ from datetime import datetime, date
 from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_
-from app.db.session import get_db
-from app.models.inventory import InventoryItem as InventoryItemModel
+from app.db.session import get_dbfrom app.core.deps import get_current_user
+from app.models.user import Userfrom app.models.inventory import InventoryItem as InventoryItemModel
 from app.models.stock_movement import StockMovement as StockMovementModel
 from app.schemas.report import (
     InventoryValuationReport,
@@ -24,7 +24,8 @@ from app.schemas.report import (
 )
 from app.schemas.response import DataResponse, ResponseMeta
 
-router = APIRouter()
+# All routes in this router require authentication
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def get_response_meta(request: Request) -> ResponseMeta:

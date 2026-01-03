@@ -7,6 +7,7 @@ import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { NavigationService, NavViewMode } from '../../core/services/navigation.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -17,15 +18,20 @@ import { NavigationService, NavViewMode } from '../../core/services/navigation.s
 })
 export class HeaderComponent {
   private navService = inject(NavigationService);
+  private authService = inject(AuthService);
 
   viewMode = this.navService.viewMode;
   navSections = this.navService.navSections;
+  currentUser = this.authService.currentUser;
+
+  // Computed user display name
+  userName = computed(() => this.currentUser()?.name || 'User');
 
   userMenuItems: MenuItem[] = [
     { label: 'Profile', icon: 'pi pi-user' },
     { label: 'Settings', icon: 'pi pi-cog' },
     { separator: true },
-    { label: 'Logout', icon: 'pi pi-sign-out' }
+    { label: 'Logout', icon: 'pi pi-sign-out', command: () => this.logout() }
   ];
 
   // Icons for view mode button
@@ -53,5 +59,9 @@ export class HeaderComponent {
 
   setViewMode(mode: NavViewMode) {
     this.navService.setViewMode(mode);
+  }
+
+  logout() {
+    this.authService.logout();
   }
 }

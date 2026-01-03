@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, asc, desc
 from app.db.session import get_db
+from app.core.deps import get_current_user
+from app.models.user import User
 from app.models.inventory import InventoryItem as InventoryItemModel
 from app.models.stock_movement import StockMovement as StockMovementModel
 from app.models.inventory_location_quantity import (
@@ -31,7 +33,8 @@ from app.schemas.response import (
     MessageResponse,
 )
 
-router = APIRouter()
+# All routes in this router require authentication
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def get_response_meta(request: Request) -> ResponseMeta:

@@ -4,6 +4,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
+from app.core.deps import get_current_user
+from app.models.user import User
 from app.models.location import Location as LocationModel
 from app.schemas.location import (
     Location,
@@ -18,7 +20,8 @@ from app.schemas.response import (
     MessageResponse,
 )
 
-router = APIRouter()
+# All routes in this router require authentication
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def get_response_meta(request: Request) -> ResponseMeta:

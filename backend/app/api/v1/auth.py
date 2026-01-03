@@ -220,15 +220,17 @@ def logout(response: Response):
     return {"message": "Logged out"}
 
 
-@router.get("/auth/me", response_model=UserResponse)
+@router.get("/auth/me")
 def get_me(user: User = Depends(get_current_user)):
     """Get current authenticated user."""
-    return UserResponse(
-        id=str(user.id),
-        email=user.email,
-        name=user.name,
-        is_active=user.is_active,
-    )
+    return {
+        "data": UserResponse(
+            id=str(user.id),
+            email=user.email,
+            name=user.name,
+            is_active=user.is_active,
+        )
+    }
 
 
 @router.post("/auth/register", response_model=LoginResponse, status_code=201)
