@@ -2,9 +2,11 @@
 Database seed utilities for initial data setup.
 """
 
+import os
 from sqlalchemy.orm import Session
 from app.models.user import User, UserRole, SYSTEM_USER_ID
 from app.models.tenant import Tenant, DEFAULT_TENANT_ID
+from app.models.admin_user import AdminUser
 from app.core.security import get_password_hash
 
 
@@ -116,6 +118,44 @@ def seed_demo_admin(db: Session, default_tenant: Tenant) -> User:
     return demo_user
 
 
+def seed_super_admin(db: Session) -> AdminUser | None:
+    """
+    Create or get the super admin user for the admin portal.
+
+    Credentials are read from environment variables:
+    - ADMIN_EMAIL: Admin email (default: admin@synkadia.com)
+    - ADMIN_PASSWORD: Admin password (required, no default)
+
+    Returns:
+        AdminUser: The super admin user instance, or None if password not set
+    """
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@synkadia.com")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+
+    if not admin_password:
+        print("Skipping super admin seed: ADMIN_PASSWORD not set")
+        return None
+
+    admin_user = db.query(AdminUser).filter(AdminUser.email == admin_email).first()
+
+    if admin_user is None:
+        admin_user = AdminUser(
+            email=admin_email,
+            name="Super Admin",
+            password_hash=get_password_hash(admin_password),
+            is_active=True,
+            is_super_admin=True,
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        print(f"Created super admin user: {admin_user.email}")
+    else:
+        print(f"Super admin user already exists: {admin_user.email}")
+
+    return admin_user
+
+
 def run_seeds(db: Session) -> None:
     """
     Run all database seeds.
@@ -128,6 +168,7 @@ def run_seeds(db: Session) -> None:
     default_tenant = seed_default_tenant(db)
     seed_system_user(db, default_tenant)
     seed_demo_admin(db, default_tenant)
+    seed_super_admin(db)
     print("Database seeding complete.")
 
 
