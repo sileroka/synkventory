@@ -14,7 +14,7 @@ from app.db.session import Base
 class AdminUser(Base):
     """
     Admin user model for the admin portal at admin.synkventory.com.
-    
+
     These users are NOT scoped to any tenant - they have cross-tenant access
     to manage tenants and their users.
     """
@@ -31,7 +31,9 @@ class AdminUser(Base):
     name = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    is_super_admin = Column(Boolean, default=False, nullable=False)  # Full system access
+    is_super_admin = Column(
+        Boolean, default=False, nullable=False
+    )  # Full system access
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)

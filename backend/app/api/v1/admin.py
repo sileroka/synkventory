@@ -36,48 +36,49 @@ router = APIRouter()
 
 # ----- Admin Authentication -----
 
+
 def get_current_admin_user(
     request: Request,
     db: Session = Depends(get_db_no_tenant),
 ) -> AdminUser:
     """Get current admin user from cookie token."""
     from app.core.security import decode_token
-    
+
     token = request.cookies.get("admin_access_token")
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
-    
+
     payload = decode_token(token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
-    
+
     # Check if this is an admin token
     if payload.get("type") != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token type",
         )
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
-    
+
     admin_user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
     if not admin_user or not admin_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
-    
+
     return admin_user
 
 
@@ -89,28 +90,28 @@ def admin_login(
 ):
     """Admin portal login."""
     admin_user = db.query(AdminUser).filter(AdminUser.email == request.email).first()
-    
-    if not admin_user or not verify_password(request.password, admin_user.password_hash):
+
+    if not admin_user or not verify_password(
+        request.password, admin_user.password_hash
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
-    
+
     if not admin_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account is disabled",
         )
-    
+
     # Update last login
     admin_user.last_login = datetime.now(timezone.utc)
     db.commit()
-    
+
     # Create admin token with type indicator
-    token = create_access_token(
-        data={"sub": str(admin_user.id), "type": "admin"}
-    )
-    
+    token = create_access_token(data={"sub": str(admin_user.id), "type": "admin"})
+
     # Set cookie
     response.set_cookie(
         key="admin_access_token",
@@ -120,7 +121,7 @@ def admin_login(
         samesite="lax",
         max_age=60 * 60 * 24,  # 24 hours
     )
-    
+
     return AdminLoginResponse(user=AdminUserResponse.model_validate(admin_user))
 
 
@@ -141,6 +142,7 @@ def get_current_admin(
 
 # ----- Admin User Management -----
 
+
 @router.get("/admin-users", response_model=List[AdminUserResponse])
 def list_admin_users(
     admin_user: AdminUser = Depends(get_current_admin_user),
@@ -152,12 +154,16 @@ def list_admin_users(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",
         )
-    
+
     users = db.query(AdminUser).order_by(AdminUser.created_at.desc()).all()
     return [AdminUserResponse.model_validate(u) for u in users]
 
 
-@router.post("/admin-users", response_model=AdminUserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin-users",
+    response_model=AdminUserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_admin_user(
     data: AdminUserCreate,
     admin_user: AdminUser = Depends(get_current_admin_user),
@@ -169,7 +175,7 @@ def create_admin_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",
         )
-    
+
     # Check if email exists
     existing = db.query(AdminUser).filter(AdminUser.email == data.email).first()
     if existing:
@@ -177,7 +183,7 @@ def create_admin_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-    
+
     new_admin = AdminUser(
         email=data.email,
         name=data.name,
@@ -187,11 +193,12 @@ def create_admin_user(
     db.add(new_admin)
     db.commit()
     db.refresh(new_admin)
-    
+
     return AdminUserResponse.model_validate(new_admin)
 
 
 # ----- Tenant Management -----
+
 
 @router.get("/tenants", response_model=List[TenantResponse])
 def list_tenants(
@@ -201,10 +208,12 @@ def list_tenants(
     """List all tenants with user counts."""
     # Query tenants with user count
     tenants = db.query(Tenant).order_by(Tenant.created_at.desc()).all()
-    
+
     result = []
     for tenant in tenants:
-        user_count = db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
+        user_count = (
+            db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
+        )
         tenant_dict = {
             "id": tenant.id,
             "name": tenant.name,
@@ -215,11 +224,13 @@ def list_tenants(
             "user_count": user_count or 0,
         }
         result.append(TenantResponse.model_validate(tenant_dict))
-    
+
     return result
 
 
-@router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED
+)
 def create_tenant(
     data: TenantCreate,
     admin_user: AdminUser = Depends(get_current_admin_user),
@@ -233,7 +244,7 @@ def create_tenant(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tenant slug already exists",
         )
-    
+
     tenant = Tenant(
         name=data.name,
         slug=data.slug,
@@ -241,7 +252,7 @@ def create_tenant(
     db.add(tenant)
     db.commit()
     db.refresh(tenant)
-    
+
     return TenantResponse(
         id=tenant.id,
         name=tenant.name,
@@ -266,9 +277,11 @@ def get_tenant(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tenant not found",
         )
-    
-    user_count = db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
-    
+
+    user_count = (
+        db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
+    )
+
     return TenantResponse(
         id=tenant.id,
         name=tenant.name,
@@ -294,17 +307,19 @@ def update_tenant(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tenant not found",
         )
-    
+
     if data.name is not None:
         tenant.name = data.name
     if data.is_active is not None:
         tenant.is_active = data.is_active
-    
+
     db.commit()
     db.refresh(tenant)
-    
-    user_count = db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
-    
+
+    user_count = (
+        db.query(func.count(User.id)).filter(User.tenant_id == tenant.id).scalar()
+    )
+
     return TenantResponse(
         id=tenant.id,
         name=tenant.name,
@@ -328,19 +343,20 @@ def delete_tenant(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required",
         )
-    
+
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tenant not found",
         )
-    
+
     db.delete(tenant)
     db.commit()
 
 
 # ----- Tenant User Management -----
+
 
 @router.get("/tenants/{tenant_id}/users", response_model=List[TenantUserResponse])
 def list_tenant_users(
@@ -356,12 +372,21 @@ def list_tenant_users(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tenant not found",
         )
-    
-    users = db.query(User).filter(User.tenant_id == tenant_id).order_by(User.created_at.desc()).all()
+
+    users = (
+        db.query(User)
+        .filter(User.tenant_id == tenant_id)
+        .order_by(User.created_at.desc())
+        .all()
+    )
     return [TenantUserResponse.model_validate(u) for u in users]
 
 
-@router.post("/tenants/{tenant_id}/users", response_model=TenantUserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/tenants/{tenant_id}/users",
+    response_model=TenantUserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_tenant_user(
     tenant_id: UUID,
     data: TenantUserCreate,
@@ -376,18 +401,22 @@ def create_tenant_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tenant not found",
         )
-    
+
     # Check if email exists in this tenant
-    existing = db.query(User).filter(
-        User.tenant_id == tenant_id,
-        User.email == data.email,
-    ).first()
+    existing = (
+        db.query(User)
+        .filter(
+            User.tenant_id == tenant_id,
+            User.email == data.email,
+        )
+        .first()
+    )
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered in this tenant",
         )
-    
+
     user = User(
         tenant_id=tenant_id,
         email=data.email,
@@ -398,7 +427,7 @@ def create_tenant_user(
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     return TenantUserResponse.model_validate(user)
 
 
@@ -410,17 +439,21 @@ def get_tenant_user(
     db: Session = Depends(get_db_no_tenant),
 ):
     """Get a specific user in a tenant."""
-    user = db.query(User).filter(
-        User.id == user_id,
-        User.tenant_id == tenant_id,
-    ).first()
-    
+    user = (
+        db.query(User)
+        .filter(
+            User.id == user_id,
+            User.tenant_id == tenant_id,
+        )
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     return TenantUserResponse.model_validate(user)
 
 
@@ -433,31 +466,37 @@ def update_tenant_user(
     db: Session = Depends(get_db_no_tenant),
 ):
     """Update a user in a tenant."""
-    user = db.query(User).filter(
-        User.id == user_id,
-        User.tenant_id == tenant_id,
-    ).first()
-    
+    user = (
+        db.query(User)
+        .filter(
+            User.id == user_id,
+            User.tenant_id == tenant_id,
+        )
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     if data.name is not None:
         user.name = data.name
     if data.role is not None:
         user.role = data.role
     if data.is_active is not None:
         user.is_active = data.is_active
-    
+
     db.commit()
     db.refresh(user)
-    
+
     return TenantUserResponse.model_validate(user)
 
 
-@router.delete("/tenants/{tenant_id}/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/tenants/{tenant_id}/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 def delete_tenant_user(
     tenant_id: UUID,
     user_id: UUID,
@@ -465,16 +504,20 @@ def delete_tenant_user(
     db: Session = Depends(get_db_no_tenant),
 ):
     """Delete a user in a tenant."""
-    user = db.query(User).filter(
-        User.id == user_id,
-        User.tenant_id == tenant_id,
-    ).first()
-    
+    user = (
+        db.query(User)
+        .filter(
+            User.id == user_id,
+            User.tenant_id == tenant_id,
+        )
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     db.delete(user)
     db.commit()
