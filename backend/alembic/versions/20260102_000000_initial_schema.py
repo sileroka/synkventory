@@ -387,7 +387,9 @@ def upgrade() -> None:
     ]
 
     for table in tables_with_rls:
-        op.execute(f"GRANT SELECT, INSERT, UPDATE, DELETE ON {table} TO synkventory_app")
+        op.execute(
+            f"GRANT SELECT, INSERT, UPDATE, DELETE ON {table} TO synkventory_app"
+        )
 
     # Enable RLS and create policies for tenant-scoped tables
     tenant_tables = [
@@ -427,7 +429,9 @@ def upgrade() -> None:
     op.execute("GRANT SELECT ON tenants TO synkventory_app")
 
     # Grant sequence permissions
-    op.execute("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO synkventory_app")
+    op.execute(
+        "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO synkventory_app"
+    )
 
 
 def downgrade() -> None:
