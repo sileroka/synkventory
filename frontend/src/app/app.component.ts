@@ -36,8 +36,8 @@ export class AppComponent {
     const isLogin = url === '/login' || url.startsWith('/login');
     // On root domain, any root path (including anchor links like /#features) should show landing
     const isLanding = this.tenantService.isRootDomain() && (url === '/' || url.startsWith('/#'));
-    // Admin portal has its own layout, so treat admin routes as standalone
-    const isAdmin = url.startsWith('/admin');
-    return isLogin || isLanding || isAdmin;
+    // Admin portal has its own layout, so always hide regular layout on admin subdomain
+    const isAdminPortal = this.tenantService.isAdminPortal();
+    return isLogin || isLanding || isAdminPortal;
   });
 }
