@@ -318,6 +318,291 @@ $neutral-100: #F1F5F9;
   }
 }
 
+// Pricing Section
+.pricing {
+  padding: 6rem 0;
+  background: $neutral-100;
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+
+    .section-tag {
+      display: inline-block;
+      background: rgba($primary, 0.1);
+      color: $primary;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: $neutral-900;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 1.125rem;
+      color: $neutral-500;
+    }
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .pricing-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    &.featured {
+      border: 2px solid $primary;
+      padding-top: 3rem;
+
+      .featured-badge {
+        position: absolute;
+        top: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: $primary;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0 0 0.5rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+
+    .pricing-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid $neutral-300;
+
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $neutral-900;
+        margin-bottom: 1rem;
+      }
+
+      .price {
+        font-size: 3rem;
+        font-weight: 700;
+        color: $neutral-900;
+        margin-bottom: 0.5rem;
+
+        .currency {
+          font-size: 1.5rem;
+          vertical-align: super;
+        }
+
+        .period {
+          font-size: 1rem;
+          font-weight: 400;
+          color: $neutral-500;
+        }
+
+        .custom {
+          font-size: 2rem;
+        }
+      }
+
+      .description {
+        font-size: 0.9rem;
+        color: $neutral-500;
+      }
+    }
+
+    .features-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 2rem;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        color: $neutral-700;
+
+        i {
+          color: $primary;
+          font-size: 0.875rem;
+        }
+      }
+    }
+
+    ::ng-deep .pricing-btn {
+      width: 100%;
+    }
+
+    ::ng-deep .pricing-btn-primary {
+      background: $primary !important;
+      border-color: $primary !important;
+
+      &:hover {
+        background: $primary-dark !important;
+        border-color: $primary-dark !important;
+      }
+    }
+  }
+}
+
+// Contact Section
+.contact {
+  padding: 6rem 0;
+  background: white;
+
+  .contact-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .contact-info {
+    .section-tag {
+      display: inline-block;
+      background: rgba($primary, 0.1);
+      color: $primary;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: $neutral-900;
+      margin-bottom: 1rem;
+    }
+
+    > p {
+      font-size: 1.125rem;
+      color: $neutral-500;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .contact-method {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+
+      i {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: rgba($primary, 0.1);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $primary;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+
+      h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: $neutral-900;
+        margin-bottom: 0.25rem;
+      }
+
+      a {
+        font-size: 0.9rem;
+        color: $primary;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .contact-form {
+    background: $neutral-100;
+    padding: 2rem;
+    border-radius: 1rem;
+
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: $neutral-700;
+        margin-bottom: 0.5rem;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid $neutral-300;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: $primary;
+          box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        }
+
+        &::placeholder {
+          color: $neutral-500;
+        }
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+    }
+
+    ::ng-deep .contact-submit-btn {
+      width: 100%;
+      background: $primary !important;
+      border-color: $primary !important;
+
+      &:hover {
+        background: $primary-dark !important;
+        border-color: $primary-dark !important;
+      }
+    }
+  }
+}
+
 // Footer
 .landing-footer {
   padding: 4rem 0 2rem;
@@ -412,6 +697,16 @@ $neutral-100: #F1F5F9;
   .features .features-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .pricing .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .contact .contact-content {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -447,6 +742,22 @@ $neutral-100: #F1F5F9;
 
     .features-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  .pricing {
+    padding: 4rem 0;
+
+    .section-header h2 {
+      font-size: 1.75rem;
+    }
+  }
+
+  .contact {
+    padding: 4rem 0;
+
+    .contact-info h2 {
+      font-size: 1.75rem;
     }
   }
 
