@@ -1,12 +1,12 @@
 """
 User model for authentication and audit tracking.
-This is a placeholder for future SynkAuth integration.
 """
 
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 
@@ -16,14 +16,9 @@ SYSTEM_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 class User(Base):
     """
-    User model for tracking who created/modified records.
+    User model for authentication.
 
-    NOTE: This is a placeholder model. Full authentication will be
-    handled by SynkAuth integration in a future phase. For now, this
-    model supports:
-    - Audit trail (created_by/updated_by foreign keys)
-    - System user for automated operations
-    - Basic user info storage
+    Users are scoped to tenants - the same email can exist in different tenants.
     """
 
     __tablename__ = "users"
@@ -34,11 +29,23 @@ class User(Base):
         default=uuid.uuid4,
         server_default=func.gen_random_uuid(),
     )
-    email = Column(String(255), unique=True, index=True, nullable=False)
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    email = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    is_locked = Column(Boolean, default=False, nullable=False)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant", backref="users")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
