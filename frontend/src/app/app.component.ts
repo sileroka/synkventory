@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { filter, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LayoutComponent } from './layout/layout.component';
+import { TenantService } from './core/services/tenant.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ export class AppComponent {
   title = 'Synkventory';
 
   private router = inject(Router);
+  private tenantService = inject(TenantService);
 
   // Track if we're on the login page
   private currentUrl$ = this.router.events.pipe(
@@ -25,8 +27,11 @@ export class AppComponent {
 
   currentUrl = toSignal(this.currentUrl$, { initialValue: this.router.url });
 
-  isLoginPage = computed(() => {
+  // Check if we're on a standalone page (no layout needed)
+  isStandalonePage = computed(() => {
     const url = this.currentUrl();
-    return url === '/login' || url.startsWith('/login');
+    const isLogin = url === '/login' || url.startsWith('/login');
+    const isLanding = url === '/' && this.tenantService.isRootDomain();
+    return isLogin || isLanding;
   });
 }

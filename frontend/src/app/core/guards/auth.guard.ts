@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { TenantService } from '../services/tenant.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { UserRole } from '../../models/user.model';
@@ -64,6 +65,44 @@ export const noAuthGuard: CanActivateFn = () => {
     return false;
   }
 
+  return true;
+};
+
+/**
+ * Guard for landing page - only show on root domain, redirect to dashboard/login on subdomains
+ */
+export const landingGuard: CanActivateFn = () => {
+  const tenantService = inject(TenantService);
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  // If on a subdomain (tenant site), redirect to dashboard or login
+  if (tenantService.isSubdomain()) {
+    // Wait for auth to load
+    if (authService.isLoading()) {
+      return toObservable(authService.isLoading).pipe(
+        filter(loading => !loading),
+        take(1),
+        map(() => {
+          if (authService.isAuthenticated()) {
+            router.navigate(['/dashboard']);
+          } else {
+            router.navigate(['/login']);
+          }
+          return false;
+        })
+      );
+    }
+
+    if (authService.isAuthenticated()) {
+      router.navigate(['/dashboard']);
+    } else {
+      router.navigate(['/login']);
+    }
+    return false;
+  }
+
+  // On root domain, show landing page
   return true;
 };
 

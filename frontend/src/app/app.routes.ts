@@ -8,15 +8,18 @@ import { InventoryValuationComponent } from './features/reports/components/inven
 import { StockMovementReportComponent } from './features/reports/components/stock-movement-report/stock-movement-report.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { UserListComponent } from './features/users/user-list.component';
-import { authGuard, noAuthGuard, roleGuard } from './core/guards/auth.guard';
+import { LandingComponent } from './features/landing/landing.component';
+import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { UserRole } from './models/user.model';
 
 export const routes: Routes = [
+  // Landing page (root domain only)
+  { path: '', component: LandingComponent, canActivate: [landingGuard], pathMatch: 'full' },
+  
   // Public routes
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
 
   // Protected routes
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'inventory', component: InventoryListComponent, canActivate: [authGuard] },
   { path: 'inventory/:id', component: InventoryDetailComponent, canActivate: [authGuard] },

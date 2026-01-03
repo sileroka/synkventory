@@ -1,0 +1,160 @@
+<div class="landing-page">
+  <!-- Header -->
+  <header class="landing-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="brand">
+          <img src="assets/logo_name_primary.png" alt="Synkventory" class="logo">
+        </div>
+        <nav class="header-nav">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#contact">Contact</a>
+          <p-button 
+            label="Sign In" 
+            [link]="true"
+            styleClass="signin-btn"
+            (onClick)="onSignIn()"
+          />
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Inventory Management,<br><span class="highlight">Simplified.</span></h1>
+        <p class="hero-subtitle">
+          Synkventory helps businesses track, manage, and optimize inventory 
+          across locations with powerful real-time insights.
+        </p>
+        <div class="hero-cta">
+          <p-button 
+            label="Start Free Trial" 
+            icon="pi pi-arrow-right" 
+            iconPos="right"
+            severity="primary"
+            size="large"
+            styleClass="cta-primary"
+          />
+          <p-button 
+            label="Watch Demo" 
+            icon="pi pi-play"
+            severity="secondary"
+            size="large"
+            [outlined]="true"
+            styleClass="cta-secondary"
+          />
+        </div>
+        <p class="hero-note">
+          <i class="pi pi-check-circle"></i>
+          No credit card required · 14-day free trial
+        </p>
+      </div>
+      <div class="hero-image">
+        <div class="dashboard-preview">
+          <div class="preview-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="preview-content">
+            <div class="stat-cards">
+              <div class="stat-card">
+                <span class="stat-value">2,847</span>
+                <span class="stat-label">Total Items</span>
+              </div>
+              <div class="stat-card accent">
+                <span class="stat-value">23</span>
+                <span class="stat-label">Low Stock</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-value">$1.2M</span>
+                <span class="stat-label">Inventory Value</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Features</span>
+        <h2>Everything you need to manage inventory</h2>
+        <p>Powerful tools designed for modern businesses</p>
+      </div>
+      <div class="features-grid">
+        @for (feature of features; track feature.title) {
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i [class]="'pi ' + feature.icon"></i>
+            </div>
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to get your inventory in sync?</h2>
+        <p>Join thousands of businesses already using Synkventory to streamline their operations.</p>
+        <p-button 
+          label="Start Your Free Trial" 
+          icon="pi pi-arrow-right" 
+          iconPos="right"
+          severity="primary"
+          size="large"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="assets/logo_name_primary.png" alt="Synkventory" class="footer-logo">
+          <p class="tagline">Stock in sync.</p>
+          <p class="company">A product by Synkadia</p>
+        </div>
+        <div class="footer-links">
+          <div class="link-group">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#">Integrations</a>
+            <a href="#">API</a>
+          </div>
+          <div class="link-group">
+            <h4>Company</h4>
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+            <a href="#contact">Contact</a>
+          </div>
+          <div class="link-group">
+            <h4>Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Security</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; {{ currentYear }} Synkadia. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</div>
