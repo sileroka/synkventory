@@ -1,9 +1,10 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserRole } from '../../models/user.model';
+import { TenantService } from './tenant.service';
 
 export interface LoginRequest {
   email: string;
@@ -29,6 +30,7 @@ export interface LoginResponse {
 })
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
+  private tenantService = inject(TenantService);
 
   // Signals for reactive state
   private currentUserSignal = signal<User | null>(null);
@@ -43,8 +45,13 @@ export class AuthService {
     private http: HttpClient,
     private router: Router
   ) {
-    // Check auth status on service init
-    this.checkAuthStatus();
+    // Don't check auth on admin portal - it uses AdminAuthService
+    if (!this.tenantService.isAdminPortal()) {
+      this.checkAuthStatus();
+    } else {
+      // Mark as done loading for admin portal
+      this.isLoadingSignal.set(false);
+    }
   }
 
   /**

@@ -10,7 +10,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { UserListComponent } from './features/users/user-list.component';
 import { LandingComponent } from './features/landing/landing.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
-import { adminAuthGuard, adminNoAuthGuard } from './core/guards/admin.guard';
+import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
 
 // Admin components
@@ -21,7 +21,7 @@ import { TenantListComponent } from './features/admin/tenants/tenant-list.compon
 import { TenantDetailComponent } from './features/admin/tenants/tenant-detail.component';
 
 export const routes: Routes = [
-  // Landing page (root domain only)
+  // Landing page (root domain only) - also handles redirect for admin portal
   { path: '', component: LandingComponent, canActivate: [landingGuard], pathMatch: 'full' },
 
   // Public routes
@@ -58,6 +58,6 @@ export const routes: Routes = [
     ]
   },
 
-  // Catch-all redirect to login
+  // Catch-all - different behavior for admin portal
   { path: '**', redirectTo: '/login' }
 ];
