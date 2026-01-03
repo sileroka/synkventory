@@ -72,7 +72,9 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include API router
+# Mount at both /api/v1 (direct access) and /v1 (when proxy strips /api)
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix="/v1")
 
 
 @app.on_event("startup")
