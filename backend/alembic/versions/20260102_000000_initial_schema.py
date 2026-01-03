@@ -240,7 +240,7 @@ def upgrade() -> None:
         "adjust",
         "count",
         name="movement_type_enum",
-        create_type=True,
+        create_type=False,  # We create it manually below
     )
     movement_type_enum.create(op.get_bind(), checkfirst=True)
 
