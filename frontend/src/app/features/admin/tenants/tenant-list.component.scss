@@ -1,0 +1,135 @@
+$primary: #0D9488;
+$neutral-100: #F1F5F9;
+$neutral-300: #CBD5E1;
+$neutral-500: #64748B;
+$neutral-900: #0F172A;
+
+.tenant-list-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $neutral-900;
+    margin: 0 0 0.25rem;
+  }
+
+  p {
+    color: $neutral-500;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.content-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tenant-name {
+  color: $primary;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.subdomain {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: $neutral-500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+
+  i {
+    font-size: 3rem;
+    color: $neutral-300;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $neutral-500;
+    margin: 0 0 1rem;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+// Dialog styles
+.form-field {
+  margin-bottom: 1.25rem;
+
+  label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $neutral-900;
+    margin-bottom: 0.5rem;
+  }
+
+  .hint {
+    display: block;
+    font-size: 0.75rem;
+    color: $neutral-500;
+    margin-top: 0.25rem;
+  }
+}
+
+.slug-input {
+  display: flex;
+  align-items: center;
+
+  input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .slug-suffix {
+    background: $neutral-100;
+    border: 1px solid $neutral-300;
+    border-left: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: $neutral-500;
+    border-radius: 0 0.25rem 0.25rem 0;
+    white-space: nowrap;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+::ng-deep {
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem 1rem;
+  }
+
+  .p-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}

@@ -27,12 +27,17 @@ export class AppComponent {
 
   currentUrl = toSignal(this.currentUrl$, { initialValue: this.router.url });
 
+  // Check if we're on the admin portal
+  isAdminPortal = computed(() => this.tenantService.isAdminPortal());
+
   // Check if we're on a standalone page (no layout needed)
   isStandalonePage = computed(() => {
     const url = this.currentUrl();
     const isLogin = url === '/login' || url.startsWith('/login');
     // On root domain, any root path (including anchor links like /#features) should show landing
     const isLanding = this.tenantService.isRootDomain() && (url === '/' || url.startsWith('/#'));
-    return isLogin || isLanding;
+    // Admin portal has its own layout, so treat admin routes as standalone
+    const isAdmin = url.startsWith('/admin');
+    return isLogin || isLanding || isAdmin;
   });
 }

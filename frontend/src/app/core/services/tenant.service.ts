@@ -12,10 +12,24 @@ export class TenantService {
   readonly hostname = this._hostname.asReadonly();
 
   /**
+   * Check if we're on the admin portal (admin.synkventory.com)
+   */
+  readonly isAdminPortal = computed(() => {
+    const host = this._hostname();
+    const subdomain = this.extractSubdomain(host);
+    return subdomain === 'admin';
+  });
+
+  /**
    * Check if we're on the root domain (marketing site) vs a tenant subdomain
    */
   readonly isRootDomain = computed(() => {
     const host = this._hostname();
+
+    // Admin portal is not root domain
+    if (this.isAdminPortal()) {
+      return false;
+    }
 
     // Check for localhost development
     if (host === 'localhost' || host.startsWith('localhost:')) {
@@ -30,15 +44,15 @@ export class TenantService {
   });
 
   /**
-   * Check if we're on a tenant subdomain
+   * Check if we're on a tenant subdomain (not admin, not root)
    */
-  readonly isSubdomain = computed(() => !this.isRootDomain());
+  readonly isSubdomain = computed(() => !this.isRootDomain() && !this.isAdminPortal());
 
   /**
-   * Get the subdomain/tenant slug if on a subdomain
+   * Get the subdomain/tenant slug if on a tenant subdomain
    */
   readonly tenantSlug = computed(() => {
-    if (this.isRootDomain()) {
+    if (this.isRootDomain() || this.isAdminPortal()) {
       return null;
     }
     return this.extractSubdomain(this._hostname());

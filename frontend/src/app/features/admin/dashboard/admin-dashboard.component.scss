@@ -1,0 +1,225 @@
+$primary: #0D9488;
+$secondary: #F87171;
+$success: #10B981;
+$neutral-100: #F1F5F9;
+$neutral-300: #CBD5E1;
+$neutral-500: #64748B;
+$neutral-700: #334155;
+$neutral-900: #0F172A;
+
+.admin-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $neutral-900;
+    margin: 0 0 0.25rem;
+  }
+
+  p {
+    color: $neutral-500;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.25rem;
+      color: white;
+    }
+
+    &.tenants {
+      background: $primary;
+    }
+
+    &.active {
+      background: $success;
+    }
+
+    &.users {
+      background: #6366F1;
+    }
+  }
+
+  .stat-content {
+    display: flex;
+    flex-direction: column;
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: $neutral-900;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: $neutral-500;
+    }
+  }
+}
+
+.recent-section {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: $neutral-900;
+      margin: 0;
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem;
+  color: $neutral-500;
+
+  i {
+    font-size: 1.25rem;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+
+  i {
+    font-size: 3rem;
+    color: $neutral-300;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $neutral-500;
+    margin: 0 0 1rem;
+  }
+}
+
+.tenants-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.tenant-card {
+  background: $neutral-100;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: darken($neutral-100, 3%);
+    transform: translateY(-2px);
+  }
+
+  .tenant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: $neutral-900;
+      margin: 0;
+    }
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    text-transform: uppercase;
+
+    &.active {
+      background: rgba($success, 0.1);
+      color: darken($success, 10%);
+    }
+
+    &.inactive {
+      background: rgba($secondary, 0.1);
+      color: darken($secondary, 10%);
+    }
+  }
+
+  .tenant-slug {
+    font-size: 0.8rem;
+    color: $neutral-500;
+    margin: 0 0 0.75rem;
+  }
+
+  .tenant-stats {
+    font-size: 0.8rem;
+    color: $neutral-700;
+
+    i {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tenants-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenants-grid {
+    grid-template-columns: 1fr;
+  }
+}

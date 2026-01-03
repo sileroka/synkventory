@@ -12,6 +12,7 @@ from app.api.v1 import (
     health,
     auth,
     users,
+    admin,
 )
 
 api_router = APIRouter()
@@ -25,3 +26,6 @@ api_router.include_router(
     stock_movements.router, prefix="/stock-movements", tags=["stock-movements"]
 )
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
+
+# Admin portal routes (admin.synkventory.com)
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])

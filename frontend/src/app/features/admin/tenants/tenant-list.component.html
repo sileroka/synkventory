@@ -1,0 +1,135 @@
+<div class="tenant-list-page">
+  <p-toast />
+  <p-confirmDialog />
+
+  <header class="page-header">
+    <div>
+      <h1>Tenants</h1>
+      <p>Manage all tenant organizations</p>
+    </div>
+    <p-button label="Create Tenant" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+  </header>
+
+  <div class="content-card">
+    <p-table
+      [value]="tenants()"
+      [loading]="isLoading()"
+      [paginator]="tenants().length > 10"
+      [rows]="10"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Subdomain</th>
+          <th>Users</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th style="width: 150px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-tenant>
+        <tr>
+          <td>
+            <a [routerLink]="['/admin/tenants', tenant.id]" class="tenant-name">
+              {{ tenant.name }}
+            </a>
+          </td>
+          <td>
+            <span class="subdomain">{{ tenant.slug }}.synkventory.com</span>
+          </td>
+          <td>{{ tenant.user_count }}</td>
+          <td>
+            <p-tag
+              [value]="tenant.is_active ? 'Active' : 'Inactive'"
+              [severity]="tenant.is_active ? 'success' : 'danger'"
+            />
+          </td>
+          <td>{{ tenant.created_at | date:'mediumDate' }}</td>
+          <td>
+            <div class="action-buttons">
+              <p-button
+                icon="pi pi-users"
+                [text]="true"
+                [routerLink]="['/admin/tenants', tenant.id]"
+                pTooltip="Manage Users"
+              />
+              <p-button
+                [icon]="tenant.is_active ? 'pi pi-ban' : 'pi pi-check'"
+                [text]="true"
+                [severity]="tenant.is_active ? 'warning' : 'success'"
+                (onClick)="toggleTenantStatus(tenant)"
+                [pTooltip]="tenant.is_active ? 'Deactivate' : 'Activate'"
+              />
+              @if (isSuperAdmin()) {
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="confirmDelete(tenant)"
+                  pTooltip="Delete"
+                />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-building"></i>
+              <p>No tenants found</p>
+              <p-button label="Create First Tenant" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Create Dialog -->
+  <p-dialog
+    header="Create Tenant"
+    [(visible)]="showCreateDialog"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+  >
+    <div class="form-field">
+      <label for="name">Organization Name</label>
+      <input
+        pInputText
+        id="name"
+        [(ngModel)]="newTenant.name"
+        (blur)="generateSlug()"
+        placeholder="Acme Corporation"
+        class="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="slug">Subdomain</label>
+      <div class="slug-input">
+        <input
+          pInputText
+          id="slug"
+          [(ngModel)]="newTenant.slug"
+          placeholder="acme"
+          class="w-full"
+        />
+        <span class="slug-suffix">.synkventory.com</span>
+      </div>
+      <small class="hint">Only lowercase letters, numbers, and hyphens</small>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancel" [text]="true" (onClick)="showCreateDialog.set(false)" />
+      <p-button
+        label="Create"
+        icon="pi pi-check"
+        [loading]="isCreating()"
+        (onClick)="createTenant()"
+      />
+    </ng-template>
+  </p-dialog>
+</div>

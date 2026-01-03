@@ -11,10 +11,10 @@ import { ButtonModule } from 'primeng/button';
 })
 export class LandingComponent {
   currentYear = new Date().getFullYear();
-  
+
   // Billing toggle: false = monthly, true = yearly
   isYearly = signal(false);
-  
+
   // Pricing tiers with monthly prices (yearly gets 10% discount)
   pricingTiers = [
     {
@@ -62,11 +62,11 @@ export class LandingComponent {
       cta: 'Contact Sales'
     }
   ];
-  
+
   toggleBilling(): void {
     this.isYearly.update(v => !v);
   }
-  
+
   getPrice(monthlyPrice: number | null): string {
     if (monthlyPrice === null) return 'Custom';
     if (this.isYearly()) {
@@ -77,7 +77,7 @@ export class LandingComponent {
     }
     return monthlyPrice.toString();
   }
-  
+
   getYearlySavings(monthlyPrice: number): number {
     return Math.round(monthlyPrice * 12 * 0.1);
   }

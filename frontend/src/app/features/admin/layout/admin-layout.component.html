@@ -1,0 +1,53 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <img src="assets/logo_name_primary.png" alt="Synkventory" class="logo">
+      <span class="admin-badge">Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item"
+        >
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+
+      @if (isSuperAdmin()) {
+        <a routerLink="/admin/admins" routerLinkActive="active" class="nav-item">
+          <i class="pi pi-users"></i>
+          <span>Admin Users</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ currentAdmin()?.name }}</span>
+          <span class="user-role">{{ isSuperAdmin() ? 'Super Admin' : 'Admin' }}</span>
+        </div>
+      </div>
+      <p-button
+        icon="pi pi-sign-out"
+        [text]="true"
+        severity="secondary"
+        (onClick)="logout()"
+        pTooltip="Logout"
+      />
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

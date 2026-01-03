@@ -1,0 +1,176 @@
+<div class="tenant-detail-page">
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a routerLink="/admin/tenants">Tenants</a>
+    <i class="pi pi-chevron-right"></i>
+    <span>{{ tenant()?.name || 'Loading...' }}</span>
+  </nav>
+
+  <header class="page-header">
+    <div>
+      <h1>{{ tenant()?.name }}</h1>
+      <p class="subdomain">{{ tenant()?.slug }}.synkventory.com</p>
+    </div>
+    <p-button label="Add User" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+  </header>
+
+  <!-- Tenant Info Card -->
+  @if (tenant()) {
+    <div class="info-card">
+      <div class="info-item">
+        <span class="label">Status</span>
+        <p-tag
+          [value]="tenant()!.is_active ? 'Active' : 'Inactive'"
+          [severity]="tenant()!.is_active ? 'success' : 'danger'"
+        />
+      </div>
+      <div class="info-item">
+        <span class="label">Users</span>
+        <span class="value">{{ tenant()!.user_count }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Created</span>
+        <span class="value">{{ tenant()!.created_at | date:'mediumDate' }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Users Table -->
+  <div class="content-card">
+    <h2>Users</h2>
+    <p-table
+      [value]="users()"
+      [loading]="isLoading()"
+      [paginator]="users().length > 10"
+      [rows]="10"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th style="width: 120px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <p-dropdown
+              [options]="roleOptions"
+              [(ngModel)]="user.role"
+              (onChange)="updateUserRole(user, $event.value)"
+              styleClass="role-dropdown"
+            />
+          </td>
+          <td>
+            <p-tag
+              [value]="user.is_active ? 'Active' : 'Inactive'"
+              [severity]="user.is_active ? 'success' : 'danger'"
+            />
+          </td>
+          <td>{{ user.created_at | date:'mediumDate' }}</td>
+          <td>
+            <div class="action-buttons">
+              <p-button
+                [icon]="user.is_active ? 'pi pi-ban' : 'pi pi-check'"
+                [text]="true"
+                [severity]="user.is_active ? 'warning' : 'success'"
+                (onClick)="toggleUserStatus(user)"
+                [pTooltip]="user.is_active ? 'Deactivate' : 'Activate'"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                (onClick)="confirmDelete(user)"
+                pTooltip="Delete"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-users"></i>
+              <p>No users in this tenant</p>
+              <p-button label="Add First User" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Create User Dialog -->
+  <p-dialog
+    header="Add User"
+    [(visible)]="showCreateDialog"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+  >
+    <div class="form-field">
+      <label for="name">Name</label>
+      <input
+        pInputText
+        id="name"
+        [(ngModel)]="newUser.name"
+        placeholder="John Doe"
+        class="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="email">Email</label>
+      <input
+        pInputText
+        id="email"
+        type="email"
+        [(ngModel)]="newUser.email"
+        placeholder="john@company.com"
+        class="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <p-password
+        id="password"
+        [(ngModel)]="newUser.password"
+        [feedback]="true"
+        [toggleMask]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="role">Role</label>
+      <p-dropdown
+        id="role"
+        [options]="roleOptions"
+        [(ngModel)]="newUser.role"
+        styleClass="w-full"
+      />
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancel" [text]="true" (onClick)="showCreateDialog.set(false)" />
+      <p-button
+        label="Create"
+        icon="pi pi-check"
+        [loading]="isCreating()"
+        (onClick)="createUser()"
+      />
+    </ng-template>
+  </p-dialog>
+</div>

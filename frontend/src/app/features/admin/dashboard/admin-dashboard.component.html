@@ -1,0 +1,83 @@
+<div class="admin-dashboard">
+  <header class="page-header">
+    <h1>Dashboard</h1>
+    <p>Overview of all tenants and users</p>
+  </header>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon tenants">
+        <i class="pi pi-building"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().totalTenants }}</span>
+        <span class="stat-label">Total Tenants</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon active">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().activeTenants }}</span>
+        <span class="stat-label">Active Tenants</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon users">
+        <i class="pi pi-users"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().totalUsers }}</span>
+        <span class="stat-label">Total Users</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Tenants -->
+  <section class="recent-section">
+    <div class="section-header">
+      <h2>Recent Tenants</h2>
+      <p-button
+        label="View All"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        [text]="true"
+        routerLink="/admin/tenants"
+      />
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading tenants...</span>
+      </div>
+    } @else if (tenants().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-building"></i>
+        <p>No tenants yet</p>
+        <p-button label="Create First Tenant" routerLink="/admin/tenants" icon="pi pi-plus" />
+      </div>
+    } @else {
+      <div class="tenants-grid">
+        @for (tenant of tenants().slice(0, 6); track tenant.id) {
+          <div class="tenant-card" [routerLink]="['/admin/tenants', tenant.id]">
+            <div class="tenant-header">
+              <h3>{{ tenant.name }}</h3>
+              <span class="status-badge" [class.active]="tenant.is_active" [class.inactive]="!tenant.is_active">
+                {{ tenant.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <p class="tenant-slug">{{ tenant.slug }}.synkventory.com</p>
+            <div class="tenant-stats">
+              <span><i class="pi pi-users"></i> {{ tenant.user_count }} users</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

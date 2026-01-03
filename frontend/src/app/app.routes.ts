@@ -10,7 +10,15 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { UserListComponent } from './features/users/user-list.component';
 import { LandingComponent } from './features/landing/landing.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
+import { adminAuthGuard, adminNoAuthGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
+
+// Admin components
+import { AdminLoginComponent } from './features/admin/login/admin-login.component';
+import { AdminLayoutComponent } from './features/admin/layout/admin-layout.component';
+import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
+import { TenantListComponent } from './features/admin/tenants/tenant-list.component';
+import { TenantDetailComponent } from './features/admin/tenants/tenant-detail.component';
 
 export const routes: Routes = [
   // Landing page (root domain only)
@@ -28,12 +36,26 @@ export const routes: Routes = [
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
 
-  // Admin/Manager only routes
+  // Admin/Manager only routes (tenant-level)
   {
     path: 'users',
     component: UserListComponent,
     canActivate: [roleGuard],
     data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }
+  },
+
+  // Admin Portal routes (admin.synkventory.com)
+  { path: 'admin/login', component: AdminLoginComponent, canActivate: [adminNoAuthGuard] },
+  {
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [adminAuthGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: AdminDashboardComponent },
+      { path: 'tenants', component: TenantListComponent },
+      { path: 'tenants/:id', component: TenantDetailComponent },
+    ]
   },
 
   // Catch-all redirect to login

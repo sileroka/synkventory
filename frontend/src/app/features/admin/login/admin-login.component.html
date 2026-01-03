@@ -1,0 +1,51 @@
+<div class="admin-login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="assets/logo_name_primary.png" alt="Synkventory" class="logo">
+      <h1>Admin Portal</h1>
+      <p>Sign in to manage tenants and users</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      @if (error()) {
+        <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
+      }
+
+      <div class="form-field">
+        <label for="email">Email</label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="admin@synkventory.com"
+          [disabled]="isLoading()"
+          class="w-full"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="password">Password</label>
+        <p-password
+          id="password"
+          [(ngModel)]="password"
+          name="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [disabled]="isLoading()"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+        />
+      </div>
+
+      <p-button
+        type="submit"
+        label="Sign In"
+        [loading]="isLoading()"
+        styleClass="w-full mt-3"
+        severity="primary"
+      />
+    </form>
+  </div>
+</div>
