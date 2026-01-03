@@ -1,6 +1,7 @@
 """
 Tenant middleware for subdomain-based multi-tenancy.
 """
+
 import os
 from typing import Callable, Optional
 
@@ -35,8 +36,17 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Skip tenant check for health endpoints and docs
-        skip_paths = ["/health", "/api/v1/health", "/docs", "/openapi.json", "/redoc", "/"]
-        if request.url.path in skip_paths or request.url.path.startswith("/api/v1/health"):
+        skip_paths = [
+            "/health",
+            "/api/v1/health",
+            "/docs",
+            "/openapi.json",
+            "/redoc",
+            "/",
+        ]
+        if request.url.path in skip_paths or request.url.path.startswith(
+            "/api/v1/health"
+        ):
             return await call_next(request)
 
         # Skip tenant check for admin portal endpoints
