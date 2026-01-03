@@ -21,6 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Handle 401 Unauthorized
       if (error.status === 401) {
         // Don't try to refresh for login/logout/refresh endpoints
         if (req.url.includes('/auth/login') ||
@@ -45,6 +46,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => refreshError);
           })
         );
+      }
+
+      // Handle 404 for auth/me (happens when no subdomain/tenant)
+      if (error.status === 404 && req.url.includes('/auth/me')) {
+        authService.clearAuth();
+        router.navigate(['/login']);
+        return throwError(() => error);
       }
 
       return throwError(() => error);

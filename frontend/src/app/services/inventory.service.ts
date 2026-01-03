@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { IInventoryItem, IInventoryLocationQuantity, ILowStockAlert, InventoryStatus } from '../models/inventory-item.model';
 import { IStockMovement, IStockMovementCreate } from '../models/stock-movement.model';
+import { environment } from '../../environments/environment';
 import {
   IDataResponse,
   IListResponse,
@@ -50,7 +51,8 @@ export interface IInventoryFilters {
   providedIn: 'root'
 })
 export class InventoryService {
-  private apiUrl = 'http://localhost:8000/api/v1/inventory';
+  private apiUrl = `${environment.apiUrl}/inventory`;
+  private stockMovementsUrl = `${environment.apiUrl}/stock-movements`;
 
   constructor(private http: HttpClient) { }
 
@@ -173,7 +175,7 @@ export class InventoryService {
   }
 
   createStockMovement(movement: IStockMovementCreate): Observable<IStockMovement> {
-    return this.http.post<IDataResponse<IStockMovement>>('http://localhost:8000/api/v1/stock-movements', movement)
+    return this.http.post<IDataResponse<IStockMovement>>(this.stockMovementsUrl, movement)
       .pipe(map(response => response.data));
   }
 }

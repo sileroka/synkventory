@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ICategory, ICategoryTreeNode } from '../models/category.model';
+import { environment } from '../../../../environments/environment';
 import {
   IDataResponse,
   IListResponse,
@@ -19,7 +20,7 @@ export interface ICategoryListResult {
   providedIn: 'root'
 })
 export class CategoryService {
-  private apiUrl = 'http://localhost:8000/api/v1/categories';
+  private apiUrl = `${environment.apiUrl}/categories`;
 
   constructor(private http: HttpClient) { }
 

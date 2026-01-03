@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ILocation } from '../models/location.model';
+import { environment } from '../../../../environments/environment';
 import {
   IDataResponse,
   IListResponse,
@@ -19,7 +20,7 @@ export interface ILocationListResult {
   providedIn: 'root'
 })
 export class LocationService {
-  private apiUrl = 'http://localhost:8000/api/v1/locations';
+  private apiUrl = `${environment.apiUrl}/locations`;
 
   constructor(private http: HttpClient) { }
 

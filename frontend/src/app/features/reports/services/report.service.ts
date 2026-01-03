@@ -8,12 +8,13 @@ import {
   MovementType
 } from '../models/report.model';
 import { IDataResponse } from '../../../models/api-response.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReportService {
-  private apiUrl = 'http://localhost:8000/api/v1/reports';
+  private apiUrl = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 
