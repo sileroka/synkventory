@@ -68,6 +68,7 @@
               [(ngModel)]="user.role"
               (onChange)="updateUserRole(user, $event.value)"
               styleClass="role-dropdown"
+              appendTo="body"
             />
           </td>
           <td>
@@ -160,6 +161,7 @@
         [options]="roleOptions"
         [(ngModel)]="newUser.role"
         styleClass="w-full"
+        appendTo="body"
       />
     </div>
 
