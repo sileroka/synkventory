@@ -3,8 +3,7 @@ import { Router, CanActivateFn } from '@angular/router';
 import { AdminAuthService } from '../services/admin-auth.service';
 import { TenantService } from '../services/tenant.service';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, take, switchMap } from 'rxjs';
-import { of } from 'rxjs';
+import { filter, map, take } from 'rxjs';
 
 /**
  * Guard to ensure we're on the admin portal subdomain
@@ -29,37 +28,17 @@ export const adminAuthGuard: CanActivateFn = () => {
   const adminAuthService = inject(AdminAuthService);
   const router = inject(Router);
 
-  // If still loading, wait for initialization
-  if (adminAuthService.isLoading()) {
-    return toObservable(adminAuthService.isLoading).pipe(
-      filter(loading => !loading),
-      take(1),
-      map(() => {
-        if (adminAuthService.isAuthenticated()) {
-          return true;
-        }
-        router.navigate(['/admin/login']);
-        return false;
-      })
-    );
-  }
-
-  // If not initialized, trigger initialization
-  if (!adminAuthService.isAuthenticated()) {
-    return adminAuthService.initialize().pipe(
-      map(user => {
-        if (user) {
-          return true;
-        }
-        router.navigate(['/admin/login']);
-        return false;
-      })
-    );
-  }
-
-  return true;
+  // Always initialize first to check auth status
+  return adminAuthService.initialize().pipe(
+    map(user => {
+      if (user) {
+        return true;
+      }
+      router.navigate(['/admin/login']);
+      return false;
+    })
+  );
 };
-
 /**
  * Guard for admin login page - redirect to dashboard if already authenticated
  */
@@ -67,27 +46,18 @@ export const adminNoAuthGuard: CanActivateFn = () => {
   const adminAuthService = inject(AdminAuthService);
   const router = inject(Router);
 
-  // If still loading, wait for initialization
-  if (adminAuthService.isLoading()) {
-    return toObservable(adminAuthService.isLoading).pipe(
-      filter(loading => !loading),
-      take(1),
-      map(() => {
-        if (adminAuthService.isAuthenticated()) {
-          router.navigate(['/admin/dashboard']);
-          return false;
-        }
-        return true;
-      })
-    );
-  }
-
-  if (adminAuthService.isAuthenticated()) {
-    router.navigate(['/admin/dashboard']);
-    return false;
-  }
-
-  return true;
+  // Always initialize first to check auth status
+  return adminAuthService.initialize().pipe(
+    map(user => {
+      if (user) {
+        // Already authenticated, go to dashboard
+        router.navigate(['/admin/dashboard']);
+        return false;
+      }
+      // Not authenticated, allow access to login page
+      return true;
+    })
+  );
 };
 
 /**
