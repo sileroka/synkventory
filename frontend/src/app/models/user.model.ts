@@ -79,12 +79,12 @@ export function getRoleLabel(role: UserRole): string {
 /**
  * Helper function to get severity for role badge.
  */
-export function getRoleSeverity(role: UserRole): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+export function getRoleSeverity(role: UserRole): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
   switch (role) {
     case UserRole.ADMIN:
       return 'danger';
     case UserRole.MANAGER:
-      return 'warn';
+      return 'warning';
     case UserRole.USER:
       return 'info';
     case UserRole.VIEWER:

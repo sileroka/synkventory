@@ -127,7 +127,7 @@
                 icon="pi pi-key"
                 [rounded]="true"
                 [text]="true"
-                severity="warn"
+                severity="warning"
                 pTooltip="Reset Password"
                 (onClick)="showResetPasswordDialog(user)"
               />
@@ -274,7 +274,7 @@
         label="Reset Password"
         icon="pi pi-key"
         type="submit"
-        severity="warn"
+        severity="warning"
         [disabled]="passwordForm.invalid || saving"
         [loading]="saving"
       />

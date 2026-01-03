@@ -17,7 +17,7 @@
   <!-- Mega Menu Navigation (shown when viewMode === 'mega-menu') -->
   @if (viewMode() === 'mega-menu') {
     <nav class="mega-menu">
-      @for (section of navSections; track section.title) {
+      @for (section of navSections(); track section.title) {
         @for (item of section.items; track item.route) {
           <div class="mega-menu-item" [class.has-children]="item.children && item.children.length > 0">
             @if (item.children && item.children.length > 0) {
