@@ -341,3 +341,178 @@ chore: update dependencies
   }
 }
 ```
+
+## Synkventory Auth/Tenancy Patterns
+
+# Synkventory Development Guidelines
+
+## Multi-Tenancy Architecture
+
+This application uses subdomain-based multi-tenancy with PostgreSQL Row Level Security (RLS).
+
+### Key Concepts
+
+- **Tenant Context**: Set automatically by `TenantMiddleware` from subdomain
+- **RLS Enforcement**: Database policies filter all queries by `tenant_id`
+- **Auth**: JWT tokens in HttpOnly cookies, validated per-request
+
+## Backend Patterns (Python/FastAPI)
+
+### Protected Routes - ALWAYS use auth dependency
+
+```python
+from app.core.deps import get_current_user
+from app.models.user import User
+
+@router.get("/items")
+def get_items(
+    user: User = Depends(get_current_user),  # REQUIRED for protected routes
+    db: Session = Depends(get_db),
+):
+    # RLS automatically filters by tenant
+    return db.query(InventoryItem).all()
+```
+
+### Database Sessions - ALWAYS use get_db()
+
+```python
+from app.db.session import get_db
+
+# CORRECT - RLS context is set automatically
+@router.get("/items")
+def get_items(db: Session = Depends(get_db)):
+    ...
+
+# WRONG - Never create sessions directly in routes
+def get_items():
+    db = SessionLocal()  # NO! Missing RLS context
+```
+
+### New Models - ALWAYS include tenant_id for tenant-scoped data
+
+```python
+class NewModel(Base):
+    __tablename__ = "new_models"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(  # REQUIRED for tenant-scoped tables
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    # ... other fields
+
+    tenant = relationship("Tenant", backref="new_models")
+```
+
+### Creating Records - tenant_id comes from context
+
+```python
+from app.core.tenant import get_current_tenant
+
+@router.post("/items")
+def create_item(
+    data: ItemCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tenant = get_current_tenant()
+    item = InventoryItem(
+        tenant_id=tenant.id,  # REQUIRED - get from context, not request
+        created_by=user.id,
+        **data.model_dump()
+    )
+    db.add(item)
+    db.commit()
+```
+
+### Auth Endpoints - Don't require auth, but DO require tenant
+
+```python
+from app.core.deps import require_tenant
+
+@router.post("/auth/login")
+def login(
+    request: LoginRequest,
+    tenant = Depends(require_tenant),  # Ensures valid tenant context
+    db: Session = Depends(get_db),
+):
+    ...
+```
+
+## Database Migrations
+
+### New Tables - ALWAYS add RLS policy
+
+```sql
+-- After creating table
+ALTER TABLE new_table ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation_policy ON new_table
+    FOR ALL TO synkventory_app
+    USING (tenant_id = current_setting('app.current_tenant_id', true)::UUID)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant_id', true)::UUID);
+
+-- Index for RLS performance
+CREATE INDEX idx_new_table_tenant_id ON new_table(tenant_id);
+```
+
+## Frontend Patterns (Angular)
+
+### HTTP Interceptor - Cookies sent automatically
+
+```typescript
+// HttpClient already sends cookies with credentials: 'include'
+// No manual token handling needed
+```
+
+### Auth Guard - Protect routes
+
+```typescript
+// Use AuthGuard on protected routes
+{ path: 'inventory', component: InventoryComponent, canActivate: [AuthGuard] }
+```
+
+### Login Redirect - Handle 401s globally
+
+```typescript
+// Interceptor should redirect to /login on 401 responses
+if (error.status === 401) {
+  router.navigate(["/login"]);
+}
+```
+
+## Security Rules
+
+1. **Never** expose tenant_id in URLs or let users specify it in requests
+2. **Never** query without RLS context (always use `get_db()`)
+3. **Never** store tokens in localStorage - use HttpOnly cookies only
+4. **Never** return detailed auth errors - always "Invalid email or password"
+5. **Always** use `Depends(get_current_user)` on routes that need auth
+6. **Always** add tenant_id column and RLS policy for new tenant-scoped tables
+
+## Testing
+
+### Local Development
+
+```bash
+# Use X-Tenant-Slug header for localhost testing
+curl -H "X-Tenant-Slug: demo" http://localhost:8000/api/v1/inventory
+```
+
+### Test Auth
+
+```bash
+# Login
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: demo" \
+  -d '{"email": "admin@demo.com", "password": "changeme123"}' \
+  -c cookies.txt
+
+# Authenticated request
+curl http://localhost:8000/api/v1/inventory \
+  -H "X-Tenant-Slug: demo" \
+  -b cookies.txt
+```
