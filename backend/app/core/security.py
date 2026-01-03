@@ -1,6 +1,7 @@
 """
 Security utilities for password hashing and JWT tokens.
 """
+
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -21,6 +22,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 
 class TokenData(BaseModel):
     """Data extracted from a valid JWT token."""
+
     user_id: str
     tenant_id: str
     email: str
@@ -29,6 +31,7 @@ class TokenData(BaseModel):
 
 class TokenPair(BaseModel):
     """Access and refresh token pair."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -54,8 +57,10 @@ def create_access_token(
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
     to_encode = {
         "sub": user_id,
         "tenant_id": tenant_id,
@@ -77,7 +82,7 @@ def create_admin_access_token(
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(hours=24)  # 24 hours for admin
-    
+
     to_encode = {
         "sub": admin_id,
         "email": email,
@@ -97,13 +102,13 @@ def decode_admin_token(token: str) -> Optional[dict]:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "admin":
             return None
-        
+
         admin_id: str = payload.get("sub")
         email: str = payload.get("email")
-        
+
         if not all([admin_id, email]):
             return None
-        
+
         return {
             "admin_id": admin_id,
             "email": email,
@@ -124,7 +129,7 @@ def create_refresh_token(
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    
+
     to_encode = {
         "sub": user_id,
         "tenant_id": tenant_id,
@@ -154,10 +159,10 @@ def decode_token(token: str) -> Optional[TokenData]:
         tenant_id: str = payload.get("tenant_id")
         email: str = payload.get("email")
         exp: int = payload.get("exp")
-        
+
         if not all([user_id, tenant_id, email, exp]):
             return None
-        
+
         return TokenData(
             user_id=user_id,
             tenant_id=tenant_id,

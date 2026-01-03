@@ -12,7 +12,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.security import verify_password, get_password_hash, create_admin_access_token, decode_admin_token
+from app.core.security import (
+    verify_password,
+    get_password_hash,
+    create_admin_access_token,
+    decode_admin_token,
+)
 from app.db.session import get_db_no_tenant  # Admin endpoints don't use RLS
 from app.models.admin_user import AdminUser
 from app.models.tenant import Tenant
