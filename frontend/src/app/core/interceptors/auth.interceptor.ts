@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { TenantService } from '../services/tenant.service';
 
 /**
  * HTTP interceptor that:
@@ -12,6 +13,7 @@ import { AuthService } from '../services/auth.service';
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const tenantService = inject(TenantService);
   const router = inject(Router);
 
   // Add credentials for cookie-based auth
@@ -19,17 +21,28 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     withCredentials: true
   });
 
+  // Check if this is an admin API request
+  const isAdminRequest = req.url.includes('/admin/');
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       // Handle 401 Unauthorized
       if (error.status === 401) {
-        // Don't try to refresh for login/logout/refresh endpoints
+        // For admin API requests, don't interfere - let AdminAuthService handle it
+        if (isAdminRequest) {
+          return throwError(() => error);
+        }
+
+        // Don't try to refresh for login/logout/refresh/me endpoints
         if (req.url.includes('/auth/login') ||
             req.url.includes('/auth/logout') ||
             req.url.includes('/auth/refresh') ||
             req.url.includes('/auth/me')) {
           authService.clearAuth();
-          router.navigate(['/login']);
+          // Only redirect if not on admin portal
+          if (!tenantService.isAdminPortal()) {
+            router.navigate(['/login']);
+          }
           return throwError(() => error);
         }
 
@@ -42,16 +55,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           catchError((refreshError) => {
             // Refresh failed, redirect to login
             authService.clearAuth();
-            router.navigate(['/login']);
+            if (!tenantService.isAdminPortal()) {
+              router.navigate(['/login']);
+            }
             return throwError(() => refreshError);
           })
         );
       }
 
       // Handle 404 for auth/me (happens when no subdomain/tenant)
-      if (error.status === 404 && req.url.includes('/auth/me')) {
+      if (error.status === 404 && req.url.includes('/auth/me') && !isAdminRequest) {
         authService.clearAuth();
-        router.navigate(['/login']);
+        if (!tenantService.isAdminPortal()) {
+          router.navigate(['/login']);
+        }
         return throwError(() => error);
       }
 
