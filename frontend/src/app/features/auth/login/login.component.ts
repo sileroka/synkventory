@@ -27,7 +27,7 @@ import { MessageModule } from 'primeng/message';
     <div class="login-container">
       <div class="login-card">
         <div class="logo-section">
-          <img src="assets/logo.png" alt="Synkventory Logo" style="width: 400px;" />
+          <img src="assets/logo_name_primary.png" alt="Synkventory Logo" style="width: 400px;" />
           <p class="brand-tagline">Stock in sync.</p>
         </div>
 
