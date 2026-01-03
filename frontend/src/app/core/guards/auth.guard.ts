@@ -76,6 +76,12 @@ export const landingGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // If on admin portal, redirect to admin login
+  if (tenantService.isAdminPortal()) {
+    router.navigate(['/admin/login']);
+    return false;
+  }
+
   // If on a subdomain (tenant site), redirect to dashboard or login
   if (tenantService.isSubdomain()) {
     // Wait for auth to load
