@@ -73,7 +73,7 @@ def get_db():
 
 def get_db_no_tenant():
     """
-    Database session without tenant context.
+    Database session without tenant context (admin mode).
 
     Use for operations that need to bypass RLS:
     - Tenant lookup (before we know which tenant)
@@ -84,15 +84,13 @@ def get_db_no_tenant():
     """
     db = SessionLocal()
     try:
-        # Explicitly reset role to bypass RLS policies
-        # RLS policies only apply to synkventory_app role, so resetting to
-        # the connection owner role bypasses them entirely.
-        # Note: Don't RESET app.current_tenant_id as it sets to empty string
-        # which causes "invalid input syntax for type uuid" errors
-        try:
-            db.execute(text("RESET ROLE"))
-        except Exception:
-            pass
+        # Set admin flag to bypass RLS policies
+        # This enables the admin_bypass policy which allows all operations
+        db.execute(text("SET app.is_admin = 'true'"))
         yield db
     finally:
+        try:
+            db.execute(text("SET app.is_admin = 'false'"))
+        except Exception:
+            pass
         db.close()
