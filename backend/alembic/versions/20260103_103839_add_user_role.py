@@ -1,7 +1,7 @@
 """Add role column to users table
 
 Revision ID: 20260103_103839
-Revises: 20260102_000000
+Revises: 0001
 Create Date: 2026-01-03 10:38:39
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "20260103_103839"
-down_revision: Union[str, None] = "20260102_000000"
+down_revision: Union[str, None] = "0001"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
