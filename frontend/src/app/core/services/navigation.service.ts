@@ -1,4 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from './auth.service';
+import { UserRole } from '../../models/user.model';
 
 export type NavViewMode = 'expanded' | 'collapsed' | 'mega-menu';
 
@@ -10,18 +12,22 @@ export interface NavItem {
   children?: NavItem[];
   badge?: number;
   badgeSeverity?: 'success' | 'info' | 'warning' | 'danger';
+  roles?: UserRole[]; // Roles that can see this item
 }
 
 export interface NavSection {
   id: string;
   title?: string;
   items: NavItem[];
+  roles?: UserRole[]; // Roles that can see this section
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class NavigationService {
+  private readonly authService = inject(AuthService);
+
   // Persist nav mode in localStorage
   private readonly STORAGE_KEY = 'synkventory_nav_mode';
 
@@ -41,8 +47,8 @@ export class NavigationService {
   readonly isMegaMenu = computed(() => this._viewMode() === 'mega-menu');
   readonly showSidebar = computed(() => this._viewMode() !== 'mega-menu');
 
-  // Navigation structure with submenu support
-  readonly navSections: NavSection[] = [
+  // Base navigation structure
+  private readonly baseNavSections: NavSection[] = [
     {
       id: 'main',
       items: [
@@ -109,8 +115,36 @@ export class NavigationService {
           route: '/reports/movements'
         }
       ]
+    },
+    {
+      id: 'admin',
+      title: 'Administration',
+      roles: [UserRole.ADMIN, UserRole.MANAGER],
+      items: [
+        {
+          id: 'users',
+          label: 'User Management',
+          icon: 'pi-users',
+          route: '/users',
+          roles: [UserRole.ADMIN, UserRole.MANAGER]
+        }
+      ]
     }
   ];
+
+  // Filtered navigation based on user role
+  readonly navSections = computed(() => {
+    const currentUser = this.authService.currentUser();
+    const userRole = currentUser?.role as UserRole | undefined;
+
+    return this.baseNavSections
+      .filter(section => this.canAccessSection(section, userRole))
+      .map(section => ({
+        ...section,
+        items: section.items.filter(item => this.canAccessItem(item, userRole))
+      }))
+      .filter(section => section.items.length > 0);
+  });
 
   // Flat list of all nav items for search/reference
   readonly allNavItems = computed(() => {
@@ -123,9 +157,29 @@ export class NavigationService {
         }
       });
     };
-    this.navSections.forEach(section => flatten(section.items));
+    this.navSections().forEach(section => flatten(section.items));
     return items;
   });
+
+  private canAccessSection(section: NavSection, userRole: UserRole | undefined): boolean {
+    if (!section.roles || section.roles.length === 0) {
+      return true;
+    }
+    if (!userRole) {
+      return false;
+    }
+    return section.roles.includes(userRole);
+  }
+
+  private canAccessItem(item: NavItem, userRole: UserRole | undefined): boolean {
+    if (!item.roles || item.roles.length === 0) {
+      return true;
+    }
+    if (!userRole) {
+      return false;
+    }
+    return item.roles.includes(userRole);
+  }
 
   private loadViewMode(): NavViewMode {
     if (typeof localStorage !== 'undefined') {

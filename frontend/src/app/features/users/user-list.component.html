@@ -1,0 +1,287 @@
+<div class="user-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>User Management</h1>
+      <p class="subtitle">Manage users and their access levels</p>
+    </div>
+    <p-button
+      label="Add User"
+      icon="pi pi-plus"
+      (onClick)="showCreateDialog()"
+      severity="primary"
+    />
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-wrapper">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          placeholder="Search by name or email..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+        />
+      </span>
+    </div>
+    <div class="filter-controls">
+      <p-dropdown
+        [options]="statusOptions"
+        [(ngModel)]="statusFilter"
+        placeholder="All Statuses"
+        (onChange)="loadUsers()"
+        [showClear]="true"
+      />
+      <p-dropdown
+        [options]="roleOptions"
+        [(ngModel)]="roleFilter"
+        placeholder="All Roles"
+        (onChange)="loadUsers()"
+        [showClear]="true"
+      />
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <p-table
+    [value]="users"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    (onLazyLoad)="onPageChange($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-striped"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th style="width: 150px">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td>
+          <span class="user-name">{{ user.name }}</span>
+          @if (user.id === currentUserId) {
+            <span class="you-badge">(you)</span>
+          }
+        </td>
+        <td>{{ user.email }}</td>
+        <td>
+          <p-tag
+            [value]="getRoleLabel(user.role)"
+            [severity]="getRoleSeverity(user.role)"
+          />
+        </td>
+        <td>
+          @if (user.isLocked) {
+            <p-tag value="Locked" severity="danger" />
+          } @else if (user.isActive) {
+            <p-tag value="Active" severity="success" />
+          } @else {
+            <p-tag value="Inactive" severity="secondary" />
+          }
+        </td>
+        <td>{{ user.createdAt | date:'mediumDate' }}</td>
+        <td>
+          <div class="action-buttons">
+            <p-button
+              icon="pi pi-pencil"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              pTooltip="Edit"
+              (onClick)="showEditDialog(user)"
+            />
+            @if (user.id !== currentUserId) {
+              @if (user.isActive) {
+                <p-button
+                  icon="pi pi-ban"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  pTooltip="Deactivate"
+                  (onClick)="confirmDeactivate(user)"
+                />
+              } @else {
+                <p-button
+                  icon="pi pi-check-circle"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="success"
+                  pTooltip="Activate"
+                  (onClick)="activateUser(user)"
+                />
+              }
+              <p-button
+                icon="pi pi-key"
+                [rounded]="true"
+                [text]="true"
+                severity="warn"
+                pTooltip="Reset Password"
+                (onClick)="showResetPasswordDialog(user)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty-message">
+          <i class="pi pi-users"></i>
+          <p>No users found</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Create/Edit User Dialog -->
+<p-dialog
+  [(visible)]="showUserDialog"
+  [header]="editingUser ? 'Edit User' : 'Create User'"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [closable]="true"
+>
+  <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+    <div class="form-field">
+      <label for="name">Name *</label>
+      <input
+        id="name"
+        type="text"
+        pInputText
+        formControlName="name"
+        [class.ng-invalid]="userForm.get('name')?.invalid && userForm.get('name')?.touched"
+      />
+      @if (userForm.get('name')?.invalid && userForm.get('name')?.touched) {
+        <small class="p-error">Name is required</small>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="email">Email *</label>
+      <input
+        id="email"
+        type="email"
+        pInputText
+        formControlName="email"
+        [class.ng-invalid]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+        [readonly]="!!editingUser"
+      />
+      @if (userForm.get('email')?.invalid && userForm.get('email')?.touched) {
+        <small class="p-error">Valid email is required</small>
+      }
+    </div>
+
+    @if (!editingUser) {
+      <div class="form-field">
+        <label for="password">Password *</label>
+        <p-password
+          id="password"
+          formControlName="password"
+          [toggleMask]="true"
+          [feedback]="true"
+          styleClass="w-full"
+        />
+        @if (userForm.get('password')?.invalid && userForm.get('password')?.touched) {
+          <small class="p-error">
+            Password must be at least 8 characters with uppercase, lowercase, and a number
+          </small>
+        }
+      </div>
+    }
+
+    <div class="form-field">
+      <label for="role">Role *</label>
+      <p-dropdown
+        id="role"
+        [options]="createRoleOptions"
+        formControlName="role"
+        placeholder="Select a role"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="dialog-footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        (onClick)="hideUserDialog()"
+        severity="secondary"
+        [text]="true"
+      />
+      <p-button
+        [label]="editingUser ? 'Update' : 'Create'"
+        icon="pi pi-check"
+        type="submit"
+        [disabled]="userForm.invalid || saving"
+        [loading]="saving"
+      />
+    </div>
+  </form>
+</p-dialog>
+
+<!-- Reset Password Dialog -->
+<p-dialog
+  [(visible)]="showPasswordDialog"
+  header="Reset Password"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="true"
+>
+  <p class="reset-warning">
+    <i class="pi pi-exclamation-triangle"></i>
+    You are about to reset the password for <strong>{{ resetPasswordUser?.name }}</strong>.
+  </p>
+  <form [formGroup]="passwordForm" (ngSubmit)="resetPassword()">
+    <div class="form-field">
+      <label for="newPassword">New Password *</label>
+      <p-password
+        id="newPassword"
+        formControlName="newPassword"
+        [toggleMask]="true"
+        [feedback]="true"
+        styleClass="w-full"
+      />
+      @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
+        <small class="p-error">
+          Password must be at least 8 characters with uppercase, lowercase, and a number
+        </small>
+      }
+    </div>
+
+    <div class="dialog-footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        (onClick)="hidePasswordDialog()"
+        severity="secondary"
+        [text]="true"
+      />
+      <p-button
+        label="Reset Password"
+        icon="pi pi-key"
+        type="submit"
+        severity="warn"
+        [disabled]="passwordForm.invalid || saving"
+        [loading]="saving"
+      />
+    </div>
+  </form>
+</p-dialog>
+
+<!-- Confirm Dialog -->
+<p-confirmDialog />
+<p-toast />

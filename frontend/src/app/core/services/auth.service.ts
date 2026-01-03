@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { UserRole } from '../../models/user.model';
 
 export interface LoginRequest {
   email: string;
@@ -13,6 +14,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
   tenantId: string;
   isActive: boolean;
 }

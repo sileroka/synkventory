@@ -26,7 +26,7 @@ export class SidebarComponent {
   }
 
   get navSections(): NavSection[] {
-    return this.navService.navSections;
+    return this.navService.navSections();
   }
 
   hasChildren(item: NavItem): boolean {

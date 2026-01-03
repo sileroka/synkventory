@@ -3,8 +3,9 @@ Database seed utilities for initial data setup.
 """
 
 from sqlalchemy.orm import Session
-from app.models.user import User, SYSTEM_USER_ID
+from app.models.user import User, UserRole, SYSTEM_USER_ID
 from app.models.tenant import Tenant, DEFAULT_TENANT_ID
+from app.core.security import get_password_hash
 
 
 def seed_default_tenant(db: Session) -> Tenant:
@@ -66,6 +67,7 @@ def seed_system_user(db: Session, default_tenant: Tenant) -> User:
             email="system@synkventory.local",
             name="System",
             password_hash="!disabled",  # Cannot login - not a valid bcrypt hash
+            role=UserRole.ADMIN.value,
             is_active=True,
         )
         db.add(system_user)
@@ -76,6 +78,42 @@ def seed_system_user(db: Session, default_tenant: Tenant) -> User:
         print(f"System user already exists: {system_user.email}")
 
     return system_user
+
+
+def seed_demo_admin(db: Session, default_tenant: Tenant) -> User:
+    """
+    Create or get the demo admin user for testing.
+
+    This user can be used to login during development.
+    Default credentials: admin@demo.com / Changeme123!
+
+    Args:
+        db: Database session
+        default_tenant: The default tenant to associate the user with
+
+    Returns:
+        User: The demo admin user instance
+    """
+    demo_email = "admin@demo.com"
+    demo_user = db.query(User).filter(User.email == demo_email).first()
+
+    if demo_user is None:
+        demo_user = User(
+            tenant_id=default_tenant.id,
+            email=demo_email,
+            name="Demo Admin",
+            password_hash=get_password_hash("Changeme123!"),
+            role=UserRole.ADMIN.value,
+            is_active=True,
+        )
+        db.add(demo_user)
+        db.commit()
+        db.refresh(demo_user)
+        print(f"Created demo admin user: {demo_user.email} (password: Changeme123!)")
+    else:
+        print(f"Demo admin user already exists: {demo_user.email}")
+
+    return demo_user
 
 
 def run_seeds(db: Session) -> None:
@@ -89,6 +127,7 @@ def run_seeds(db: Session) -> None:
     # Tenant must be seeded first since users and other entities reference it
     default_tenant = seed_default_tenant(db)
     seed_system_user(db, default_tenant)
+    seed_demo_admin(db, default_tenant)
     print("Database seeding complete.")
 
 

@@ -39,6 +39,7 @@ class UserResponse(BaseModel):
     id: str
     email: str
     name: str
+    role: str
     is_active: bool
 
     class Config:
@@ -137,6 +138,7 @@ def login(
             id=str(user.id),
             email=user.email,
             name=user.name,
+            role=user.role,
             is_active=user.is_active,
         )
     )
@@ -228,6 +230,7 @@ def get_me(user: User = Depends(get_current_user)):
             id=str(user.id),
             email=user.email,
             name=user.name,
+            role=user.role,
             is_active=user.is_active,
         )
     }
@@ -305,6 +308,7 @@ def register(
             id=str(user.id),
             email=user.email,
             name=user.name,
+            role=user.role,
             is_active=user.is_active,
         ),
         message="Registration successful",
