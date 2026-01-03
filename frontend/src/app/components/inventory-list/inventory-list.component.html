@@ -187,7 +187,8 @@
                   placeholder="Select"
                   optionLabel="label"
                   optionValue="value"
-                  [showClear]="true">
+                  [showClear]="true"
+                  appendTo="body">
                 </p-dropdown>
               </ng-template>
             </p-columnFilter>
@@ -212,7 +213,8 @@
                   placeholder="Select"
                   optionLabel="label"
                   optionValue="value"
-                  [showClear]="true">
+                  [showClear]="true"
+                  appendTo="body">
                 </p-dropdown>
               </ng-template>
             </p-columnFilter>
@@ -229,7 +231,8 @@
                   placeholder="Select"
                   optionLabel="label"
                   optionValue="value"
-                  [showClear]="true">
+                  [showClear]="true"
+                  appendTo="body">
                 </p-dropdown>
               </ng-template>
             </p-columnFilter>
@@ -354,7 +357,7 @@
       <label for="status" class="block mb-2">Status</label>
       <p-dropdown id="status" [(ngModel)]="selectedItem.status"
         [options]="statusOptions" optionLabel="label" optionValue="value"
-        class="w-full" styleClass="w-full"></p-dropdown>
+        class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
     </div>
 
     <div>
@@ -368,7 +371,7 @@
       <p-dropdown id="category" [(ngModel)]="selectedItem.categoryId"
         [options]="categoryOptions" optionLabel="label" optionValue="value"
         placeholder="Select a category"
-        class="w-full" styleClass="w-full"></p-dropdown>
+        class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
     </div>
 
     <div>
@@ -376,7 +379,7 @@
       <p-dropdown id="location" [(ngModel)]="selectedItem.locationId"
         [options]="locationOptions" optionLabel="label" optionValue="value"
         placeholder="Select a location"
-        class="w-full" styleClass="w-full"></p-dropdown>
+        class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
     </div>
   </div>
 

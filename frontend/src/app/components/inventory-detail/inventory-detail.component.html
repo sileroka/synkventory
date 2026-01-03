@@ -307,7 +307,8 @@
         optionValue="value"
         placeholder="Select source location"
         class="w-full"
-        styleClass="w-full">
+        styleClass="w-full"
+        appendTo="body">
       </p-dropdown>
       <small class="text-color-secondary" *ngIf="transferFromLocationId">
         Available: {{ getMaxTransferQuantity() }}
@@ -324,7 +325,8 @@
         optionValue="value"
         placeholder="Select destination location"
         class="w-full"
-        styleClass="w-full">
+        styleClass="w-full"
+        appendTo="body">
       </p-dropdown>
     </div>
 
