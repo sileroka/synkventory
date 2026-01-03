@@ -40,10 +40,18 @@ export const authGuard: CanActivateFn = () => {
 
 /**
  * Guard for login page - redirects to dashboard if already authenticated
+ * Also redirects to admin login if on admin portal
  */
 export const noAuthGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
+  const tenantService = inject(TenantService);
   const router = inject(Router);
+
+  // If on admin portal, redirect to admin login page
+  if (tenantService.isAdminPortal()) {
+    router.navigate(['/admin/login']);
+    return false;
+  }
 
   // If still loading, wait for it to complete
   if (authService.isLoading()) {
