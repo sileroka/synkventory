@@ -27,11 +27,11 @@ export interface LoginResponse {
 })
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
-  
+
   // Signals for reactive state
   private currentUserSignal = signal<User | null>(null);
   private isLoadingSignal = signal<boolean>(true);
-  
+
   // Computed values
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isAuthenticated = computed(() => !!this.currentUserSignal());

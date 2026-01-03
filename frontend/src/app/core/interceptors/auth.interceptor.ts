@@ -23,7 +23,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         // Don't try to refresh for login/logout/refresh endpoints
-        if (req.url.includes('/auth/login') || 
+        if (req.url.includes('/auth/login') ||
             req.url.includes('/auth/logout') ||
             req.url.includes('/auth/refresh') ||
             req.url.includes('/auth/me')) {

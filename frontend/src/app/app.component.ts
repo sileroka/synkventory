@@ -1,5 +1,5 @@
 import { Component, inject, computed } from '@angular/core';
-import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet, Event } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,17 +14,17 @@ import { LayoutComponent } from './layout/layout.component';
 })
 export class AppComponent {
   title = 'Synkventory';
-  
+
   private router = inject(Router);
-  
+
   // Track if we're on the login page
   private currentUrl$ = this.router.events.pipe(
-    filter(event => event instanceof NavigationEnd),
-    map((event: NavigationEnd) => event.urlAfterRedirects)
+    filter((event: Event): event is NavigationEnd => event instanceof NavigationEnd),
+    map((event) => event.urlAfterRedirects)
   );
-  
+
   currentUrl = toSignal(this.currentUrl$, { initialValue: this.router.url });
-  
+
   isLoginPage = computed(() => {
     const url = this.currentUrl();
     return url === '/login' || url.startsWith('/login');

@@ -35,9 +35,9 @@ import { MessageModule } from 'primeng/message';
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <div class="form-field">
               <label for="email">Email</label>
-              <input 
-                pInputText 
-                id="email" 
+              <input
+                pInputText
+                id="email"
                 formControlName="email"
                 type="email"
                 placeholder="Enter your email"
@@ -51,7 +51,7 @@ import { MessageModule } from 'primeng/message';
 
             <div class="form-field">
               <label for="password">Password</label>
-              <p-password 
+              <p-password
                 id="password"
                 formControlName="password"
                 placeholder="Enter your password"
@@ -69,7 +69,7 @@ import { MessageModule } from 'primeng/message';
               <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-3" />
             }
 
-            <p-button 
+            <p-button
               type="submit"
               label="Sign In"
               styleClass="w-full"

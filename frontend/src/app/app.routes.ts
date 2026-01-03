@@ -12,7 +12,7 @@ import { authGuard, noAuthGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   // Public routes
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
-  
+
   // Protected routes
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
@@ -22,7 +22,7 @@ export const routes: Routes = [
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
-  
+
   // Catch-all redirect to login
   { path: '**', redirectTo: '/login' }
 ];
