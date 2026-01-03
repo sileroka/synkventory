@@ -4,8 +4,535 @@
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
+// =============================================================================
+// Synkventory Design System Variables
+// =============================================================================
+:root {
+  // Primary Colors
+  --synk-primary: #0D9488;
+  --synk-primary-light: #14B8A6;
+  --synk-primary-dark: #0F766E;
+  --synk-secondary: #F87171;
+  --synk-tertiary: #6366F1;
+
+  // Neutral Colors
+  --synk-neutral-900: #0F172A;
+  --synk-neutral-700: #334155;
+  --synk-neutral-600: #475569;
+  --synk-neutral-500: #64748B;
+  --synk-neutral-400: #94A3B8;
+  --synk-neutral-300: #CBD5E1;
+  --synk-neutral-200: #E2E8F0;
+  --synk-neutral-100: #F1F5F9;
+  --synk-white: #FFFFFF;
+
+  // Semantic Colors
+  --synk-success: #10B981;
+  --synk-warning: #F59E0B;
+  --synk-error: #EF4444;
+  --synk-info: #6366F1;
+}
+
 body {
-  font-family: var(--font-family);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   padding: 0;
+  color: var(--synk-neutral-900);
+  background: var(--synk-neutral-100);
+}
+
+// =============================================================================
+// PrimeNG Card Overrides
+// =============================================================================
+.p-card {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid var(--synk-neutral-200);
+  background: var(--synk-white);
+
+  .p-card-body {
+    padding: 1.25rem;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+
+  .p-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--synk-neutral-900);
+    margin-bottom: 0.5rem;
+  }
+
+  .p-card-subtitle {
+    font-size: 0.875rem;
+    color: var(--synk-neutral-500);
+    margin-bottom: 1rem;
+  }
+
+  .p-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--synk-neutral-200);
+  }
+
+  .p-card-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--synk-neutral-200);
+  }
+}
+
+// Surface cards (using primeflex class)
+.surface-card {
+  background: var(--synk-white);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  border: 1px solid var(--synk-neutral-200);
+}
+
+// =============================================================================
+// PrimeNG DataTable Overrides - Clean & Compact
+// =============================================================================
+.p-datatable {
+  font-size: 0.8125rem;
+
+  // Table wrapper
+  .p-datatable-wrapper {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  // Table header
+  .p-datatable-thead {
+    > tr > th {
+      background: var(--synk-neutral-100);
+      color: var(--synk-neutral-700);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      padding: 0.625rem 0.75rem;
+      border-bottom: 2px solid var(--synk-neutral-300);
+      white-space: nowrap;
+
+      // Sortable column styling
+      &.p-sortable-column {
+        cursor: pointer;
+        transition: background 0.15s ease;
+
+        &:hover {
+          background: var(--synk-neutral-200);
+        }
+
+        &.p-highlight {
+          background: rgba(13, 148, 136, 0.08);
+          color: var(--synk-primary-dark);
+        }
+      }
+    }
+  }
+
+  // Table body
+  .p-datatable-tbody {
+    > tr {
+      transition: background 0.15s ease;
+
+      > td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--synk-neutral-200);
+        color: var(--synk-neutral-700);
+        vertical-align: middle;
+      }
+
+      &:hover {
+        background: rgba(13, 148, 136, 0.04) !important;
+      }
+
+      // Striped rows
+      &:nth-child(even) {
+        background: var(--synk-neutral-100);
+      }
+    }
+  }
+
+  // Column header content layout for filter + sort
+  .p-column-header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  // Sort icon styling
+  .p-sortable-column-icon {
+    color: var(--synk-neutral-400);
+    font-size: 0.75rem;
+    margin-left: auto;
+
+    .p-highlight & {
+      color: var(--synk-primary);
+    }
+  }
+
+  // Filter icon styling (for column filters)
+  .p-column-filter-menu-button {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--synk-neutral-400);
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+    order: -1; // Places filter icon before text
+
+    &:hover {
+      background: var(--synk-neutral-200);
+      color: var(--synk-neutral-600);
+    }
+
+    &.p-column-filter-menu-button-active {
+      background: rgba(13, 148, 136, 0.15);
+      color: var(--synk-primary);
+    }
+  }
+
+  // Filter clear button
+  .p-column-filter-clear-button {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--synk-neutral-500);
+  }
+
+  // Checkbox styling
+  .p-checkbox {
+    width: 1.125rem;
+    height: 1.125rem;
+
+    .p-checkbox-box {
+      width: 1.125rem;
+      height: 1.125rem;
+      border-radius: 0.25rem;
+      border: 1.5px solid var(--synk-neutral-300);
+
+      &.p-highlight {
+        background: var(--synk-primary);
+        border-color: var(--synk-primary);
+      }
+    }
+  }
+
+  // Paginator styling
+  .p-paginator {
+    padding: 0.625rem 0.75rem;
+    background: var(--synk-neutral-100);
+    border-top: 1px solid var(--synk-neutral-200);
+    font-size: 0.8125rem;
+
+    .p-paginator-element {
+      min-width: 2rem;
+      height: 2rem;
+      border-radius: 0.375rem;
+
+      &:hover {
+        background: var(--synk-neutral-200);
+      }
+
+      &.p-highlight {
+        background: var(--synk-primary);
+        color: white;
+      }
+    }
+
+    .p-dropdown {
+      height: 2rem;
+
+      .p-dropdown-label {
+        padding: 0.375rem 0.5rem;
+      }
+    }
+  }
+
+  // Loading overlay
+  .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  // Empty message
+  .p-datatable-emptymessage {
+    td {
+      text-align: center;
+      padding: 2rem;
+      color: var(--synk-neutral-500);
+    }
+  }
+}
+
+// Compact variant
+.p-datatable-sm {
+  .p-datatable-thead > tr > th {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.6875rem;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+}
+
+// Remove gridlines if not needed
+.p-datatable-gridlines {
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    border-width: 0 0 1px 0;
+  }
+}
+
+// =============================================================================
+// Column Filter Overlay
+// =============================================================================
+.p-column-filter-overlay {
+  background: var(--synk-white);
+  border: 1px solid var(--synk-neutral-200);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  min-width: 14rem;
+
+  .p-column-filter-overlay-menu {
+    padding: 0.75rem;
+  }
+
+  .p-column-filter-constraint {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--synk-neutral-200);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .p-column-filter-matchmode-dropdown {
+    margin-bottom: 0.5rem;
+  }
+
+  .p-column-filter-add-rule,
+  .p-column-filter-remove-button {
+    margin-top: 0.5rem;
+  }
+
+  .p-column-filter-buttonbar {
+    padding-top: 0.75rem;
+    gap: 0.5rem;
+  }
+}
+
+// =============================================================================
+// PrimeNG Button Overrides - Brand Colors
+// =============================================================================
+.p-button {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+
+  &.p-button-sm {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  // Primary button (teal)
+  &:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger) {
+    background: var(--synk-primary);
+    border-color: var(--synk-primary);
+
+    &:hover {
+      background: var(--synk-primary-dark);
+      border-color: var(--synk-primary-dark);
+    }
+  }
+}
+
+// =============================================================================
+// PrimeNG Input Overrides
+// =============================================================================
+.p-inputtext {
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--synk-neutral-300);
+
+  &:focus {
+    border-color: var(--synk-primary);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+  }
+}
+
+.p-dropdown,
+.p-multiselect {
+  font-size: 0.8125rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--synk-neutral-300);
+
+  &:not(.p-disabled):hover {
+    border-color: var(--synk-neutral-400);
+  }
+
+  &:not(.p-disabled).p-focus {
+    border-color: var(--synk-primary);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+  }
+
+  .p-dropdown-label,
+  .p-multiselect-label {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+// =============================================================================
+// PrimeNG Toolbar Overrides
+// =============================================================================
+.p-toolbar {
+  background: var(--synk-neutral-100);
+  border: 1px solid var(--synk-neutral-200);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+// =============================================================================
+// Status Badge Styles
+// =============================================================================
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+
+  &.status-in_stock {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+
+  &.status-low_stock {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+
+  &.status-out_of_stock {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+
+  &.status-on_order {
+    background: #E0E7FF;
+    color: #3730A3;
+  }
+
+  &.status-discontinued {
+    background: #E2E8F0;
+    color: #475569;
+  }
+}
+
+// =============================================================================
+// Toast Overrides
+// =============================================================================
+.p-toast {
+  .p-toast-message {
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+
+    &.p-toast-message-success {
+      background: #D1FAE5;
+      border-left: 4px solid var(--synk-success);
+      color: #065F46;
+    }
+
+    &.p-toast-message-warn {
+      background: #FEF3C7;
+      border-left: 4px solid var(--synk-warning);
+      color: #92400E;
+    }
+
+    &.p-toast-message-error {
+      background: #FEE2E2;
+      border-left: 4px solid var(--synk-error);
+      color: #991B1B;
+    }
+
+    &.p-toast-message-info {
+      background: #E0E7FF;
+      border-left: 4px solid var(--synk-info);
+      color: #3730A3;
+    }
+  }
+}
+
+// =============================================================================
+// Dialog Overrides
+// =============================================================================
+.p-dialog {
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: none;
+
+  .p-dialog-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--synk-neutral-200);
+  }
+
+  .p-dialog-content {
+    padding: 1.25rem;
+  }
+
+  .p-dialog-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--synk-neutral-200);
+  }
+}
+
+// =============================================================================
+// Utility Classes
+// =============================================================================
+.text-primary {
+  color: var(--synk-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--synk-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--synk-primary) !important;
+}
+
+// Page title styling
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--synk-neutral-900);
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--synk-neutral-900);
+}
+
+h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--synk-neutral-900);
+}
+
+// Link styling
+a {
+  color: var(--synk-primary);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--synk-primary-dark);
+    text-decoration: underline;
+  }
 }

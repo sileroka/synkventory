@@ -121,6 +121,7 @@
   </p-toolbar>
 
   <p-table
+    #dt
     [value]="items"
     [loading]="loading"
     [paginator]="true"
@@ -133,23 +134,109 @@
     [(selection)]="selectedItems"
     [rowHover]="true"
     dataKey="id"
-    styleClass="p-datatable-striped p-datatable-gridlines">
+    [filterDelay]="300"
+    [globalFilterFields]="['sku', 'name', 'description']"
+    styleClass="p-datatable-striped">
 
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 3rem">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
-        <th pSortableColumn="sku" style="width: 8rem">SKU <p-sortIcon field="sku"></p-sortIcon></th>
-        <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
-        <th style="width: 12rem">Description</th>
-        <th pSortableColumn="quantity" style="width: 7rem">Quantity <p-sortIcon field="quantity"></p-sortIcon></th>
-        <th pSortableColumn="reorderPoint" style="width: 8rem">Reorder Pt <p-sortIcon field="reorderPoint"></p-sortIcon></th>
-        <th pSortableColumn="status" style="width: 8rem">Status <p-sortIcon field="status"></p-sortIcon></th>
-        <th pSortableColumn="unitPrice" style="width: 7rem">Price <p-sortIcon field="unitPrice"></p-sortIcon></th>
-        <th style="width: 8rem">Category</th>
-        <th style="width: 8rem">Location</th>
-        <th style="width: 12rem">Actions</th>
+        <th pSortableColumn="sku" style="width: 7rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="text" field="sku" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
+            <span>SKU</span>
+            <p-sortIcon field="sku"></p-sortIcon>
+          </div>
+        </th>
+        <th pSortableColumn="name">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="text" field="name" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
+            <span>Name</span>
+            <p-sortIcon field="name"></p-sortIcon>
+          </div>
+        </th>
+        <th style="width: 10rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="text" field="description" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
+            <span>Description</span>
+          </div>
+        </th>
+        <th pSortableColumn="quantity" style="width: 6rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="numeric" field="quantity" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
+            <span>Qty</span>
+            <p-sortIcon field="quantity"></p-sortIcon>
+          </div>
+        </th>
+        <th pSortableColumn="reorderPoint" style="width: 6rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="numeric" field="reorderPoint" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
+            <span>Reorder</span>
+            <p-sortIcon field="reorderPoint"></p-sortIcon>
+          </div>
+        </th>
+        <th pSortableColumn="status" style="width: 7rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter field="status" display="menu" [showMatchModes]="false" [showOperator]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <p-dropdown
+                  [options]="statusMultiOptions"
+                  (onChange)="filter($event.value)"
+                  placeholder="Select"
+                  optionLabel="label"
+                  optionValue="value"
+                  [showClear]="true">
+                </p-dropdown>
+              </ng-template>
+            </p-columnFilter>
+            <span>Status</span>
+            <p-sortIcon field="status"></p-sortIcon>
+          </div>
+        </th>
+        <th pSortableColumn="unitPrice" style="width: 6rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter type="numeric" field="unitPrice" display="menu" [showMatchModes]="true" [showOperator]="false" currency="USD"></p-columnFilter>
+            <span>Price</span>
+            <p-sortIcon field="unitPrice"></p-sortIcon>
+          </div>
+        </th>
+        <th style="width: 7rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter field="category.name" display="menu" [showMatchModes]="false" [showOperator]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <p-dropdown
+                  [options]="categoryMultiOptions"
+                  (onChange)="filter($event.value)"
+                  placeholder="Select"
+                  optionLabel="label"
+                  optionValue="value"
+                  [showClear]="true">
+                </p-dropdown>
+              </ng-template>
+            </p-columnFilter>
+            <span>Category</span>
+          </div>
+        </th>
+        <th style="width: 7rem">
+          <div class="flex align-items-center justify-content-between">
+            <p-columnFilter field="location.name" display="menu" [showMatchModes]="false" [showOperator]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <p-dropdown
+                  [options]="locationMultiOptions"
+                  (onChange)="filter($event.value)"
+                  placeholder="Select"
+                  optionLabel="label"
+                  optionValue="value"
+                  [showClear]="true">
+                </p-dropdown>
+              </ng-template>
+            </p-columnFilter>
+            <span>Location</span>
+          </div>
+        </th>
+        <th style="width: 8rem">Actions</th>
       </tr>
     </ng-template>
 

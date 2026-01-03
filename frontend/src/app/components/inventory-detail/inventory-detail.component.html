@@ -155,7 +155,7 @@
             </td>
             <td>{{ locQty.binLocation || '-' }}</td>
             <td class="text-right font-semibold">{{ locQty.quantity }}</td>
-            <td class="text-right">{{ locQty.quantity * (item?.unitPrice || 0) | currency }}</td>
+            <td class="text-right">{{ locQty.quantity * (item!.unitPrice) | currency }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
@@ -166,11 +166,11 @@
             </td>
           </tr>
         </ng-template>
-        <ng-template pTemplate="footer" *ngIf="locationQuantities.length > 0">
+        <ng-template pTemplate="footer" *ngIf="locationQuantities.length > 0 && item">
           <tr>
             <td colspan="2" class="font-bold">Total</td>
-            <td class="text-right font-bold">{{ item?.quantity }}</td>
-            <td class="text-right font-bold">{{ (item?.quantity || 0) * (item?.unitPrice || 0) | currency }}</td>
+            <td class="text-right font-bold">{{ item.quantity }}</td>
+            <td class="text-right font-bold">{{ item.quantity * item.unitPrice | currency }}</td>
           </tr>
         </ng-template>
       </p-table>
