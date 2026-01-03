@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { NavigationService } from '../core/services/navigation.service';
 
 @Component({
   selector: 'app-layout',
@@ -12,9 +13,15 @@ import { SidebarComponent } from './sidebar/sidebar.component';
   styleUrl: './layout.component.scss'
 })
 export class LayoutComponent {
-  sidebarCollapsed: boolean = false;
+  private navService = inject(NavigationService);
 
-  onToggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
+  // Computed classes for the layout based on navigation state
+  layoutClasses = computed(() => {
+    const viewMode = this.navService.viewMode();
+    return {
+      'sidebar-expanded': viewMode === 'expanded',
+      'sidebar-collapsed': viewMode === 'collapsed',
+      'sidebar-hidden': viewMode === 'mega-menu'
+    };
+  });
 }

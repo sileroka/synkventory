@@ -1,17 +1,50 @@
 <header class="app-header">
   <div class="header-left">
+    <div class="brand">
+      <img src="assets/logo_name_primary.png" style="height: 50px;" alt="Synkventory Logo" class="brand-logo">
+    </div>
     <p-button
-      icon="pi pi-bars"
+      [icon]="viewModeIcon()"
       [text]="true"
       [rounded]="true"
-      (onClick)="onToggleSidebar()"
+      (onClick)="cycleViewMode()"
+      [pTooltip]="viewModeTooltip()"
+      tooltipPosition="bottom"
       styleClass="header-menu-btn">
     </p-button>
-    <div class="brand">
-      <span class="brand-name">Synkventory</span>
-      <span class="brand-tagline">Stock in sync.</span>
-    </div>
   </div>
+
+  <!-- Mega Menu Navigation (shown when viewMode === 'mega-menu') -->
+  @if (viewMode() === 'mega-menu') {
+    <nav class="mega-menu">
+      @for (section of navSections; track section.title) {
+        @for (item of section.items; track item.route) {
+          <div class="mega-menu-item" [class.has-children]="item.children && item.children.length > 0">
+            @if (item.children && item.children.length > 0) {
+              <button class="mega-menu-btn">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+                <i class="pi pi-chevron-down dropdown-arrow"></i>
+              </button>
+              <div class="mega-dropdown">
+                @for (child of item.children; track child.route) {
+                  <a [routerLink]="child.route" class="mega-dropdown-item" routerLinkActive="active">
+                    <i [class]="child.icon"></i>
+                    <span>{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            } @else {
+              <a [routerLink]="item.route" class="mega-menu-btn" routerLinkActive="active">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            }
+          </div>
+        }
+      }
+    </nav>
+  }
 
   <div class="header-right">
     <p-button

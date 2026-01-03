@@ -1,48 +1,75 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-
-interface NavItem {
-  label: string;
-  icon: string;
-  route: string;
-  badge?: number;
-}
-
-interface NavSection {
-  title?: string;
-  items: NavItem[];
-}
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { NavigationService, NavItem, NavSection } from '../../core/services/navigation.service';
+import { TooltipModule } from 'primeng/tooltip';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TooltipModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent {
-  @Input() collapsed: boolean = false;
+  private router = inject(Router);
+  navService = inject(NavigationService);
 
-  navSections: NavSection[] = [
-    {
-      items: [
-        { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' },
-        { label: 'Inventory', icon: 'pi-box', route: '/inventory' },
-        { label: 'Locations', icon: 'pi-map-marker', route: '/locations' },
-        { label: 'Categories', icon: 'pi-tags', route: '/categories' },
-        { label: 'Stock Movements', icon: 'pi-arrows-h', route: '/stock-movements' }
-      ]
-    },
-    {
-      title: 'Reports',
-      items: [
-        { label: 'Inventory Valuation', icon: 'pi-chart-bar', route: '/reports/valuation' },
-        { label: 'Stock Movements', icon: 'pi-history', route: '/reports/movements' }
-      ]
+  constructor() {
+    // Expand parent menu when navigating to a child route
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.expandParentOfActiveRoute();
+    });
+  }
+
+  get navSections(): NavSection[] {
+    return this.navService.navSections;
+  }
+
+  hasChildren(item: NavItem): boolean {
+    return !!item.children && item.children.length > 0;
+  }
+
+  isExpanded(item: NavItem): boolean {
+    return this.navService.isSubmenuExpanded(item.id);
+  }
+
+  toggleSubmenu(event: Event, item: NavItem): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.navService.toggleSubmenu(item.id);
+  }
+
+  onNavItemClick(item: NavItem): void {
+    // Close mobile menu on navigation
+    this.navService.closeMobileMenu();
+  }
+
+  private expandParentOfActiveRoute(): void {
+    const currentUrl = this.router.url;
+
+    for (const section of this.navSections) {
+      for (const item of section.items) {
+        if (item.children) {
+          const hasActiveChild = item.children.some(child =>
+            child.route && currentUrl.startsWith(child.route)
+          );
+          if (hasActiveChild) {
+            this.navService.expandSubmenu(item.id);
+          }
+        }
+      }
     }
-  ];
+  }
 
-  // Keep navItems for backwards compatibility
-  navItems: NavItem[] = this.navSections.flatMap(section => section.items);
+  // Handle click outside to close expanded submenus in collapsed mode
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (this.navService.isCollapsed()) {
+      // Could add logic to close hover menus if needed
+    }
+  }
 }

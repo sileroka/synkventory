@@ -1,34 +1,109 @@
-<aside class="sidebar" [class.collapsed]="collapsed">
+<aside
+  class="sidebar"
+  [class.collapsed]="navService.isCollapsed()"
+  [class.hidden]="navService.isMegaMenu()">
+
   <nav class="sidebar-nav">
-    @for (section of navSections; track $index) {
-      @if (section.title && !collapsed) {
+    @for (section of navSections; track section.id) {
+      <!-- Section Title (expanded mode only) -->
+      @if (section.title && navService.isExpanded()) {
         <div class="nav-section-title">{{ section.title }}</div>
       }
-      @if (section.title && collapsed) {
+      <!-- Section Divider (collapsed mode) -->
+      @if (section.title && navService.isCollapsed()) {
         <div class="nav-section-divider"></div>
       }
+
       <ul class="nav-list">
-        @for (item of section.items; track item.route) {
-          <li class="nav-item">
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="active"
-              class="nav-link"
-              [attr.title]="collapsed ? item.label : null">
-              <i class="pi {{ item.icon }} nav-icon"></i>
-              <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-              <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
-            </a>
+        @for (item of section.items; track item.id) {
+          <li class="nav-item" [class.has-children]="hasChildren(item)">
+            <!-- Main nav link -->
+            @if (hasChildren(item)) {
+              <!-- Parent with children - toggle submenu -->
+              <a
+                class="nav-link"
+                [class.expanded]="isExpanded(item)"
+                (click)="toggleSubmenu($event, item)"
+                [pTooltip]="navService.isCollapsed() ? item.label : ''"
+                tooltipPosition="right">
+                <i class="pi {{ item.icon }} nav-icon"></i>
+                @if (navService.isExpanded()) {
+                  <span class="nav-label">{{ item.label }}</span>
+                  <i class="pi pi-chevron-down nav-arrow" [class.rotated]="isExpanded(item)"></i>
+                }
+              </a>
+
+              <!-- Submenu -->
+              @if (navService.isExpanded()) {
+                <ul class="nav-submenu" [class.open]="isExpanded(item)">
+                  @for (child of item.children; track child.id) {
+                    <li class="nav-submenu-item">
+                      <a
+                        [routerLink]="child.route"
+                        routerLinkActive="active"
+                        class="nav-submenu-link"
+                        (click)="onNavItemClick(child)">
+                        <i class="pi {{ child.icon }} nav-submenu-icon"></i>
+                        <span class="nav-submenu-label">{{ child.label }}</span>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+
+              <!-- Collapsed mode flyout -->
+              @if (navService.isCollapsed()) {
+                <div class="nav-flyout">
+                  <div class="nav-flyout-header">{{ item.label }}</div>
+                  <ul class="nav-flyout-list">
+                    @for (child of item.children; track child.id) {
+                      <li class="nav-flyout-item">
+                        <a
+                          [routerLink]="child.route"
+                          routerLinkActive="active"
+                          class="nav-flyout-link"
+                          (click)="onNavItemClick(child)">
+                          <i class="pi {{ child.icon }}"></i>
+                          <span>{{ child.label }}</span>
+                        </a>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            } @else {
+              <!-- Simple link without children -->
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                class="nav-link"
+                [pTooltip]="navService.isCollapsed() ? item.label : ''"
+                tooltipPosition="right"
+                (click)="onNavItemClick(item)">
+                <i class="pi {{ item.icon }} nav-icon"></i>
+                @if (navService.isExpanded()) {
+                  <span class="nav-label">{{ item.label }}</span>
+                  @if (item.badge) {
+                    <span class="nav-badge" [class]="item.badgeSeverity || 'info'">
+                      {{ item.badge }}
+                    </span>
+                  }
+                }
+              </a>
+            }
           </li>
         }
       </ul>
     }
   </nav>
 
-  <div class="sidebar-footer" *ngIf="!collapsed">
-    <div class="version-info">
-      <span class="version">v1.0.0</span>
-      <span class="company">Synkadia</span>
+  <!-- Footer (expanded mode only) -->
+  @if (navService.isExpanded()) {
+    <div class="sidebar-footer">
+      <div class="version-info">
+        <span class="version">v1.0.0</span>
+        <span class="company">Synkadia</span>
+      </div>
     </div>
-  </div>
+  }
 </aside>

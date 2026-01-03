@@ -1,5 +1,5 @@
-$sidebar-width: 240px;
-$sidebar-collapsed-width: 60px;
+$sidebar-width: 260px;
+$sidebar-collapsed-width: 68px;
 $header-height: 60px;
 
 .app-layout {
@@ -12,10 +12,14 @@ $header-height: 60px;
   margin-top: $header-height;
   padding: 1.5rem;
   min-height: calc(100vh - #{$header-height});
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.25s ease;
 
   .sidebar-collapsed & {
     margin-left: $sidebar-collapsed-width;
+  }
+
+  .sidebar-hidden & {
+    margin-left: 0;
   }
 }
 
