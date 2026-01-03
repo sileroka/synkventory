@@ -176,7 +176,7 @@ $neutral-100: #F1F5F9;
 
       &.accent {
         background: rgba($secondary, 0.1);
-        
+
         .stat-value {
           color: $secondary;
         }
@@ -300,16 +300,20 @@ $neutral-100: #F1F5F9;
       color: rgba(255, 255, 255, 0.8);
       margin-bottom: 2rem;
     }
+  }
 
-    ::ng-deep .p-button {
-      background: white;
-      color: $primary;
-      border-color: white;
+  ::ng-deep .cta-section-btn {
+    background: white !important;
+    color: $primary !important;
+    border-color: white !important;
 
-      &:hover {
-        background: $neutral-100;
-        border-color: $neutral-100;
-      }
+    &:hover {
+      background: $neutral-100 !important;
+      border-color: $neutral-100 !important;
+    }
+
+    .p-button-icon {
+      color: $primary !important;
     }
   }
 }

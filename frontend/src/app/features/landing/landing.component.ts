@@ -1,6 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
@@ -11,8 +10,6 @@ import { ButtonModule } from 'primeng/button';
   styleUrl: './landing.component.scss'
 })
 export class LandingComponent {
-  private router = inject(Router);
-  
   currentYear = new Date().getFullYear();
 
   features = [
@@ -47,10 +44,4 @@ export class LandingComponent {
       description: 'Bank-level security with tenant isolation and encrypted data.'
     }
   ];
-
-  onSignIn(): void {
-    // In production, this would redirect to a subdomain or show a tenant selector
-    // For now, just go to login page
-    this.router.navigate(['/login']);
-  }
 }

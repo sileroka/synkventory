@@ -31,7 +31,8 @@ export class AppComponent {
   isStandalonePage = computed(() => {
     const url = this.currentUrl();
     const isLogin = url === '/login' || url.startsWith('/login');
-    const isLanding = url === '/' && this.tenantService.isRootDomain();
+    // On root domain, any root path (including anchor links like /#features) should show landing
+    const isLanding = this.tenantService.isRootDomain() && (url === '/' || url.startsWith('/#'));
     return isLogin || isLanding;
   });
 }

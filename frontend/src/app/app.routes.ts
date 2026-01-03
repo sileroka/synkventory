@@ -15,7 +15,7 @@ import { UserRole } from './models/user.model';
 export const routes: Routes = [
   // Landing page (root domain only)
   { path: '', component: LandingComponent, canActivate: [landingGuard], pathMatch: 'full' },
-  
+
   // Public routes
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
 
