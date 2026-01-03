@@ -59,9 +59,13 @@ def upgrade() -> None:
             server_default=sa.text("gen_random_uuid()"),
             nullable=False,
         ),
+        sa.Column("tenant_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("email", sa.String(255), nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("password_hash", sa.String(255), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
+        sa.Column("is_locked", sa.Boolean(), nullable=False, server_default="false"),
+        sa.Column("locked_until", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -70,8 +74,12 @@ def upgrade() -> None:
         ),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
     )
-    op.create_index("ix_users_email", "users", ["email"], unique=True)
+    op.create_index("ix_users_tenant_id", "users", ["tenant_id"])
+    op.create_index(
+        "ix_users_tenant_email", "users", ["tenant_id", "email"], unique=True
+    )
     op.create_index("ix_users_is_active", "users", ["is_active"])
 
     # ==========================================================================
@@ -350,9 +358,104 @@ def upgrade() -> None:
         ["location_id"],
     )
 
+    # ==========================================================================
+    # Row Level Security (RLS) Setup
+    # ==========================================================================
+    # Create app role for RLS enforcement (if not exists)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'synkventory_app') THEN
+                CREATE ROLE synkventory_app;
+            END IF;
+        END
+        $$;
+        """
+    )
+
+    # Grant usage on schema
+    op.execute("GRANT USAGE ON SCHEMA public TO synkventory_app")
+
+    # Grant table permissions to app role
+    tables_with_rls = [
+        "users",
+        "categories",
+        "locations",
+        "inventory_items",
+        "stock_movements",
+    ]
+
+    for table in tables_with_rls:
+        op.execute(f"GRANT SELECT, INSERT, UPDATE, DELETE ON {table} TO synkventory_app")
+
+    # Enable RLS and create policies for tenant-scoped tables
+    tenant_tables = [
+        "users",
+        "categories",
+        "locations",
+        "inventory_items",
+        "stock_movements",
+    ]
+
+    for table in tenant_tables:
+        # Enable RLS
+        op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
+
+        # Create policy: users can only see/modify rows in their tenant
+        op.execute(
+            f"""
+            CREATE POLICY {table}_tenant_isolation ON {table}
+                FOR ALL
+                TO synkventory_app
+                USING (tenant_id::text = current_setting('app.current_tenant_id', true))
+                WITH CHECK (tenant_id::text = current_setting('app.current_tenant_id', true))
+            """
+        )
+
+    # Tenants table - users can only see their own tenant
+    op.execute("ALTER TABLE tenants ENABLE ROW LEVEL SECURITY")
+    op.execute(
+        """
+        CREATE POLICY tenants_tenant_isolation ON tenants
+            FOR ALL
+            TO synkventory_app
+            USING (id::text = current_setting('app.current_tenant_id', true))
+            WITH CHECK (id::text = current_setting('app.current_tenant_id', true))
+        """
+    )
+    op.execute("GRANT SELECT ON tenants TO synkventory_app")
+
+    # Grant sequence permissions
+    op.execute("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO synkventory_app")
+
 
 def downgrade() -> None:
     """Drop all tables in reverse order."""
+    # ==========================================================================
+    # Remove RLS Setup
+    # ==========================================================================
+    tenant_tables = [
+        "users",
+        "categories",
+        "locations",
+        "inventory_items",
+        "stock_movements",
+    ]
+
+    for table in tenant_tables:
+        op.execute(f"DROP POLICY IF EXISTS {table}_tenant_isolation ON {table}")
+        op.execute(f"ALTER TABLE {table} DISABLE ROW LEVEL SECURITY")
+
+    op.execute("DROP POLICY IF EXISTS tenants_tenant_isolation ON tenants")
+    op.execute("ALTER TABLE tenants DISABLE ROW LEVEL SECURITY")
+
+    # Revoke permissions and drop role
+    op.execute("REVOKE ALL ON ALL TABLES IN SCHEMA public FROM synkventory_app")
+    op.execute("REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM synkventory_app")
+    op.execute("REVOKE USAGE ON SCHEMA public FROM synkventory_app")
+
+    # Drop tables
     op.drop_table("inventory_location_quantities")
     op.drop_table("stock_movements")
 

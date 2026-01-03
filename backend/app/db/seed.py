@@ -39,7 +39,7 @@ def seed_default_tenant(db: Session) -> Tenant:
     return default_tenant
 
 
-def seed_system_user(db: Session) -> User:
+def seed_system_user(db: Session, default_tenant: Tenant) -> User:
     """
     Create or get the system user.
 
@@ -48,6 +48,10 @@ def seed_system_user(db: Session) -> User:
     - Automated processes and cron jobs
     - Seed data creation
     - Any operation that isn't triggered by a real user
+
+    Args:
+        db: Database session
+        default_tenant: The default tenant to associate the system user with
 
     Returns:
         User: The system user instance
@@ -58,8 +62,10 @@ def seed_system_user(db: Session) -> User:
     if system_user is None:
         system_user = User(
             id=SYSTEM_USER_ID,
+            tenant_id=default_tenant.id,
             email="system@synkventory.local",
             name="System",
+            password_hash="!disabled",  # Cannot login - not a valid bcrypt hash
             is_active=True,
         )
         db.add(system_user)
@@ -81,8 +87,8 @@ def run_seeds(db: Session) -> None:
     """
     print("Running database seeds...")
     # Tenant must be seeded first since users and other entities reference it
-    seed_default_tenant(db)
-    seed_system_user(db)
+    default_tenant = seed_default_tenant(db)
+    seed_system_user(db, default_tenant)
     print("Database seeding complete.")
 
 
