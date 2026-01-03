@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.security import verify_password, get_password_hash, create_access_token
+from app.core.security import verify_password, get_password_hash, create_admin_access_token, decode_admin_token
 from app.db.session import get_db_no_tenant  # Admin endpoints don't use RLS
 from app.models.admin_user import AdminUser
 from app.models.tenant import Tenant
@@ -42,8 +42,6 @@ def get_current_admin_user(
     db: Session = Depends(get_db_no_tenant),
 ) -> AdminUser:
     """Get current admin user from cookie token."""
-    from app.core.security import decode_token
-
     token = request.cookies.get("admin_access_token")
     if not token:
         raise HTTPException(
@@ -51,28 +49,21 @@ def get_current_admin_user(
             detail="Not authenticated",
         )
 
-    payload = decode_token(token)
+    payload = decode_admin_token(token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            detail="Invalid or expired token",
         )
 
-    # Check if this is an admin token
-    if payload.get("type") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
-        )
-
-    user_id = payload.get("sub")
-    if not user_id:
+    admin_id = payload.get("admin_id")
+    if not admin_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
 
-    admin_user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
+    admin_user = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
     if not admin_user or not admin_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,8 +100,12 @@ def admin_login(
     admin_user.last_login = datetime.now(timezone.utc)
     db.commit()
 
-    # Create admin token with type indicator
-    token = create_access_token(data={"sub": str(admin_user.id), "type": "admin"})
+    # Create admin token
+    token = create_admin_access_token(
+        admin_id=str(admin_user.id),
+        email=admin_user.email,
+        is_super_admin=admin_user.is_super_admin,
+    )
 
     # Set cookie
     response.set_cookie(

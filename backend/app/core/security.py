@@ -66,6 +66,53 @@ def create_access_token(
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
+def create_admin_access_token(
+    admin_id: str,
+    email: str,
+    is_super_admin: bool = False,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """Create a JWT access token for admin users (no tenant context)."""
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(hours=24)  # 24 hours for admin
+    
+    to_encode = {
+        "sub": admin_id,
+        "email": email,
+        "is_super_admin": is_super_admin,
+        "exp": expire,
+        "type": "admin",
+    }
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_admin_token(token: str) -> Optional[dict]:
+    """
+    Decode and validate an admin JWT token.
+    Returns None if token is invalid or expired.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "admin":
+            return None
+        
+        admin_id: str = payload.get("sub")
+        email: str = payload.get("email")
+        
+        if not all([admin_id, email]):
+            return None
+        
+        return {
+            "admin_id": admin_id,
+            "email": email,
+            "is_super_admin": payload.get("is_super_admin", False),
+        }
+    except JWTError:
+        return None
+
+
 def create_refresh_token(
     user_id: str,
     tenant_id: str,

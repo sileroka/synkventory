@@ -21,4 +21,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("REVOKE SELECT, INSERT, UPDATE, DELETE ON admin_users FROM synkventory_app")
+    op.execute(
+        "REVOKE SELECT, INSERT, UPDATE, DELETE ON admin_users FROM synkventory_app"
+    )
