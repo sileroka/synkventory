@@ -85,10 +85,12 @@ def get_db_no_tenant():
     db = SessionLocal()
     try:
         # Explicitly reset role to bypass RLS policies
-        # This ensures we're using the connection owner role, not synkventory_app
+        # RLS policies only apply to synkventory_app role, so resetting to
+        # the connection owner role bypasses them entirely.
+        # Note: Don't RESET app.current_tenant_id as it sets to empty string
+        # which causes "invalid input syntax for type uuid" errors
         try:
             db.execute(text("RESET ROLE"))
-            db.execute(text("RESET app.current_tenant_id"))
         except Exception:
             pass
         yield db
