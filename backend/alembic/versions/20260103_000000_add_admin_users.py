@@ -43,7 +43,8 @@ def upgrade() -> None:
     # Create unique index on email
     op.create_index("idx_admin_users_email", "admin_users", ["email"], unique=True)
 
-    # NOTE: No RLS on admin_users - they are not tenant-scoped
+    # Grant permissions to app user (no RLS needed - admin_users is not tenant-scoped)
+    op.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON admin_users TO synkventory_app")
 
 
 def downgrade() -> None:
