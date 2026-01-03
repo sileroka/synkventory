@@ -84,6 +84,13 @@ def get_db_no_tenant():
     """
     db = SessionLocal()
     try:
+        # Explicitly reset role to bypass RLS policies
+        # This ensures we're using the connection owner role, not synkventory_app
+        try:
+            db.execute(text("RESET ROLE"))
+            db.execute(text("RESET app.current_tenant_id"))
+        except Exception:
+            pass
         yield db
     finally:
         db.close()
