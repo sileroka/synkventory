@@ -39,6 +39,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if request.url.path in skip_paths or request.url.path.startswith("/api/v1/health"):
             return await call_next(request)
 
+        # Skip tenant check for admin portal endpoints
+        if request.url.path.startswith("/api/v1/admin"):
+            return await call_next(request)
+
         # Extract subdomain
         host = request.headers.get("host", "")
         subdomain: Optional[str] = None
