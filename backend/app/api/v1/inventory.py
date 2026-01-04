@@ -45,7 +45,7 @@ def get_response_meta(request: Request) -> ResponseMeta:
     )
 
 
-@router.get("/", response_model=ListResponse[InventoryItem])
+@router.get("", response_model=ListResponse[InventoryItem])
 def get_inventory_items(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
@@ -233,7 +233,7 @@ def get_inventory_item(item_id: UUID, request: Request, db: Session = Depends(ge
     return DataResponse(data=item, meta=get_response_meta(request))
 
 
-@router.post("/", response_model=DataResponse[InventoryItem], status_code=201)
+@router.post("", response_model=DataResponse[InventoryItem], status_code=201)
 def create_inventory_item(
     item: InventoryItemCreate, request: Request, db: Session = Depends(get_db)
 ):

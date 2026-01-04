@@ -61,7 +61,7 @@ def build_category_tree(
     return tree
 
 
-@router.get("/", response_model=ListResponse[Category])
+@router.get("", response_model=ListResponse[Category])
 def get_categories(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
@@ -144,7 +144,7 @@ def get_category(category_id: UUID, request: Request, db: Session = Depends(get_
     return DataResponse(data=category, meta=get_response_meta(request))
 
 
-@router.post("/", response_model=DataResponse[Category], status_code=201)
+@router.post("", response_model=DataResponse[Category], status_code=201)
 def create_category(
     category: CategoryCreate, request: Request, db: Session = Depends(get_db)
 ):

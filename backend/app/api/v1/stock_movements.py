@@ -82,7 +82,7 @@ def get_or_create_location_quantity(
     return loc_qty
 
 
-@router.post("/", response_model=DataResponse[StockMovement], status_code=201)
+@router.post("", response_model=DataResponse[StockMovement], status_code=201)
 def create_stock_movement(
     movement: StockMovementCreate, request: Request, db: Session = Depends(get_db)
 ):
@@ -229,7 +229,7 @@ def create_stock_movement(
     return DataResponse(data=db_movement, meta=get_response_meta(request))
 
 
-@router.get("/", response_model=ListResponse[StockMovement])
+@router.get("", response_model=ListResponse[StockMovement])
 def get_stock_movements(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),

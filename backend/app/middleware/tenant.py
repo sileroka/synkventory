@@ -36,11 +36,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.base_domain = base_domain
         self.is_dev = os.getenv("ENVIRONMENT", "development") == "development"
-        logger.info(f"[TENANT] TenantMiddleware initialized with base_domain={base_domain}, is_dev={self.is_dev}")
+        logger.info(
+            f"[TENANT] TenantMiddleware initialized with base_domain={base_domain}, is_dev={self.is_dev}"
+        )
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         logger.info(f"[TENANT] Processing request: {request.url.path}")
-        
+
         # Skip tenant check for health endpoints and docs
         skip_paths = [
             "/health",
@@ -57,8 +59,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Skip tenant check for admin portal endpoints
-        if request.url.path.startswith("/api/v1/admin") or request.url.path.startswith("/v1/admin"):
-            logger.info(f"[TENANT] Skipping tenant check for admin path: {request.url.path}")
+        if request.url.path.startswith("/api/v1/admin") or request.url.path.startswith(
+            "/v1/admin"
+        ):
+            logger.info(
+                f"[TENANT] Skipping tenant check for admin path: {request.url.path}"
+            )
             return await call_next(request)
 
         # Extract subdomain
@@ -88,7 +94,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Look up tenant
         tenant_context = self._get_tenant_by_slug(subdomain)
-        logger.info(f"[TENANT] Tenant lookup result for '{subdomain}': {tenant_context}")
+        logger.info(
+            f"[TENANT] Tenant lookup result for '{subdomain}': {tenant_context}"
+        )
 
         # Set context (even if None - auth will fail with generic error)
         if tenant_context:

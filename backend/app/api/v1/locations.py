@@ -32,7 +32,7 @@ def get_response_meta(request: Request) -> ResponseMeta:
     )
 
 
-@router.get("/", response_model=ListResponse[Location])
+@router.get("", response_model=ListResponse[Location])
 def get_locations(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
@@ -87,7 +87,7 @@ def get_location(location_id: UUID, request: Request, db: Session = Depends(get_
     return DataResponse(data=location, meta=get_response_meta(request))
 
 
-@router.post("/", response_model=DataResponse[Location], status_code=201)
+@router.post("", response_model=DataResponse[Location], status_code=201)
 def create_location(
     location: LocationCreate, request: Request, db: Session = Depends(get_db)
 ):

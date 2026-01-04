@@ -47,16 +47,22 @@ async def debug_logging_middleware(request: Request, call_next):
     logger.info(f"[DEBUG] Incoming request: {request.method} {request.url.path}")
     logger.info(f"[DEBUG] Full URL: {request.url}")
     logger.info(f"[DEBUG] Host header: {request.headers.get('host', 'N/A')}")
-    logger.info(f"[DEBUG] X-Forwarded-Proto: {request.headers.get('x-forwarded-proto', 'N/A')}")
-    logger.info(f"[DEBUG] X-Forwarded-Host: {request.headers.get('x-forwarded-host', 'N/A')}")
+    logger.info(
+        f"[DEBUG] X-Forwarded-Proto: {request.headers.get('x-forwarded-proto', 'N/A')}"
+    )
+    logger.info(
+        f"[DEBUG] X-Forwarded-Host: {request.headers.get('x-forwarded-host', 'N/A')}"
+    )
     logger.info(f"[DEBUG] X-Tenant-Slug: {request.headers.get('x-tenant-slug', 'N/A')}")
     logger.info(f"[DEBUG] Origin: {request.headers.get('origin', 'N/A')}")
     logger.info(f"[DEBUG] Cookie present: {'cookie' in request.headers}")
-    
+
     response = await call_next(request)
-    
-    logger.info(f"[DEBUG] Response status: {response.status_code} for {request.method} {request.url.path}")
-    
+
+    logger.info(
+        f"[DEBUG] Response status: {response.status_code} for {request.method} {request.url.path}"
+    )
+
     return response
 
 
