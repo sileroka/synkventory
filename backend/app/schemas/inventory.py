@@ -106,7 +106,9 @@ class InventoryItem(InventoryItemBase):
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
 
-    @field_validator("id", "created_by", "updated_by", "category_id", "location_id", mode="before")
+    @field_validator(
+        "id", "created_by", "updated_by", "category_id", "location_id", mode="before"
+    )
     @classmethod
     def convert_uuid_to_str(cls, v: Any) -> Optional[str]:
         return str(v) if v else None
