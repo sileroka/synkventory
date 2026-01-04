@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
@@ -30,8 +30,9 @@ class RelatedLocation(BaseModel):
     name: str
     code: str
 
-    @field_serializer("id")
-    def serialize_id(self, v: Any) -> str:
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v: Any) -> Optional[str]:
         return str(v) if v else None
 
 
@@ -46,8 +47,9 @@ class RelatedCategory(BaseModel):
     name: str
     code: str
 
-    @field_serializer("id")
-    def serialize_id(self, v: Any) -> str:
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v: Any) -> Optional[str]:
         return str(v) if v else None
 
 
@@ -104,8 +106,9 @@ class InventoryItem(InventoryItemBase):
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
 
-    @field_serializer("id", "created_by", "updated_by", "category_id", "location_id")
-    def serialize_uuid(self, v: Any) -> Optional[str]:
+    @field_validator("id", "created_by", "updated_by", "category_id", "location_id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v: Any) -> Optional[str]:
         return str(v) if v else None
 
 
@@ -128,8 +131,9 @@ class LowStockAlert(BaseModel):
     category: Optional[RelatedCategory] = None
     location: Optional[RelatedLocation] = None
 
-    @field_serializer("id")
-    def serialize_id(self, v: Any) -> Optional[str]:
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v: Any) -> Optional[str]:
         return str(v) if v else None
 
 
