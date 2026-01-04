@@ -20,6 +20,36 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # First, ensure the synkventory_app role has permissions on category_attributes table
+    # This may have been missed in the initial migration
+    op.execute(
+        "GRANT SELECT, INSERT, UPDATE, DELETE ON category_attributes TO synkventory_app"
+    )
+
+    # Enable RLS on category_attributes if not already enabled
+    op.execute("ALTER TABLE category_attributes ENABLE ROW LEVEL SECURITY")
+
+    # Drop existing policy if it exists (to avoid conflicts)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            DROP POLICY IF EXISTS category_attributes_tenant_isolation ON category_attributes;
+        END
+        $$;
+    """
+    )
+
+    # Create RLS policy for category_attributes
+    op.execute(
+        """
+        CREATE POLICY category_attributes_tenant_isolation ON category_attributes
+            FOR ALL TO synkventory_app
+            USING (tenant_id = current_setting('app.current_tenant_id', true)::UUID)
+            WITH CHECK (tenant_id = current_setting('app.current_tenant_id', true)::UUID)
+    """
+    )
+
     # Add is_global column
     op.add_column(
         "category_attributes",
@@ -41,9 +71,15 @@ def upgrade() -> None:
         ["tenant_id", "is_global"],
     )
 
-    # Drop the old unique index that requires category_id
-    op.drop_index(
-        "ix_category_attributes_category_key", table_name="category_attributes"
+    # Drop the old unique index that requires category_id (if exists)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            DROP INDEX IF EXISTS ix_category_attributes_category_key;
+        END
+        $$;
+    """
     )
 
     # Create partial unique index for category-specific attributes
@@ -67,13 +103,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop the new indexes
-    op.drop_index("ix_category_attributes_global_key", table_name="category_attributes")
-    op.drop_index(
-        "ix_category_attributes_category_key", table_name="category_attributes"
-    )
-    op.drop_index(
-        "ix_category_attributes_tenant_global", table_name="category_attributes"
-    )
+    op.execute("DROP INDEX IF EXISTS ix_category_attributes_global_key")
+    op.execute("DROP INDEX IF EXISTS ix_category_attributes_category_key")
+    op.execute("DROP INDEX IF EXISTS ix_category_attributes_tenant_global")
 
     # Recreate the original unique index
     op.create_index(
@@ -95,3 +127,5 @@ def downgrade() -> None:
 
     # Drop is_global column
     op.drop_column("category_attributes", "is_global")
+
+    # Note: We don't remove the GRANT or RLS policy as they should remain
