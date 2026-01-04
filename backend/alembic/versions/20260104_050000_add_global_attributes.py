@@ -1,7 +1,7 @@
 """Add global attributes support
 
-Revision ID: 20260104_000000
-Revises: 20260102_000000
+Revision ID: 20260104_050000
+Revises: 20260104_040000
 Create Date: 2026-01-04
 
 """
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "20260104_000000"
-down_revision: Union[str, None] = "20260102_000000"
+revision: str = "20260104_050000"
+down_revision: Union[str, None] = "20260104_040000"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
