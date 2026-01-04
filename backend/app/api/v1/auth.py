@@ -10,6 +10,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.deps import get_current_user
 from app.core.security import (
     create_token_pair,
@@ -23,6 +24,19 @@ from app.db.session import get_db
 from app.models.user import User
 
 router = APIRouter()
+
+
+def set_auth_cookie(response: Response, key: str, value: str, max_age: int) -> None:
+    """Set an authentication cookie with proper domain settings."""
+    response.set_cookie(
+        key=key,
+        value=value,
+        httponly=True,
+        secure=True,  # Requires HTTPS in production
+        samesite="lax",
+        max_age=max_age,
+        domain=settings.COOKIE_DOMAIN,  # None in dev, ".synkventory.com" in prod
+    )
 
 
 # =============================================================================
@@ -116,22 +130,8 @@ def login(
     )
 
     # Set HttpOnly cookies
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=True,  # Requires HTTPS in production
-        samesite="lax",
-        max_age=30 * 60,  # 30 minutes
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60,  # 7 days
-    )
+    set_auth_cookie(response, "access_token", tokens.access_token, 30 * 60)  # 30 min
+    set_auth_cookie(response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60)  # 7 days
 
     return LoginResponse(
         user=UserResponse(
@@ -194,31 +194,25 @@ def refresh_tokens(
     )
 
     # Set new cookies
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=30 * 60,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60,
-    )
+    set_auth_cookie(response, "access_token", tokens.access_token, 30 * 60)
+    set_auth_cookie(response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60)
 
     return {"message": "Tokens refreshed"}
+
+
+def delete_auth_cookie(response: Response, key: str) -> None:
+    """Delete an authentication cookie with proper domain settings."""
+    response.delete_cookie(
+        key=key,
+        domain=settings.COOKIE_DOMAIN,
+    )
 
 
 @router.post("/auth/logout")
 def logout(response: Response):
     """Clear auth cookies."""
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    delete_auth_cookie(response, "access_token")
+    delete_auth_cookie(response, "refresh_token")
     return {"message": "Logged out"}
 
 
@@ -286,22 +280,8 @@ def register(
     )
 
     # Set cookies
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=30 * 60,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60,
-    )
+    set_auth_cookie(response, "access_token", tokens.access_token, 30 * 60)
+    set_auth_cookie(response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60)
 
     return LoginResponse(
         user=UserResponse(

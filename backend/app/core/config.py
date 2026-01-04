@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # Example: "http://localhost:4200,https://app.synkventory.com"
     CORS_ORIGINS: str = "http://localhost:4200,http://localhost"
 
+    # Cookie domain for cross-subdomain auth
+    # Set to ".synkventory.com" in production to share cookies across subdomains
+    COOKIE_DOMAIN: Optional[str] = None
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def validate_cors_origins(cls, v: Union[str, List[str]]) -> str:

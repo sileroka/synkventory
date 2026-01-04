@@ -85,6 +85,11 @@ services:
         scope: RUN_TIME
         type: SECRET
 
+      # Cookie domain for cross-subdomain auth
+      - key: COOKIE_DOMAIN
+        scope: RUN_TIME
+        value: ".synkventory.com"
+
       # CORS - will be auto-set to app URL
       - key: CORS_ORIGINS
         scope: RUN_TIME
