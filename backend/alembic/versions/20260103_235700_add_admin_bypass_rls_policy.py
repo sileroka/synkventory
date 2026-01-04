@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Add admin bypass policies to tenant-scoped tables.
-    
+
     These policies allow operations when app.is_admin is set to 'true',
     enabling admin operations to bypass normal tenant isolation.
     """
