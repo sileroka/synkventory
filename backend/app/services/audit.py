@@ -91,7 +91,7 @@ class AuditService:
         """
         try:
             ip_address, user_agent = self._get_request_context(request)
-            
+
             # Get user email directly from user_id query to avoid session issues
             user_email = None
             if user_id:
@@ -127,12 +127,8 @@ class AuditService:
 
         except Exception as e:
             logger.error(f"Failed to create audit log: {e}")
-            # Don't rollback - just log the error and let the calling code handle it
-            # Expunge the failed audit log object if it was added
-            try:
-                db.rollback()
-            except Exception:
-                pass
+            # Don't rollback - audit logging failure should not affect the main transaction
+            # The calling code has already captured necessary data before calling audit
             return None
 
     def log_login(
