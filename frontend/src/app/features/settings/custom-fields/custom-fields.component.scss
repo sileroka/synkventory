@@ -1,0 +1,119 @@
+.card {
+  background: var(--synk-white);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--synk-neutral-900);
+  margin: 0;
+}
+
+h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--synk-neutral-900);
+  margin: 0;
+}
+
+.category-panel {
+  background: var(--synk-neutral-50);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  height: 100%;
+  min-height: 400px;
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.25rem;
+
+  &:hover {
+    background: var(--synk-neutral-100);
+  }
+
+  &.selected {
+    background: var(--synk-primary);
+    color: white;
+
+    .category-code {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    i {
+      color: white;
+    }
+  }
+
+  i {
+    color: var(--synk-neutral-500);
+  }
+}
+
+.category-code {
+  font-size: 0.75rem;
+  color: var(--synk-neutral-500);
+  font-family: var(--font-mono);
+}
+
+.attributes-panel {
+  background: var(--synk-neutral-50);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  min-height: 400px;
+}
+
+.empty-state,
+.empty-attributes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+}
+
+.default-value {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--synk-neutral-100);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  color: var(--synk-neutral-700);
+}
+
+// Table styling
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--synk-neutral-100);
+      color: var(--synk-neutral-700);
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: 1rem;
+    }
+  }
+
+  .p-tag {
+    font-size: 0.75rem;
+  }
+}

@@ -63,6 +63,14 @@ export const routes: Routes = [
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
 
+  // Settings routes (Admin/Manager only)
+  {
+    path: 'settings/custom-fields',
+    loadComponent: () => import('./features/settings/custom-fields/custom-fields.component').then(m => m.CustomFieldsComponent),
+    canActivate: [roleGuard],
+    data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }
+  },
+
   // Admin/Manager only routes (tenant-level)
   {
     path: 'users',

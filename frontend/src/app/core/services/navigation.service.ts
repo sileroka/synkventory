@@ -117,6 +117,20 @@ export class NavigationService {
       ]
     },
     {
+      id: 'settings',
+      title: 'Settings',
+      roles: [UserRole.ADMIN, UserRole.MANAGER],
+      items: [
+        {
+          id: 'custom-fields',
+          label: 'Custom Fields',
+          icon: 'pi-cog',
+          route: '/settings/custom-fields',
+          roles: [UserRole.ADMIN, UserRole.MANAGER]
+        }
+      ]
+    },
+    {
       id: 'admin',
       title: 'Administration',
       roles: [UserRole.ADMIN, UserRole.MANAGER],

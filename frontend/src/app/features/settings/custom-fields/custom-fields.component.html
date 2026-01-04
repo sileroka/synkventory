@@ -1,0 +1,274 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>Custom Fields</h1>
+      <p class="text-color-secondary mt-1 mb-0">
+        Define custom attributes for inventory items by category
+      </p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Categories List -->
+    <div class="col-12 md:col-4">
+      <div class="category-panel">
+        <h3 class="mb-3">Categories</h3>
+        <p class="text-color-secondary text-sm mb-3">
+          Select a category to manage its custom fields
+        </p>
+        
+        @if (loading()) {
+          <div class="flex justify-content-center py-4">
+            <i class="pi pi-spin pi-spinner text-2xl"></i>
+          </div>
+        } @else if (categories().length === 0) {
+          <div class="text-center py-4 text-color-secondary">
+            <i class="pi pi-folder-open text-3xl mb-2"></i>
+            <p>No categories found</p>
+          </div>
+        } @else {
+          <ul class="category-list">
+            @for (category of categories(); track category.id) {
+              <li 
+                class="category-item" 
+                [class.selected]="selectedCategory()?.id === category.id"
+                (click)="selectCategory(category)">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-folder"></i>
+                  <span>{{ category.name }}</span>
+                </div>
+                <span class="category-code">{{ category.code }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Attributes Panel -->
+    <div class="col-12 md:col-8">
+      <div class="attributes-panel">
+        @if (!selectedCategory()) {
+          <div class="empty-state">
+            <i class="pi pi-cog text-5xl text-color-secondary mb-3"></i>
+            <h3 class="text-color-secondary">Select a Category</h3>
+            <p class="text-color-secondary">
+              Choose a category from the list to view and manage its custom fields
+            </p>
+          </div>
+        } @else {
+          <div class="flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">
+              Custom Fields for "{{ selectedCategory()?.name }}"
+            </h3>
+            <p-button 
+              label="Add Field" 
+              icon="pi pi-plus" 
+              (onClick)="showAddDialog()">
+            </p-button>
+          </div>
+
+          @if (attributesLoading()) {
+            <div class="flex justify-content-center py-4">
+              <i class="pi pi-spin pi-spinner text-2xl"></i>
+            </div>
+          } @else if (attributes().length === 0) {
+            <div class="empty-attributes">
+              <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary mb-3">
+                No custom fields defined for this category
+              </p>
+              <p-button 
+                label="Add First Field" 
+                icon="pi pi-plus" 
+                severity="secondary"
+                (onClick)="showAddDialog()">
+              </p-button>
+            </div>
+          } @else {
+            <p-table 
+              [value]="attributes()" 
+              [tableStyle]="{ 'min-width': '40rem' }"
+              styleClass="p-datatable-striped">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Default Value</th>
+                  <th style="width: 120px">Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-attr>
+                <tr>
+                  <td>
+                    <div class="font-semibold">{{ attr.name }}</div>
+                    @if (attr.description) {
+                      <div class="text-sm text-color-secondary">{{ attr.description }}</div>
+                    }
+                  </td>
+                  <td>
+                    <p-tag 
+                      [value]="getTypeLabel(attr.attributeType)"
+                      [icon]="'pi ' + getTypeIcon(attr.attributeType)"
+                      [severity]="getTypeSeverity(attr.attributeType)">
+                    </p-tag>
+                  </td>
+                  <td>
+                    <i [class]="attr.isRequired ? 'pi pi-check text-green-500' : 'pi pi-times text-gray-400'"></i>
+                  </td>
+                  <td>
+                    @if (attr.defaultValue !== null && attr.defaultValue !== '') {
+                      <code class="default-value">{{ attr.defaultValue }}</code>
+                    } @else {
+                      <span class="text-color-secondary">—</span>
+                    }
+                  </td>
+                  <td>
+                    <p-button 
+                      icon="pi pi-pencil" 
+                      [rounded]="true" 
+                      [text]="true" 
+                      severity="info"
+                      pTooltip="Edit"
+                      (onClick)="showEditDialog(attr)">
+                    </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      [rounded]="true" 
+                      [text]="true" 
+                      severity="danger"
+                      pTooltip="Delete"
+                      (onClick)="deleteAttribute(attr)">
+                    </p-button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Attribute Dialog -->
+<p-dialog
+  [(visible)]="displayDialog"
+  [header]="isEditMode() ? 'Edit Custom Field' : 'Add Custom Field'"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false">
+  
+  <div class="flex flex-column gap-3">
+    <div>
+      <label for="attrName" class="block mb-2">Field Name *</label>
+      <input 
+        pInputText 
+        id="attrName" 
+        [(ngModel)]="currentAttribute.name" 
+        class="w-full" 
+        placeholder="e.g., Serial Number"
+        required />
+    </div>
+
+    <div>
+      <label for="attrDesc" class="block mb-2">Description</label>
+      <textarea 
+        pInputTextarea 
+        id="attrDesc" 
+        [(ngModel)]="currentAttribute.description" 
+        class="w-full"
+        rows="2"
+        placeholder="Optional description of this field">
+      </textarea>
+    </div>
+
+    <div>
+      <label for="attrType" class="block mb-2">Field Type *</label>
+      <p-dropdown
+        id="attrType"
+        [options]="attributeTypeOptions"
+        [(ngModel)]="currentAttribute.attributeType"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+        appendTo="body">
+        <ng-template let-option pTemplate="item">
+          <div class="flex align-items-center gap-2">
+            <i [class]="'pi ' + option.icon"></i>
+            <span>{{ option.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template let-option pTemplate="selectedItem">
+          <div class="flex align-items-center gap-2">
+            <i [class]="'pi ' + option.icon"></i>
+            <span>{{ option.label }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    @if (currentAttribute.attributeType === 'select') {
+      <div>
+        <label for="attrOptions" class="block mb-2">Options (comma-separated) *</label>
+        <input 
+          pInputText 
+          id="attrOptions" 
+          [(ngModel)]="currentAttribute.options" 
+          class="w-full"
+          placeholder="Option 1, Option 2, Option 3" />
+        <small class="text-color-secondary">Enter options separated by commas</small>
+      </div>
+    }
+
+    <div>
+      <label for="attrDefault" class="block mb-2">Default Value</label>
+      <input 
+        pInputText 
+        id="attrDefault" 
+        [(ngModel)]="currentAttribute.defaultValue" 
+        class="w-full"
+        placeholder="Optional default value" />
+    </div>
+
+    <div class="flex align-items-center gap-2">
+      <p-checkbox 
+        [(ngModel)]="currentAttribute.isRequired" 
+        [binary]="true" 
+        inputId="attrRequired">
+      </p-checkbox>
+      <label for="attrRequired">Required field</label>
+    </div>
+
+    <div>
+      <label for="attrOrder" class="block mb-2">Display Order</label>
+      <p-inputNumber 
+        id="attrOrder" 
+        [(ngModel)]="currentAttribute.displayOrder" 
+        [min]="0"
+        [showButtons]="true"
+        [style]="{ width: '100%' }">
+      </p-inputNumber>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancel" 
+      severity="secondary" 
+      [text]="true" 
+      (onClick)="displayDialog.set(false)">
+    </p-button>
+    <p-button 
+      [label]="isEditMode() ? 'Update' : 'Create'" 
+      icon="pi pi-check" 
+      (onClick)="saveAttribute()"
+      [disabled]="!currentAttribute.name">
+    </p-button>
+  </ng-template>
+</p-dialog>
