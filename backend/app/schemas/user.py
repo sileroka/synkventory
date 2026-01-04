@@ -70,7 +70,7 @@ class User(UserBase):
         alias_generator=to_camel, populate_by_name=True, from_attributes=True
     )
 
-    id: str
+    id: UUID
     role: UserRole
     is_active: bool
     is_locked: bool = False
@@ -97,7 +97,7 @@ class RelatedUser(BaseModel):
         alias_generator=to_camel, populate_by_name=True, from_attributes=True
     )
 
-    id: str
+    id: UUID
     name: str
     email: str
 
