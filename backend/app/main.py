@@ -9,6 +9,7 @@ import uuid
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.core.config import settings
 from app.core.exceptions import (
     http_exception_handler,
@@ -23,6 +24,12 @@ app = FastAPI(
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
+
+# ==========================================================================
+# PROXY HEADERS MIDDLEWARE - Trust X-Forwarded-* headers from load balancer
+# This ensures redirects use HTTPS when behind a proxy/load balancer
+# ==========================================================================
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 
 @app.middleware("http")
