@@ -1,0 +1,241 @@
+<div class="category-attributes">
+  <p-toast />
+  <p-confirmDialog />
+
+  <header class="page-header">
+    <div>
+      <h2>Custom Attributes</h2>
+      <p>Define custom fields for items in "{{ categoryName() }}"</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Add Attribute"
+        icon="pi pi-plus"
+        (onClick)="showAddDialog()"
+      />
+      <p-button
+        icon="pi pi-times"
+        [text]="true"
+        severity="secondary"
+        (onClick)="close()"
+        pTooltip="Close"
+      />
+    </div>
+  </header>
+
+  <div class="content-card">
+    <p-table
+      [value]="attributes()"
+      [loading]="isLoading()"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 40px">#</th>
+          <th>Name</th>
+          <th>Key</th>
+          <th style="width: 120px">Type</th>
+          <th style="width: 100px">Required</th>
+          <th style="width: 100px">Status</th>
+          <th style="width: 150px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-attr let-index="rowIndex">
+        <tr [class.inactive]="!attr.isActive">
+          <td class="text-muted">{{ index + 1 }}</td>
+          <td>
+            <div class="attr-name">
+              <span>{{ attr.name }}</span>
+              @if (attr.description) {
+                <small class="description">{{ attr.description }}</small>
+              }
+            </div>
+          </td>
+          <td>
+            <code class="attr-key">{{ attr.key }}</code>
+          </td>
+          <td>
+            <span class="type-badge">
+              <i [class]="getTypeIcon(attr.attributeType)"></i>
+              {{ getTypeLabel(attr.attributeType) }}
+            </span>
+          </td>
+          <td>
+            @if (attr.isRequired) {
+              <p-tag value="Required" severity="warning" />
+            } @else {
+              <span class="text-muted">Optional</span>
+            }
+          </td>
+          <td>
+            <p-tag
+              [value]="attr.isActive ? 'Active' : 'Inactive'"
+              [severity]="attr.isActive ? 'success' : 'secondary'"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                (onClick)="showEditDialog(attr)"
+                pTooltip="Edit"
+              />
+              <p-button
+                [icon]="attr.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                [text]="true"
+                [severity]="attr.isActive ? 'secondary' : 'success'"
+                (onClick)="toggleActive(attr)"
+                [pTooltip]="attr.isActive ? 'Deactivate' : 'Activate'"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                (onClick)="confirmDelete(attr)"
+                pTooltip="Delete"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-list"></i>
+              <p>No custom attributes defined</p>
+              <p-button
+                label="Add First Attribute"
+                icon="pi pi-plus"
+                (onClick)="showAddDialog()"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Add/Edit Dialog -->
+  <p-dialog
+    [header]="isEditMode() ? 'Edit Attribute' : 'Add Attribute'"
+    [(visible)]="showDialog"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [closable]="!isSaving()"
+  >
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="name">Display Name *</label>
+        <input
+          id="name"
+          type="text"
+          pInputText
+          [(ngModel)]="selectedAttribute.name"
+          (ngModelChange)="onNameChange()"
+          placeholder="e.g., Serial Number"
+          [disabled]="isSaving()"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="key">Field Key *</label>
+        <input
+          id="key"
+          type="text"
+          pInputText
+          [(ngModel)]="selectedAttribute.key"
+          placeholder="e.g., serial_number"
+          [disabled]="isEditMode() || isSaving()"
+          pattern="^[a-z][a-z0-9_]*$"
+        />
+        <small class="hint">Lowercase letters, numbers, underscores only</small>
+      </div>
+
+      <div class="form-field">
+        <label for="type">Field Type *</label>
+        <p-dropdown
+          id="type"
+          [options]="attributeTypes"
+          [(ngModel)]="selectedAttribute.attributeType"
+          optionLabel="label"
+          optionValue="value"
+          [disabled]="isEditMode() || isSaving()"
+        >
+          <ng-template let-item pTemplate="item">
+            <div class="type-option">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          pInputTextarea
+          [(ngModel)]="selectedAttribute.description"
+          rows="2"
+          placeholder="Help text for users"
+          [disabled]="isSaving()"
+        ></textarea>
+      </div>
+
+      @if (selectedAttribute.attributeType === 'select') {
+        <div class="form-field">
+          <label for="options">Dropdown Options *</label>
+          <input
+            id="options"
+            type="text"
+            pInputText
+            [(ngModel)]="selectedAttribute.options"
+            placeholder="Option 1, Option 2, Option 3"
+            [disabled]="isSaving()"
+          />
+          <small class="hint">Comma-separated list of options</small>
+        </div>
+      }
+
+      <div class="form-field">
+        <label for="default">Default Value</label>
+        <input
+          id="default"
+          type="text"
+          pInputText
+          [(ngModel)]="selectedAttribute.defaultValue"
+          placeholder="Optional default value"
+          [disabled]="isSaving()"
+        />
+      </div>
+
+      <div class="form-field checkbox-field">
+        <p-checkbox
+          [(ngModel)]="selectedAttribute.isRequired"
+          [binary]="true"
+          inputId="required"
+          [disabled]="isSaving()"
+        />
+        <label for="required">Required field</label>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancel"
+        [text]="true"
+        severity="secondary"
+        (onClick)="showDialog.set(false)"
+        [disabled]="isSaving()"
+      />
+      <p-button
+        [label]="isEditMode() ? 'Update' : 'Create'"
+        icon="pi pi-check"
+        (onClick)="saveAttribute()"
+        [loading]="isSaving()"
+      />
+    </ng-template>
+  </p-dialog>
+</div>

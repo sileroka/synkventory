@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import Column, String, Integer, Float, DateTime, Text, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -50,6 +50,9 @@ class InventoryItem(Base):
 
     # Image storage - stores the S3/Spaces object key (not full URL)
     image_key = Column(String(512), nullable=True)
+
+    # Custom attributes - stores key-value pairs defined by category attributes
+    custom_attributes = Column(JSONB, nullable=True, default=dict)
 
     # Indexes for multi-tenancy queries
     __table_args__ = (

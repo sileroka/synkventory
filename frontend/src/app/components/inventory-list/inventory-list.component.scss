@@ -136,3 +136,20 @@
     text-decoration: underline;
   }
 }
+
+// Custom attributes section in dialog
+.custom-attributes-section {
+  background: #F8FAFC;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 0.5rem;
+
+  h4 {
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+  }
+}

@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, field_validator
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 from uuid import UUID
 
@@ -68,6 +68,7 @@ class InventoryItemBase(BaseModel):
     status: InventoryStatus = InventoryStatus.IN_STOCK
     category_id: Optional[str] = None
     location_id: Optional[str] = None
+    custom_attributes: Optional[Dict[str, Any]] = None
 
 
 class InventoryItemCreate(InventoryItemBase):
@@ -89,6 +90,7 @@ class InventoryItemUpdate(BaseModel):
     status: Optional[InventoryStatus] = None
     category_id: Optional[str] = None
     location_id: Optional[str] = None
+    custom_attributes: Optional[Dict[str, Any]] = None
 
 
 class InventoryItem(InventoryItemBase):

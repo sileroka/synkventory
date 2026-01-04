@@ -72,6 +72,7 @@ def add_image_url(item: InventoryItemModel) -> dict:
         "image_url": (
             storage_service.get_signed_url(item.image_key) if item.image_key else None
         ),
+        "custom_attributes": item.custom_attributes,
     }
     return item_dict
 

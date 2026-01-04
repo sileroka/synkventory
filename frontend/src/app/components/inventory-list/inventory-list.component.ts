@@ -18,14 +18,18 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CheckboxModule } from 'primeng/checkbox';
+import { CalendarModule } from 'primeng/calendar';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { InventoryService, IInventoryFilters } from '../../services/inventory.service';
 import { LocationService } from '../../features/locations/services/location.service';
 import { CategoryService } from '../../features/categories/services/category.service';
+import { CategoryAttributeService } from '../../services/category-attribute.service';
 import { UploadService } from '../../services/upload.service';
 import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../../models/inventory-item.model';
 import { ILocation } from '../../features/locations/models/location.model';
 import { ICategory } from '../../features/categories/models/category.model';
+import { ICategoryAttribute } from '../../models/category-attribute.model';
 
 interface ISelectOption {
   label: string;
@@ -58,7 +62,9 @@ interface IMultiSelectOption {
     ToolbarModule,
     FileUploadModule,
     ImageModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    CheckboxModule,
+    CalendarModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-list.component.html',
@@ -124,10 +130,15 @@ export class InventoryListComponent implements OnInit {
     { label: 'Discontinued', value: InventoryStatus.DISCONTINUED }
   ];
 
+  // Custom attributes for selected category
+  categoryAttributes: ICategoryAttribute[] = [];
+  loadingAttributes: boolean = false;
+
   constructor(
     private inventoryService: InventoryService,
     private locationService: LocationService,
     private categoryService: CategoryService,
+    private categoryAttributeService: CategoryAttributeService,
     private uploadService: UploadService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
@@ -407,6 +418,7 @@ export class InventoryListComponent implements OnInit {
     this.isEditMode = false;
     this.selectedImageFile = null;
     this.imagePreviewUrl = null;
+    this.categoryAttributes = [];
     this.displayDialog = true;
   }
 
@@ -414,12 +426,83 @@ export class InventoryListComponent implements OnInit {
     this.selectedItem = {
       ...item,
       categoryId: item.category?.id || item.categoryId || null,
-      locationId: item.location?.id || item.locationId || null
+      locationId: item.location?.id || item.locationId || null,
+      customAttributes: item.customAttributes || {}
     };
     this.isEditMode = true;
     this.selectedImageFile = null;
     this.imagePreviewUrl = item.imageUrl || null;
     this.displayDialog = true;
+
+    // Load category attributes if category is set
+    if (this.selectedItem.categoryId) {
+      this.loadCategoryAttributes(this.selectedItem.categoryId);
+    } else {
+      this.categoryAttributes = [];
+    }
+  }
+
+  onCategoryChange() {
+    if (this.selectedItem.categoryId) {
+      this.loadCategoryAttributes(this.selectedItem.categoryId);
+    } else {
+      this.categoryAttributes = [];
+      this.selectedItem.customAttributes = {};
+    }
+  }
+
+  loadCategoryAttributes(categoryId: string) {
+    this.loadingAttributes = true;
+    this.categoryAttributeService.getAttributesByCategory(categoryId).subscribe({
+      next: (result) => {
+        this.categoryAttributes = result.items.filter(attr => attr.isActive);
+        // Initialize custom attributes with defaults for new fields
+        if (!this.selectedItem.customAttributes) {
+          this.selectedItem.customAttributes = {};
+        }
+        this.categoryAttributes.forEach(attr => {
+          if (!(attr.key in this.selectedItem.customAttributes!)) {
+            // Set default value if specified
+            if (attr.defaultValue) {
+              if (attr.attributeType === 'number') {
+                this.selectedItem.customAttributes![attr.key] = parseFloat(attr.defaultValue);
+              } else if (attr.attributeType === 'boolean') {
+                this.selectedItem.customAttributes![attr.key] = attr.defaultValue === 'true';
+              } else {
+                this.selectedItem.customAttributes![attr.key] = attr.defaultValue;
+              }
+            } else {
+              // Set appropriate empty default based on type
+              if (attr.attributeType === 'boolean') {
+                this.selectedItem.customAttributes![attr.key] = false;
+              } else if (attr.attributeType === 'number') {
+                this.selectedItem.customAttributes![attr.key] = null;
+              } else {
+                this.selectedItem.customAttributes![attr.key] = '';
+              }
+            }
+          }
+        });
+        this.loadingAttributes = false;
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load category attributes'
+        });
+        this.categoryAttributes = [];
+        this.loadingAttributes = false;
+      }
+    });
+  }
+
+  getSelectOptions(attr: ICategoryAttribute): { label: string; value: string }[] {
+    if (!attr.options) return [];
+    return attr.options.split(',').map(opt => ({
+      label: opt.trim(),
+      value: opt.trim()
+    }));
   }
 
   onImageSelect(event: Event) {
@@ -580,7 +663,8 @@ export class InventoryListComponent implements OnInit {
       unitPrice: 0,
       status: InventoryStatus.IN_STOCK,
       categoryId: null,
-      locationId: null
+      locationId: null,
+      customAttributes: {}
     };
   }
 

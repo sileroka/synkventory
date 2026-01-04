@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TreeTableModule } from 'primeng/treetable';
@@ -11,9 +11,11 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService, TreeNode } from 'primeng/api';
 import { CategoryService } from '../../services/category.service';
 import { ICategory, ICategoryTreeNode } from '../../models/category.model';
+import { CategoryAttributesComponent } from '../category-attributes/category-attributes.component';
 
 @Component({
   selector: 'app-category-list',
@@ -30,7 +32,9 @@ import { ICategory, ICategoryTreeNode } from '../../models/category.model';
     ConfirmDialogModule,
     TagModule,
     CheckboxModule,
-    DropdownModule
+    DropdownModule,
+    TooltipModule,
+    CategoryAttributesComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './category-list.component.html',
@@ -43,6 +47,10 @@ export class CategoryListComponent implements OnInit {
   selectedCategory: ICategory = this.getEmptyCategory();
   isEditMode: boolean = false;
   loading: boolean = false;
+
+  // Custom attributes panel state
+  showAttributesPanel = signal(false);
+  selectedCategoryForAttributes = signal<ICategory | null>(null);
 
   parentOptions: { label: string; value: string | null }[] = [];
 
@@ -195,5 +203,16 @@ export class CategoryListComponent implements OnInit {
       parentId: null,
       isActive: true
     };
+  }
+
+  // Custom attributes management
+  openAttributesPanel(category: ICategory) {
+    this.selectedCategoryForAttributes.set(category);
+    this.showAttributesPanel.set(true);
+  }
+
+  closeAttributesPanel() {
+    this.showAttributesPanel.set(false);
+    this.selectedCategoryForAttributes.set(null);
   }
 }

@@ -28,3 +28,47 @@
     }
   }
 }
+
+// Custom Attributes Sliding Panel
+.attributes-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.attributes-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 700px;
+  max-width: 90vw;
+  height: 100%;
+  background: #f1f5f9;
+  z-index: 1001;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+  overflow: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

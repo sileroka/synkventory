@@ -381,7 +381,8 @@
       <p-dropdown id="category" [(ngModel)]="selectedItem.categoryId"
         [options]="categoryOptions" optionLabel="label" optionValue="value"
         placeholder="Select a category"
-        class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
+        class="w-full" styleClass="w-full" appendTo="body"
+        (onChange)="onCategoryChange()"></p-dropdown>
     </div>
 
     <div>
@@ -391,6 +392,84 @@
         placeholder="Select a location"
         class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
     </div>
+
+    <!-- Custom Attributes Section -->
+    @if (categoryAttributes.length > 0) {
+      <div class="custom-attributes-section border-top-1 surface-border pt-3 mt-2">
+        <h4 class="text-sm font-semibold text-color-secondary mb-3 flex align-items-center gap-2">
+          <i class="pi pi-list"></i>
+          Custom Attributes
+        </h4>
+
+        @if (loadingAttributes) {
+          <div class="flex align-items-center gap-2 p-3">
+            <p-progressSpinner [style]="{width: '20px', height: '20px'}" strokeWidth="4"></p-progressSpinner>
+            <span class="text-600">Loading attributes...</span>
+          </div>
+        } @else {
+          @for (attr of categoryAttributes; track attr.id) {
+            <div class="mb-3">
+              <label [for]="'attr_' + attr.key" class="block mb-2">
+                {{ attr.name }}
+                @if (attr.isRequired) {
+                  <span class="text-red-500">*</span>
+                }
+              </label>
+
+              @switch (attr.attributeType) {
+                @case ('text') {
+                  <input pInputText
+                         [id]="'attr_' + attr.key"
+                         [(ngModel)]="selectedItem.customAttributes![attr.key]"
+                         class="w-full"
+                         [placeholder]="attr.description || ''" />
+                }
+                @case ('number') {
+                  <p-inputNumber
+                         [inputId]="'attr_' + attr.key"
+                         [(ngModel)]="selectedItem.customAttributes![attr.key]"
+                         class="w-full" />
+                }
+                @case ('boolean') {
+                  <div class="flex align-items-center gap-2">
+                    <p-checkbox
+                           [inputId]="'attr_' + attr.key"
+                           [(ngModel)]="selectedItem.customAttributes![attr.key]"
+                           [binary]="true" />
+                    <label [for]="'attr_' + attr.key" class="text-color-secondary text-sm">{{ attr.description || 'Yes/No' }}</label>
+                  </div>
+                }
+                @case ('date') {
+                  <p-calendar
+                         [inputId]="'attr_' + attr.key"
+                         [(ngModel)]="selectedItem.customAttributes![attr.key]"
+                         class="w-full"
+                         styleClass="w-full"
+                         dateFormat="yy-mm-dd"
+                         appendTo="body" />
+                }
+                @case ('select') {
+                  <p-dropdown
+                         [inputId]="'attr_' + attr.key"
+                         [(ngModel)]="selectedItem.customAttributes![attr.key]"
+                         [options]="getSelectOptions(attr)"
+                         optionLabel="label"
+                         optionValue="value"
+                         [placeholder]="attr.description || 'Select an option'"
+                         class="w-full"
+                         styleClass="w-full"
+                         appendTo="body" />
+                }
+              }
+
+              @if (attr.description && attr.attributeType !== 'boolean') {
+                <small class="text-color-secondary block mt-1">{{ attr.description }}</small>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
 
     <!-- Image Upload Section -->
     <div>

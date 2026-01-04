@@ -38,6 +38,14 @@
         </td>
         <td>
           <p-button
+            icon="pi pi-list"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            pTooltip="Custom Attributes"
+            (onClick)="openAttributesPanel(rowData)">
+          </p-button>
+          <p-button
             icon="pi pi-plus"
             [rounded]="true"
             [text]="true"
@@ -117,3 +125,15 @@
     <p-button label="Save" icon="pi pi-check" (onClick)="saveCategory()"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Custom Attributes Sidebar Panel -->
+@if (showAttributesPanel() && selectedCategoryForAttributes()) {
+  <div class="attributes-overlay" (click)="closeAttributesPanel()"></div>
+  <div class="attributes-panel">
+    <app-category-attributes
+      [categoryId]="selectedCategoryForAttributes()!.id!"
+      [categoryName]="selectedCategoryForAttributes()!.name"
+      (closed)="closeAttributesPanel()"
+    />
+  </div>
+}

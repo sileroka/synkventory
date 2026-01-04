@@ -7,6 +7,7 @@ from app.api.v1 import (
     inventory,
     locations,
     categories,
+    category_attributes,
     stock_movements,
     reports,
     health,
@@ -24,6 +25,7 @@ api_router.include_router(users.router, tags=["users"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(locations.router, prefix="/locations", tags=["locations"])
 api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
+api_router.include_router(category_attributes.router, tags=["category-attributes"])
 api_router.include_router(
     stock_movements.router, prefix="/stock-movements", tags=["stock-movements"]
 )

@@ -42,6 +42,7 @@ export interface IInventoryItem {
   location?: IRelatedLocation | null;
   imageKey?: string | null;
   imageUrl?: string | null;
+  customAttributes?: Record<string, any> | null;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
