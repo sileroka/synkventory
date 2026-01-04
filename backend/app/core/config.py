@@ -102,13 +102,13 @@ class Settings(BaseSettings):
     SPACES_BUCKET: str = "synkventory-storage"
     SPACES_REGION: str = "sfo3"
     SPACES_ENDPOINT: Optional[str] = None
-    
+
     # Signed URL expiration in seconds (default 1 hour)
     SPACES_URL_EXPIRATION: int = 3600
-    
+
     # Max file size in bytes (default 10MB)
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024
-    
+
     # Allowed image types
     ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/gif,image/webp"
 

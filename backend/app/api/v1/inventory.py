@@ -69,7 +69,9 @@ def add_image_url(item: InventoryItemModel) -> dict:
         "created_by": item.created_by,
         "updated_by": item.updated_by,
         "image_key": item.image_key,
-        "image_url": storage_service.get_signed_url(item.image_key) if item.image_key else None,
+        "image_url": (
+            storage_service.get_signed_url(item.image_key) if item.image_key else None
+        ),
     }
     return item_dict
 
@@ -157,7 +159,7 @@ def get_inventory_items(
     # Calculate offset and apply pagination
     skip = (page - 1) * page_size
     items = query.offset(skip).limit(page_size).all()
-    
+
     # Add signed image URLs to items
     items_with_urls = [add_image_url(item) for item in items]
 

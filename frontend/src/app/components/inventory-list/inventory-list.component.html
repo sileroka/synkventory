@@ -250,10 +250,10 @@
           <p-tableCheckbox [value]="item"></p-tableCheckbox>
         </td>
         <td>
-          <img *ngIf="item.imageUrl" [src]="item.imageUrl" alt="{{ item.name }}" 
-               class="item-thumbnail border-round" 
+          <img *ngIf="item.imageUrl" [src]="item.imageUrl" alt="{{ item.name }}"
+               class="item-thumbnail border-round"
                style="width: 40px; height: 40px; object-fit: cover;">
-          <span *ngIf="!item.imageUrl" class="item-thumbnail-placeholder flex align-items-center justify-content-center border-round surface-200" 
+          <span *ngIf="!item.imageUrl" class="item-thumbnail-placeholder flex align-items-center justify-content-center border-round surface-200"
                 style="width: 40px; height: 40px;">
             <i class="pi pi-image text-400"></i>
           </span>
@@ -398,12 +398,12 @@
       <div class="image-upload-container">
         <!-- Image Preview -->
         <div *ngIf="imagePreviewUrl" class="image-preview mb-2" style="position: relative;">
-          <img [src]="imagePreviewUrl" alt="Item preview" 
-               class="border-round" 
+          <img [src]="imagePreviewUrl" alt="Item preview"
+               class="border-round"
                style="max-width: 100%; max-height: 200px; object-fit: contain;">
-          <p-button 
-            icon="pi pi-times" 
-            [rounded]="true" 
+          <p-button
+            icon="pi pi-times"
+            [rounded]="true"
             severity="danger"
             size="small"
             class="remove-image-btn absolute"
@@ -412,7 +412,7 @@
             pTooltip="Remove Image">
           </p-button>
         </div>
-        
+
         <!-- Upload Button -->
         <div *ngIf="!imagePreviewUrl" class="upload-placeholder flex flex-column align-items-center justify-content-center border-round border-dashed surface-border p-4 cursor-pointer"
              style="border-width: 2px; min-height: 120px;"
@@ -421,17 +421,17 @@
           <span class="text-600">Click to upload image</span>
           <span class="text-400 text-sm">JPEG, PNG, GIF, WebP (max 10MB)</span>
         </div>
-        
+
         <!-- Hidden File Input -->
-        <input type="file" 
+        <input type="file"
                #fileInput
                (change)="onImageSelect($event)"
                accept="image/jpeg,image/png,image/gif,image/webp"
                style="display: none;">
-        
+
         <!-- Change Image Button (when image exists) -->
-        <p-button *ngIf="imagePreviewUrl" 
-                  label="Change Image" 
+        <p-button *ngIf="imagePreviewUrl"
+                  label="Change Image"
                   icon="pi pi-upload"
                   severity="secondary"
                   [outlined]="true"
@@ -440,7 +440,7 @@
                   (onClick)="triggerFileInput()">
         </p-button>
       </div>
-      
+
       <!-- Upload Progress -->
       <div *ngIf="uploadingImage" class="flex align-items-center gap-2 mt-2">
         <p-progressSpinner [style]="{width: '20px', height: '20px'}" strokeWidth="4"></p-progressSpinner>
@@ -468,8 +468,8 @@
   <div class="flex flex-column gap-4" *ngIf="detailItem">
     <!-- Item Image (if exists) -->
     <div *ngIf="detailItem.imageUrl" class="flex justify-content-center mb-2">
-      <img [src]="detailItem.imageUrl" [alt]="detailItem.name" 
-           class="border-round shadow-2" 
+      <img [src]="detailItem.imageUrl" [alt]="detailItem.name"
+           class="border-round shadow-2"
            style="max-width: 100%; max-height: 250px; object-fit: contain;">
     </div>
 

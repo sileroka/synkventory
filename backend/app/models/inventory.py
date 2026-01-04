@@ -47,7 +47,7 @@ class InventoryItem(Base):
     updated_by = Column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True
     )
-    
+
     # Image storage - stores the S3/Spaces object key (not full URL)
     image_key = Column(String(512), nullable=True)
 

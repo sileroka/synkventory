@@ -1,0 +1,227 @@
+<div class="audit-logs-page">
+  <p-toast />
+
+  <header class="page-header">
+    <div>
+      <h1>Audit Logs</h1>
+      <p>View all user activity and system events across tenants</p>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchText"
+            placeholder="Search by email or entity..."
+            (keyup.enter)="onSearch()"
+          />
+        </span>
+      </div>
+
+      <!-- Tenant Filter -->
+      <div class="filter-item">
+        <p-dropdown
+          [options]="tenantOptions()"
+          [(ngModel)]="filters.tenantId"
+          placeholder="All Tenants"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Action Filter -->
+      <div class="filter-item">
+        <p-dropdown
+          [options]="actions()"
+          [(ngModel)]="filters.action"
+          placeholder="All Actions"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Entity Type Filter -->
+      <div class="filter-item">
+        <p-dropdown
+          [options]="entityTypes()"
+          [(ngModel)]="filters.entityType"
+          placeholder="All Types"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Date Range -->
+      <div class="filter-item date-filter">
+        <p-calendar
+          [(ngModel)]="dateRange"
+          selectionMode="range"
+          placeholder="Date Range"
+          [showIcon]="true"
+          dateFormat="mm/dd/yy"
+          [showClear]="true"
+          (onSelect)="onDateRangeChange()"
+          (onClear)="onDateRangeChange()"
+        />
+      </div>
+
+      <!-- Clear Filters -->
+      <div class="filter-item">
+        <p-button
+          icon="pi pi-filter-slash"
+          [text]="true"
+          severity="secondary"
+          (onClick)="clearFilters()"
+          pTooltip="Clear all filters"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <div class="content-card">
+    <p-table
+      [value]="logs()"
+      [loading]="isLoading()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [totalRecords]="totalItems()"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      (onLazyLoad)="onPageChange($event)"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 160px">Time</th>
+          <th>Tenant</th>
+          <th>User</th>
+          <th style="width: 140px">Action</th>
+          <th>Entity</th>
+          <th style="width: 100px">IP</th>
+          <th style="width: 80px">Details</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-log>
+        <tr>
+          <td class="timestamp">
+            {{ formatDateTime(log.createdAt) }}
+          </td>
+          <td>
+            <span class="tenant-name">{{ log.tenantName || '—' }}</span>
+          </td>
+          <td>
+            <span class="user-email">{{ log.userEmail || 'System' }}</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="getActionLabel(log.action)"
+              [severity]="getActionSeverity(log.action)"
+            />
+          </td>
+          <td>
+            <div class="entity-info">
+              <span class="entity-type">{{ log.entityType }}</span>
+              @if (log.entityName) {
+                <span class="entity-name">{{ log.entityName }}</span>
+              }
+            </div>
+          </td>
+          <td>
+            <span class="ip-address" [pTooltip]="log.userAgent || 'Unknown'">
+              {{ log.ipAddress || '—' }}
+            </span>
+          </td>
+          <td>
+            <p-button
+              icon="pi pi-eye"
+              [text]="true"
+              (onClick)="showDetails(log)"
+              pTooltip="View Details"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-list"></i>
+              <p>No audit logs found</p>
+              <span class="text-muted">Try adjusting your filters</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Detail Dialog -->
+  <p-dialog
+    header="Audit Log Details"
+    [(visible)]="showDetailDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+  >
+    @if (selectedLog()) {
+      <div class="log-details">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Timestamp</label>
+            <span>{{ formatDateTime(selectedLog()!.createdAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Tenant</label>
+            <span>{{ selectedLog()!.tenantName || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>User</label>
+            <span>{{ selectedLog()!.userEmail || 'System' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Action</label>
+            <p-tag
+              [value]="getActionLabel(selectedLog()!.action)"
+              [severity]="getActionSeverity(selectedLog()!.action)"
+            />
+          </div>
+          <div class="detail-item">
+            <label>Entity Type</label>
+            <span>{{ selectedLog()!.entityType }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Entity Name</label>
+            <span>{{ selectedLog()!.entityName || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Entity ID</label>
+            <span class="monospace">{{ selectedLog()!.entityId || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>IP Address</label>
+            <span>{{ selectedLog()!.ipAddress || '—' }}</span>
+          </div>
+          <div class="detail-item full-width">
+            <label>Browser</label>
+            <span>{{ parseUserAgent(selectedLog()!.userAgent) }}</span>
+          </div>
+          @if (selectedLog()!.extraData) {
+            <div class="detail-item full-width">
+              <label>Additional Data</label>
+              <pre class="extra-data">{{ selectedLog()!.extraData | json }}</pre>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </p-dialog>
+</div>

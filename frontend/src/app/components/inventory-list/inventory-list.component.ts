@@ -66,7 +66,7 @@ interface IMultiSelectOption {
 })
 export class InventoryListComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  
+
   items: IInventoryItem[] = [];
   displayDialog: boolean = false;
   displayDetailDialog: boolean = false;
@@ -426,7 +426,7 @@ export class InventoryListComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      
+
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
@@ -437,7 +437,7 @@ export class InventoryListComponent implements OnInit {
         });
         return;
       }
-      
+
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
         this.messageService.add({
@@ -447,9 +447,9 @@ export class InventoryListComponent implements OnInit {
         });
         return;
       }
-      
+
       this.selectedImageFile = file;
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -477,7 +477,7 @@ export class InventoryListComponent implements OnInit {
         resolve();
         return;
       }
-      
+
       this.uploadingImage = true;
       this.uploadService.uploadInventoryImage(itemId, this.selectedImageFile).subscribe({
         next: () => {

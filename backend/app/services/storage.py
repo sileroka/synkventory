@@ -29,9 +29,9 @@ class StorageService:
             if not settings.SPACES_ACCESS_KEY or not settings.SPACES_SECRET_KEY:
                 logger.warning("Spaces credentials not configured")
                 return None
-            
+
             self._client = boto3.client(
-                's3',
+                "s3",
                 region_name=settings.SPACES_REGION,
                 endpoint_url=settings.spaces_endpoint_url,
                 aws_access_key_id=settings.SPACES_ACCESS_KEY,
@@ -39,10 +39,12 @@ class StorageService:
             )
         return self._client
 
-    def _generate_key(self, tenant_id: str, filename: str, folder: str = "inventory") -> str:
+    def _generate_key(
+        self, tenant_id: str, filename: str, folder: str = "inventory"
+    ) -> str:
         """Generate a unique storage key for a file."""
         # Extract extension
-        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
         # Generate unique filename
         unique_id = uuid.uuid4().hex[:12]
         return f"{tenant_id}/{folder}/{unique_id}.{ext}"
@@ -52,7 +54,7 @@ class StorageService:
         file_content: bytes,
         max_width: int = 1200,
         max_height: int = 1200,
-        quality: int = 85
+        quality: int = 85,
     ) -> tuple[bytes, str]:
         """
         Optimize an image by resizing and compressing.
@@ -60,29 +62,31 @@ class StorageService:
         """
         try:
             img = Image.open(BytesIO(file_content))
-            
+
             # Convert RGBA to RGB for JPEG
-            if img.mode in ('RGBA', 'LA', 'P'):
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'P':
-                    img = img.convert('RGBA')
-                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+            if img.mode in ("RGBA", "LA", "P"):
+                background = Image.new("RGB", img.size, (255, 255, 255))
+                if img.mode == "P":
+                    img = img.convert("RGBA")
+                background.paste(
+                    img, mask=img.split()[-1] if img.mode == "RGBA" else None
+                )
                 img = background
-            
+
             # Resize if necessary
             if img.width > max_width or img.height > max_height:
                 img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-            
+
             # Save to bytes
             output = BytesIO()
-            img.save(output, format='JPEG', quality=quality, optimize=True)
+            img.save(output, format="JPEG", quality=quality, optimize=True)
             output.seek(0)
-            
-            return output.read(), 'image/jpeg'
+
+            return output.read(), "image/jpeg"
         except Exception as e:
             logger.error(f"Failed to optimize image: {e}")
             # Return original if optimization fails
-            return file_content, 'image/jpeg'
+            return file_content, "image/jpeg"
 
     async def upload_image(
         self,
@@ -94,14 +98,14 @@ class StorageService:
     ) -> Optional[str]:
         """
         Upload an image to Spaces.
-        
+
         Args:
             file_content: The file content as bytes
             filename: Original filename
             content_type: MIME type of the file
             tenant_id: Tenant ID for organizing files
             optimize: Whether to optimize the image
-            
+
         Returns:
             The storage key if successful, None otherwise
         """
@@ -134,7 +138,7 @@ class StorageService:
                 Body=file_content,
                 ContentType=content_type,
                 # Private by default - use signed URLs to access
-                ACL='private',
+                ACL="private",
             )
 
             logger.info(f"Successfully uploaded image: {key}")
@@ -150,11 +154,11 @@ class StorageService:
     def get_signed_url(self, key: str, expiration: int = None) -> Optional[str]:
         """
         Generate a signed URL for accessing a private object.
-        
+
         Args:
             key: The storage key of the object
             expiration: URL expiration in seconds (default from settings)
-            
+
         Returns:
             Signed URL if successful, None otherwise
         """
@@ -167,12 +171,12 @@ class StorageService:
 
         try:
             expiration = expiration or settings.SPACES_URL_EXPIRATION
-            
+
             url = self.client.generate_presigned_url(
-                'get_object',
+                "get_object",
                 Params={
-                    'Bucket': settings.SPACES_BUCKET,
-                    'Key': key,
+                    "Bucket": settings.SPACES_BUCKET,
+                    "Key": key,
                 },
                 ExpiresIn=expiration,
             )
@@ -185,10 +189,10 @@ class StorageService:
     async def delete_image(self, key: str) -> bool:
         """
         Delete an image from Spaces.
-        
+
         Args:
             key: The storage key of the object
-            
+
         Returns:
             True if successful, False otherwise
         """

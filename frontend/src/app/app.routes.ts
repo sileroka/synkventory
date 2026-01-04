@@ -22,6 +22,7 @@ import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashbo
 import { TenantListComponent } from './features/admin/tenants/tenant-list.component';
 import { TenantDetailComponent } from './features/admin/tenants/tenant-detail.component';
 import { AdminUserListComponent } from './features/admin/admin-users/admin-user-list.component';
+import { AdminAuditLogsComponent } from './features/admin/audit-logs/admin-audit-logs.component';
 
 /**
  * Guard for catch-all route - redirects appropriately based on portal
@@ -81,6 +82,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'tenants', component: TenantListComponent },
       { path: 'tenants/:id', component: TenantDetailComponent },
+      { path: 'audit-logs', component: AdminAuditLogsComponent },
       { path: 'admins', component: AdminUserListComponent, canActivate: [superAdminGuard] },
     ]
   },

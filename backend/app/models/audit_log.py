@@ -102,6 +102,9 @@ class AuditAction:
     USER_LOCK = "USER_LOCK"
     USER_UNLOCK = "USER_UNLOCK"
 
+    # Navigation/Activity
+    PAGE_VIEW = "PAGE_VIEW"
+
 
 # Entity types
 class EntityType:

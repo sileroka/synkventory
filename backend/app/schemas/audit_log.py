@@ -51,6 +51,9 @@ class AuditActionEnum(str, Enum):
     USER_LOCK = "USER_LOCK"
     USER_UNLOCK = "USER_UNLOCK"
 
+    # Navigation/Activity
+    PAGE_VIEW = "PAGE_VIEW"
+
 
 class EntityTypeEnum(str, Enum):
     """Entity types for audit logging."""

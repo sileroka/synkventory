@@ -1,0 +1,222 @@
+$primary: #0D9488;
+$secondary: #F87171;
+$neutral-100: #F1F5F9;
+$neutral-300: #CBD5E1;
+$neutral-500: #64748B;
+$neutral-700: #334155;
+$neutral-900: #0F172A;
+
+.audit-logs-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $neutral-900;
+    margin: 0 0 0.25rem;
+  }
+
+  p {
+    color: $neutral-500;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.filters-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-item {
+  &.search-filter {
+    flex: 1;
+    min-width: 200px;
+
+    input {
+      width: 100%;
+    }
+  }
+
+  &.date-filter {
+    min-width: 220px;
+  }
+
+  ::ng-deep {
+    .p-dropdown {
+      min-width: 150px;
+    }
+
+    .p-calendar {
+      width: 100%;
+    }
+  }
+}
+
+.content-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+// Table styles
+.timestamp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: $neutral-700;
+}
+
+.tenant-name {
+  font-weight: 500;
+  color: $neutral-900;
+}
+
+.user-email {
+  color: $primary;
+  font-size: 0.9rem;
+}
+
+.entity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  .entity-type {
+    font-size: 0.75rem;
+    color: $neutral-500;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .entity-name {
+    color: $neutral-700;
+    font-size: 0.9rem;
+  }
+}
+
+.ip-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: $neutral-500;
+  cursor: help;
+}
+
+// Empty state
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+
+  i {
+    font-size: 3rem;
+    color: $neutral-300;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $neutral-700;
+    margin: 0 0 0.5rem;
+    font-weight: 500;
+  }
+
+  .text-muted {
+    color: $neutral-500;
+    font-size: 0.9rem;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+// Detail dialog
+.log-details {
+  padding: 0.5rem 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: $neutral-500;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+  }
+
+  span {
+    color: $neutral-900;
+    font-size: 0.9rem;
+  }
+
+  .monospace {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: $neutral-700;
+  }
+}
+
+.extra-data {
+  background: $neutral-100;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: $neutral-700;
+  overflow-x: auto;
+  margin: 0;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+  }
+
+  .filter-item {
+    width: 100%;
+
+    &.search-filter {
+      flex: unset;
+    }
+
+    ::ng-deep .p-dropdown {
+      width: 100%;
+    }
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

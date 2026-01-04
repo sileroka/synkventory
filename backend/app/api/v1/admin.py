@@ -4,12 +4,13 @@ These endpoints are for the admin.synkventory.com portal.
 They provide cross-tenant management capabilities.
 """
 
-from datetime import datetime, timezone
+import math
+from datetime import datetime, date, timezone
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
+from sqlalchemy import func, select, desc
 from sqlalchemy.orm import Session
 
 from app.core.security import (
@@ -22,6 +23,8 @@ from app.db.session import get_db_no_tenant  # Admin endpoints don't use RLS
 from app.models.admin_user import AdminUser
 from app.models.tenant import Tenant
 from app.models.user import User
+from app.models.audit_log import AuditLog as AuditLogModel
+from pydantic import BaseModel
 from app.schemas.admin import (
     AdminUserCreate,
     AdminUserUpdate,
@@ -556,3 +559,151 @@ def delete_tenant_user(
 
     db.delete(user)
     db.commit()
+
+
+# ----- Audit Logs (Cross-Tenant) -----
+
+
+class AdminAuditLogResponse(BaseModel):
+    """Admin audit log response with tenant info."""
+
+    id: UUID
+    tenant_id: UUID
+    tenant_name: Optional[str] = None
+    user_id: Optional[UUID] = None
+    user_email: Optional[str] = None
+    action: str
+    entity_type: str
+    entity_id: Optional[UUID] = None
+    entity_name: Optional[str] = None
+    extra_data: Optional[dict] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminAuditLogListResponse(BaseModel):
+    """Paginated audit log response."""
+
+    data: List[AdminAuditLogResponse]
+    meta: dict
+
+
+@router.get("/audit-logs", response_model=AdminAuditLogListResponse)
+def list_admin_audit_logs(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(50, ge=1, le=100, alias="pageSize", description="Items per page"),
+    tenant_id: Optional[UUID] = Query(None, alias="tenantId", description="Filter by tenant"),
+    user_id: Optional[UUID] = Query(None, alias="userId", description="Filter by user"),
+    action: Optional[str] = Query(None, description="Filter by action type (LOGIN, LOGOUT, etc.)"),
+    entity_type: Optional[str] = Query(None, alias="entityType", description="Filter by entity type"),
+    start_date: Optional[date] = Query(None, alias="startDate", description="Filter from this date"),
+    end_date: Optional[date] = Query(None, alias="endDate", description="Filter until this date"),
+    search: Optional[str] = Query(None, description="Search in user email or entity name"),
+    admin_user: AdminUser = Depends(get_current_admin_user),
+    db: Session = Depends(get_db_no_tenant),
+):
+    """
+    Get audit logs across all tenants (admin access only).
+    
+    Supports filtering by tenant, user, action type, date range, and search.
+    """
+    query = db.query(AuditLogModel)
+
+    # Apply filters
+    if tenant_id:
+        query = query.filter(AuditLogModel.tenant_id == tenant_id)
+    if user_id:
+        query = query.filter(AuditLogModel.user_id == user_id)
+    if action:
+        query = query.filter(AuditLogModel.action == action)
+    if entity_type:
+        query = query.filter(AuditLogModel.entity_type == entity_type)
+    if start_date:
+        query = query.filter(
+            AuditLogModel.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+    if end_date:
+        query = query.filter(
+            AuditLogModel.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (AuditLogModel.user_email.ilike(search_term))
+            | (AuditLogModel.entity_name.ilike(search_term))
+        )
+
+    # Get total count
+    total_items = query.count()
+    total_pages = math.ceil(total_items / page_size) if total_items > 0 else 1
+
+    # Apply pagination and ordering
+    skip = (page - 1) * page_size
+    logs = (
+        query.order_by(desc(AuditLogModel.created_at))
+        .offset(skip)
+        .limit(page_size)
+        .all()
+    )
+
+    # Get tenant names for the logs
+    tenant_ids = list(set(log.tenant_id for log in logs if log.tenant_id))
+    tenant_names = {}
+    if tenant_ids:
+        tenants = db.query(Tenant).filter(Tenant.id.in_(tenant_ids)).all()
+        tenant_names = {t.id: t.name for t in tenants}
+
+    # Build response
+    data = []
+    for log in logs:
+        data.append(
+            AdminAuditLogResponse(
+                id=log.id,
+                tenant_id=log.tenant_id,
+                tenant_name=tenant_names.get(log.tenant_id),
+                user_id=log.user_id,
+                user_email=log.user_email,
+                action=log.action,
+                entity_type=log.entity_type,
+                entity_id=log.entity_id,
+                entity_name=log.entity_name,
+                extra_data=log.extra_data,
+                ip_address=log.ip_address,
+                user_agent=log.user_agent,
+                created_at=log.created_at,
+            )
+        )
+
+    return AdminAuditLogListResponse(
+        data=data,
+        meta={
+            "page": page,
+            "pageSize": page_size,
+            "totalItems": total_items,
+            "totalPages": total_pages,
+        },
+    )
+
+
+@router.get("/audit-logs/actions", response_model=List[str])
+def list_audit_actions(
+    admin_user: AdminUser = Depends(get_current_admin_user),
+    db: Session = Depends(get_db_no_tenant),
+):
+    """Get list of distinct action types in audit logs."""
+    results = db.query(AuditLogModel.action).distinct().all()
+    return sorted([r[0] for r in results if r[0]])
+
+
+@router.get("/audit-logs/entity-types", response_model=List[str])
+def list_entity_types(
+    admin_user: AdminUser = Depends(get_current_admin_user),
+    db: Session = Depends(get_db_no_tenant),
+):
+    """Get list of distinct entity types in audit logs."""
+    results = db.query(AuditLogModel.entity_type).distinct().all()
+    return sorted([r[0] for r in results if r[0]])

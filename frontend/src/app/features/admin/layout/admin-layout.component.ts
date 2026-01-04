@@ -21,6 +21,7 @@ export class AdminLayoutComponent {
   navItems = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/admin/dashboard' },
     { label: 'Tenants', icon: 'pi pi-building', route: '/admin/tenants' },
+    { label: 'Audit Logs', icon: 'pi pi-list', route: '/admin/audit-logs' },
   ];
 
   logout(): void {

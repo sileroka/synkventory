@@ -40,7 +40,7 @@ async def upload_inventory_image(
 ):
     """
     Upload an image for an inventory item.
-    
+
     - Validates file type and size
     - Optimizes the image (resize, compress)
     - Stores in DigitalOcean Spaces
@@ -54,7 +54,7 @@ async def upload_inventory_image(
     if file.content_type not in settings.allowed_image_types_list:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed: {', '.join(settings.allowed_image_types_list)}"
+            detail=f"Invalid file type. Allowed: {', '.join(settings.allowed_image_types_list)}",
         )
 
     # Read file content
@@ -64,7 +64,7 @@ async def upload_inventory_image(
     if len(content) > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=400,
-            detail=f"File too large. Maximum size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB"
+            detail=f"File too large. Maximum size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB",
         )
 
     # Get the inventory item
