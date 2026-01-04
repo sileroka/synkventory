@@ -64,7 +64,7 @@ def build_category_tree(
     return tree
 
 
-@router.get("", response_model=ListResponse[Category])
+@router.get("", response_model=ListResponse[Category], response_model_by_alias=True)
 def get_categories(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
@@ -114,7 +114,7 @@ def get_categories(
     )
 
 
-@router.get("/tree", response_model=DataResponse[List[dict]])
+@router.get("/tree", response_model=DataResponse[List[dict]], response_model_by_alias=True)
 def get_category_tree(
     request: Request,
     is_active: bool = Query(
@@ -136,7 +136,7 @@ def get_category_tree(
     return DataResponse(data=tree, meta=get_response_meta(request))
 
 
-@router.get("/{category_id}", response_model=DataResponse[Category])
+@router.get("/{category_id}", response_model=DataResponse[Category], response_model_by_alias=True)
 def get_category(category_id: UUID, request: Request, db: Session = Depends(get_db)):
     """
     Get a specific category by ID.
@@ -147,7 +147,7 @@ def get_category(category_id: UUID, request: Request, db: Session = Depends(get_
     return DataResponse(data=category, meta=get_response_meta(request))
 
 
-@router.post("", response_model=DataResponse[Category], status_code=201)
+@router.post("", response_model=DataResponse[Category], status_code=201, response_model_by_alias=True)
 def create_category(
     category: CategoryCreate,
     request: Request,
@@ -203,7 +203,7 @@ def create_category(
     return DataResponse(data=db_category, meta=get_response_meta(request))
 
 
-@router.put("/{category_id}", response_model=DataResponse[Category])
+@router.put("/{category_id}", response_model=DataResponse[Category], response_model_by_alias=True)
 def update_category(
     category_id: UUID,
     category: CategoryUpdate,
@@ -289,7 +289,7 @@ def update_category(
     return DataResponse(data=db_category, meta=get_response_meta(request))
 
 
-@router.delete("/{category_id}", response_model=MessageResponse)
+@router.delete("/{category_id}", response_model=MessageResponse, response_model_by_alias=True)
 def delete_category(
     category_id: UUID,
     request: Request,
