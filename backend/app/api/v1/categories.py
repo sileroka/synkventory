@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
 from app.core.deps import get_current_user
+from app.core.tenant import get_current_tenant
 from app.models.user import User
 from app.models.category import Category as CategoryModel
+from app.models.audit_log import AuditAction, EntityType
 from app.schemas.category import (
     Category,
     CategoryCreate,
@@ -21,6 +23,7 @@ from app.schemas.response import (
     ResponseMeta,
     MessageResponse,
 )
+from app.services.audit import audit_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -146,11 +149,16 @@ def get_category(category_id: UUID, request: Request, db: Session = Depends(get_
 
 @router.post("", response_model=DataResponse[Category], status_code=201)
 def create_category(
-    category: CategoryCreate, request: Request, db: Session = Depends(get_db)
+    category: CategoryCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Create a new category.
     """
+    tenant = get_current_tenant()
+
     # Check if code already exists
     existing_category = (
         db.query(CategoryModel).filter(CategoryModel.code == category.code).first()
@@ -172,6 +180,20 @@ def create_category(
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
+
+    # Log the creation
+    if tenant:
+        audit_service.log_create(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.CATEGORY,
+            entity_id=db_category.id,
+            entity_name=f"{db_category.code} - {db_category.name}",
+            data=category.model_dump(),
+            request=request,
+        )
+
     return DataResponse(data=db_category, meta=get_response_meta(request))
 
 
@@ -181,15 +203,27 @@ def update_category(
     category: CategoryUpdate,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Update a category.
     """
+    tenant = get_current_tenant()
+
     db_category = (
         db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
     )
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found")
+
+    # Capture old values for audit
+    old_values = {
+        "name": db_category.name,
+        "code": db_category.code,
+        "description": db_category.description,
+        "is_active": db_category.is_active,
+        "parent_id": str(db_category.parent_id) if db_category.parent_id else None,
+    }
 
     update_data = category.model_dump(exclude_unset=True)
 
@@ -223,19 +257,56 @@ def update_category(
 
     db.commit()
     db.refresh(db_category)
+
+    # Log the update with changes
+    if tenant:
+        changes = {}
+        for field, new_value in update_data.items():
+            old_value = old_values.get(field)
+            if hasattr(new_value, "hex"):
+                new_value = str(new_value)
+            if old_value != new_value:
+                changes[field] = {"old": old_value, "new": new_value}
+
+        if changes:
+            audit_service.log_update(
+                db=db,
+                tenant_id=tenant.id,
+                user_id=user.id,
+                entity_type=EntityType.CATEGORY,
+                entity_id=db_category.id,
+                entity_name=f"{db_category.code} - {db_category.name}",
+                changes=changes,
+                request=request,
+            )
+
     return DataResponse(data=db_category, meta=get_response_meta(request))
 
 
 @router.delete("/{category_id}", response_model=MessageResponse)
-def delete_category(category_id: UUID, request: Request, db: Session = Depends(get_db)):
+def delete_category(
+    category_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """
     Delete a category.
     """
+    tenant = get_current_tenant()
+
     db_category = (
         db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
     )
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found")
+
+    # Capture category info for audit
+    category_name = f"{db_category.code} - {db_category.name}"
+    category_data = {
+        "code": db_category.code,
+        "name": db_category.name,
+    }
 
     # Check for children
     children = (
@@ -249,6 +320,20 @@ def delete_category(category_id: UUID, request: Request, db: Session = Depends(g
 
     db.delete(db_category)
     db.commit()
+
+    # Log the deletion
+    if tenant:
+        audit_service.log_delete(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.CATEGORY,
+            entity_id=category_id,
+            entity_name=category_name,
+            data=category_data,
+            request=request,
+        )
+
     return MessageResponse(
         message="Category deleted successfully", meta=get_response_meta(request)
     )

@@ -24,7 +24,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Update tenant isolation policies to handle empty string tenant_id.
-    
+
     Using NULLIF converts empty string to NULL, and tenant_id = NULL is always false,
     which correctly denies access when no tenant context is set (unless admin bypass applies).
     """
@@ -39,7 +39,7 @@ def upgrade() -> None:
     for table in tenant_tables:
         # Drop the old policy
         op.execute(f"DROP POLICY IF EXISTS tenant_isolation_policy ON {table}")
-        
+
         # Create new policy with NULLIF to handle empty strings
         op.execute(
             f"""
@@ -65,7 +65,7 @@ def downgrade() -> None:
     for table in tenant_tables:
         # Drop the new policy
         op.execute(f"DROP POLICY IF EXISTS tenant_isolation_policy ON {table}")
-        
+
         # Recreate original policy
         op.execute(
             f"""

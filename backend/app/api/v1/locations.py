@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.deps import get_current_user
+from app.core.tenant import get_current_tenant
 from app.models.user import User
 from app.models.location import Location as LocationModel
+from app.models.audit_log import AuditAction, EntityType
 from app.schemas.location import (
     Location,
     LocationCreate,
@@ -19,6 +21,7 @@ from app.schemas.response import (
     ResponseMeta,
     MessageResponse,
 )
+from app.services.audit import audit_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -89,11 +92,16 @@ def get_location(location_id: UUID, request: Request, db: Session = Depends(get_
 
 @router.post("", response_model=DataResponse[Location], status_code=201)
 def create_location(
-    location: LocationCreate, request: Request, db: Session = Depends(get_db)
+    location: LocationCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Create a new location.
     """
+    tenant = get_current_tenant()
+
     # Check if code already exists
     existing_location = (
         db.query(LocationModel).filter(LocationModel.code == location.code).first()
@@ -105,6 +113,20 @@ def create_location(
     db.add(db_location)
     db.commit()
     db.refresh(db_location)
+
+    # Log the creation
+    if tenant:
+        audit_service.log_create(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.LOCATION,
+            entity_id=db_location.id,
+            entity_name=f"{db_location.code} - {db_location.name}",
+            data=location.model_dump(),
+            request=request,
+        )
+
     return DataResponse(data=db_location, meta=get_response_meta(request))
 
 
@@ -114,15 +136,26 @@ def update_location(
     location: LocationUpdate,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Update a location.
     """
+    tenant = get_current_tenant()
+
     db_location = (
         db.query(LocationModel).filter(LocationModel.id == location_id).first()
     )
     if not db_location:
         raise HTTPException(status_code=404, detail="Location not found")
+
+    # Capture old values for audit
+    old_values = {
+        "name": db_location.name,
+        "code": db_location.code,
+        "description": db_location.description,
+        "is_active": db_location.is_active,
+    }
 
     update_data = location.model_dump(exclude_unset=True)
 
@@ -141,22 +174,71 @@ def update_location(
 
     db.commit()
     db.refresh(db_location)
+
+    # Log the update with changes
+    if tenant:
+        changes = {}
+        for field, new_value in update_data.items():
+            old_value = old_values.get(field)
+            if old_value != new_value:
+                changes[field] = {"old": old_value, "new": new_value}
+
+        if changes:
+            audit_service.log_update(
+                db=db,
+                tenant_id=tenant.id,
+                user_id=user.id,
+                entity_type=EntityType.LOCATION,
+                entity_id=db_location.id,
+                entity_name=f"{db_location.code} - {db_location.name}",
+                changes=changes,
+                request=request,
+            )
+
     return DataResponse(data=db_location, meta=get_response_meta(request))
 
 
 @router.delete("/{location_id}", response_model=MessageResponse)
-def delete_location(location_id: UUID, request: Request, db: Session = Depends(get_db)):
+def delete_location(
+    location_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """
     Delete a location.
     """
+    tenant = get_current_tenant()
+
     db_location = (
         db.query(LocationModel).filter(LocationModel.id == location_id).first()
     )
     if not db_location:
         raise HTTPException(status_code=404, detail="Location not found")
 
+    # Capture location info for audit
+    location_name = f"{db_location.code} - {db_location.name}"
+    location_data = {
+        "code": db_location.code,
+        "name": db_location.name,
+    }
+
     db.delete(db_location)
     db.commit()
+
+    # Log the deletion
+    if tenant:
+        audit_service.log_delete(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.LOCATION,
+            entity_id=location_id,
+            entity_name=location_name,
+            data=location_data,
+            request=request,
+        )
+
     return MessageResponse(
         message="Location deleted successfully", meta=get_response_meta(request)
     )

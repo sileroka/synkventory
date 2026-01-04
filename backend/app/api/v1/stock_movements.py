@@ -7,12 +7,14 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, func as sql_func
 from app.db.session import get_db
 from app.core.deps import get_current_user
+from app.core.tenant import get_current_tenant
 from app.models.user import User
 from app.models.stock_movement import StockMovement as StockMovementModel, MovementType
 from app.models.inventory import InventoryItem as InventoryItemModel
 from app.models.inventory_location_quantity import (
     InventoryLocationQuantity as InventoryLocationQuantityModel,
 )
+from app.models.audit_log import AuditAction, EntityType
 from app.schemas.stock_movement import (
     StockMovement,
     StockMovementCreate,
@@ -24,6 +26,7 @@ from app.schemas.response import (
     PaginationMeta,
     ResponseMeta,
 )
+from app.services.audit import audit_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -84,7 +87,10 @@ def get_or_create_location_quantity(
 
 @router.post("", response_model=DataResponse[StockMovement], status_code=201)
 def create_stock_movement(
-    movement: StockMovementCreate, request: Request, db: Session = Depends(get_db)
+    movement: StockMovementCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Create a new stock movement and update inventory quantity.
@@ -101,6 +107,8 @@ def create_stock_movement(
     - ship/adjust(-): from_location_id required, removes quantity from there
     - transfer: both required, removes from from_location, adds to to_location
     """
+    tenant = get_current_tenant()
+
     # Get the inventory item
     item = (
         db.query(InventoryItemModel)
@@ -109,6 +117,9 @@ def create_stock_movement(
     )
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
+
+    # Capture old quantity for audit
+    old_quantity = item.quantity
 
     # Validate transfer has both from and to locations
     if movement.movement_type == MovementTypeSchema.TRANSFER:
@@ -213,6 +224,37 @@ def create_stock_movement(
 
     db.commit()
     db.refresh(db_movement)
+
+    # Map movement type to audit action
+    movement_type_to_audit_action = {
+        MovementTypeSchema.RECEIVE: AuditAction.STOCK_RECEIVE,
+        MovementTypeSchema.SHIP: AuditAction.STOCK_SHIP,
+        MovementTypeSchema.TRANSFER: AuditAction.STOCK_TRANSFER,
+        MovementTypeSchema.ADJUST: AuditAction.STOCK_ADJUST,
+        MovementTypeSchema.COUNT: AuditAction.STOCK_COUNT,
+    }
+    audit_action = movement_type_to_audit_action.get(
+        movement.movement_type, AuditAction.STOCK_ADJUST
+    )
+
+    # Log the stock movement
+    if tenant:
+        audit_service.log_stock_movement(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            movement_type=audit_action,
+            item_id=item.id,
+            item_name=f"{item.sku} - {item.name}",
+            quantity_change=movement.quantity,
+            old_quantity=old_quantity,
+            new_quantity=item.quantity,
+            from_location_id=movement.from_location_id,
+            to_location_id=movement.to_location_id,
+            reference_number=movement.reference_number,
+            reason=movement.notes,
+            request=request,
+        )
 
     # Reload with relationships
     db_movement = (

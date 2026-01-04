@@ -7,12 +7,14 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, asc, desc
 from app.db.session import get_db
 from app.core.deps import get_current_user
+from app.core.tenant import get_current_tenant
 from app.models.user import User
 from app.models.inventory import InventoryItem as InventoryItemModel
 from app.models.stock_movement import StockMovement as StockMovementModel
 from app.models.inventory_location_quantity import (
     InventoryLocationQuantity as InventoryLocationQuantityModel,
 )
+from app.models.audit_log import AuditAction, EntityType
 from app.schemas.inventory import (
     InventoryItem,
     InventoryItemCreate,
@@ -32,6 +34,7 @@ from app.schemas.response import (
     ResponseMeta,
     MessageResponse,
 )
+from app.services.audit import audit_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -235,11 +238,16 @@ def get_inventory_item(item_id: UUID, request: Request, db: Session = Depends(ge
 
 @router.post("", response_model=DataResponse[InventoryItem], status_code=201)
 def create_inventory_item(
-    item: InventoryItemCreate, request: Request, db: Session = Depends(get_db)
+    item: InventoryItemCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Create a new inventory item.
     """
+    tenant = get_current_tenant()
+
     # Check if SKU already exists
     existing_item = (
         db.query(InventoryItemModel).filter(InventoryItemModel.sku == item.sku).first()
@@ -251,6 +259,20 @@ def create_inventory_item(
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
+
+    # Log the creation
+    if tenant:
+        audit_service.log_create(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.INVENTORY_ITEM,
+            entity_id=db_item.id,
+            entity_name=f"{db_item.sku} - {db_item.name}",
+            data=item.model_dump(),
+            request=request,
+        )
+
     # Reload with relationships
     db_item = (
         db.query(InventoryItemModel)
@@ -270,15 +292,29 @@ def update_inventory_item(
     item: InventoryItemUpdate,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Update an inventory item.
     """
+    tenant = get_current_tenant()
+
     db_item = (
         db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
     )
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    # Capture old values for audit
+    old_values = {
+        "name": db_item.name,
+        "sku": db_item.sku,
+        "quantity": db_item.quantity,
+        "reorder_point": db_item.reorder_point,
+        "status": db_item.status,
+        "category_id": str(db_item.category_id) if db_item.category_id else None,
+        "location_id": str(db_item.location_id) if db_item.location_id else None,
+    }
 
     update_data = item.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -286,6 +322,33 @@ def update_inventory_item(
 
     db.commit()
     db.refresh(db_item)
+
+    # Log the update with changes
+    if tenant:
+        # Build changes dict showing old/new values
+        changes = {}
+        for field, new_value in update_data.items():
+            old_value = old_values.get(field)
+            # Convert UUIDs to strings for JSON serialization
+            if hasattr(new_value, "hex"):
+                new_value = str(new_value)
+            if hasattr(old_value, "hex"):
+                old_value = str(old_value)
+            if old_value != new_value:
+                changes[field] = {"old": old_value, "new": new_value}
+
+        if changes:
+            audit_service.log_update(
+                db=db,
+                tenant_id=tenant.id,
+                user_id=user.id,
+                entity_type=EntityType.INVENTORY_ITEM,
+                entity_id=db_item.id,
+                entity_name=f"{db_item.sku} - {db_item.name}",
+                changes=changes,
+                request=request,
+            )
+
     # Reload with relationships
     db_item = (
         db.query(InventoryItemModel)
@@ -301,19 +364,47 @@ def update_inventory_item(
 
 @router.delete("/{item_id}", response_model=MessageResponse)
 def delete_inventory_item(
-    item_id: UUID, request: Request, db: Session = Depends(get_db)
+    item_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Delete an inventory item.
     """
+    tenant = get_current_tenant()
+
     db_item = (
         db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
     )
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    # Capture item info for audit before deleting
+    item_name = f"{db_item.sku} - {db_item.name}"
+    item_data = {
+        "sku": db_item.sku,
+        "name": db_item.name,
+        "quantity": db_item.quantity,
+        "status": db_item.status,
+    }
+
     db.delete(db_item)
     db.commit()
+
+    # Log the deletion
+    if tenant:
+        audit_service.log_delete(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            entity_type=EntityType.INVENTORY_ITEM,
+            entity_id=item_id,
+            entity_name=item_name,
+            data=item_data,
+            request=request,
+        )
+
     return MessageResponse(
         message="Item deleted successfully", meta=get_response_meta(request)
     )
@@ -324,12 +415,15 @@ def bulk_delete_items(
     request_data: BulkDeleteRequest,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Delete multiple inventory items at once.
     """
+    tenant = get_current_tenant()
     success_count = 0
     failed_ids = []
+    deleted_items = []
 
     for item_id in request_data.ids:
         try:
@@ -339,6 +433,13 @@ def bulk_delete_items(
                 .first()
             )
             if db_item:
+                deleted_items.append(
+                    {
+                        "id": str(db_item.id),
+                        "sku": db_item.sku,
+                        "name": db_item.name,
+                    }
+                )
                 db.delete(db_item)
                 success_count += 1
             else:
@@ -347,6 +448,19 @@ def bulk_delete_items(
             failed_ids.append(item_id)
 
     db.commit()
+
+    # Log bulk delete operation
+    if tenant and deleted_items:
+        audit_service.log_bulk_operation(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            action=AuditAction.BULK_DELETE,
+            entity_type=EntityType.INVENTORY_ITEM,
+            count=success_count,
+            data={"deleted_items": deleted_items},
+            request=request,
+        )
 
     return DataResponse(
         data=BulkOperationResult(
@@ -363,12 +477,15 @@ def bulk_update_status(
     request_data: BulkStatusUpdateRequest,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Update status for multiple inventory items at once.
     """
+    tenant = get_current_tenant()
     success_count = 0
     failed_ids = []
+    updated_items = []
 
     for item_id in request_data.ids:
         try:
@@ -378,7 +495,16 @@ def bulk_update_status(
                 .first()
             )
             if db_item:
+                old_status = db_item.status
                 db_item.status = request_data.status.value
+                updated_items.append(
+                    {
+                        "id": str(db_item.id),
+                        "sku": db_item.sku,
+                        "old_status": old_status,
+                        "new_status": request_data.status.value,
+                    }
+                )
                 success_count += 1
             else:
                 failed_ids.append(item_id)
@@ -386,6 +512,22 @@ def bulk_update_status(
             failed_ids.append(item_id)
 
     db.commit()
+
+    # Log bulk update operation
+    if tenant and updated_items:
+        audit_service.log_bulk_operation(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            action=AuditAction.BULK_UPDATE,
+            entity_type=EntityType.INVENTORY_ITEM,
+            count=success_count,
+            data={
+                "updated_items": updated_items,
+                "new_status": request_data.status.value,
+            },
+            request=request,
+        )
 
     return DataResponse(
         data=BulkOperationResult(
@@ -403,16 +545,23 @@ def quick_adjust_quantity(
     request_data: QuickAdjustRequest,
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Quickly adjust the quantity of an inventory item.
     This updates the quantity directly and auto-updates the status based on the new quantity.
     """
+    tenant = get_current_tenant()
+
     db_item = (
         db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
     )
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    # Capture old values for audit
+    old_quantity = db_item.quantity
+    old_status = db_item.status
 
     # Update quantity
     db_item.quantity = request_data.quantity
@@ -427,6 +576,22 @@ def quick_adjust_quantity(
 
     db.commit()
     db.refresh(db_item)
+
+    # Log the quick adjustment as a stock adjustment
+    if tenant:
+        audit_service.log_stock_movement(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            movement_type=AuditAction.STOCK_ADJUST,
+            item_id=db_item.id,
+            item_name=f"{db_item.sku} - {db_item.name}",
+            quantity_change=request_data.quantity - old_quantity,
+            old_quantity=old_quantity,
+            new_quantity=request_data.quantity,
+            reason=request_data.reason,
+            request=request,
+        )
 
     # Reload with relationships
     db_item = (

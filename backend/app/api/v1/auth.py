@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,8 @@ from app.core.security import (
 from app.core.tenant import get_current_tenant
 from app.db.session import get_db
 from app.models.user import User
+from app.services.audit import audit_service
+from app.models.audit_log import AuditAction, EntityType
 
 router = APIRouter()
 
@@ -78,7 +80,8 @@ class RegisterRequest(BaseModel):
 
 @router.post("/auth/login", response_model=LoginResponse)
 def login(
-    request: LoginRequest,
+    login_request: LoginRequest,
+    http_request: Request,
     response: Response,
     db: Session = Depends(get_db),
 ):
@@ -100,26 +103,72 @@ def login(
     # Find user by email AND tenant_id
     user = (
         db.query(User)
-        .filter(User.email == request.email, User.tenant_id == tenant.id)
+        .filter(User.email == login_request.email, User.tenant_id == tenant.id)
         .first()
     )
 
     # User not found - still verify to prevent timing attacks
     if not user:
-        verify_password(request.password, "$2b$12$dummy_hash_to_prevent_timing_attacks")
+        verify_password(
+            login_request.password, "$2b$12$dummy_hash_to_prevent_timing_attacks"
+        )
+        # Log failed login attempt (no user context)
+        audit_service.log(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=None,
+            action=AuditAction.LOGIN_FAILED,
+            entity_type=EntityType.USER,
+            entity_id=None,
+            metadata={
+                "email": login_request.email,
+                "reason": "user_not_found",
+            },
+            request=http_request,
+        )
         raise auth_error
 
     # Check if user is active
     if not user.is_active:
+        audit_service.log(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            action=AuditAction.LOGIN_FAILED,
+            entity_type=EntityType.USER,
+            entity_id=user.id,
+            metadata={"reason": "user_inactive"},
+            request=http_request,
+        )
         raise auth_error
 
     # Check if user is locked
     if user.is_locked:
         if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+            audit_service.log(
+                db=db,
+                tenant_id=tenant.id,
+                user_id=user.id,
+                action=AuditAction.LOGIN_FAILED,
+                entity_type=EntityType.USER,
+                entity_id=user.id,
+                metadata={"reason": "user_locked"},
+                request=http_request,
+            )
             raise auth_error
 
     # Verify password
-    if not verify_password(request.password, user.password_hash):
+    if not verify_password(login_request.password, user.password_hash):
+        audit_service.log(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            action=AuditAction.LOGIN_FAILED,
+            entity_type=EntityType.USER,
+            entity_id=user.id,
+            metadata={"reason": "invalid_password"},
+            request=http_request,
+        )
         raise auth_error
 
     # Create tokens
@@ -134,6 +183,14 @@ def login(
     set_auth_cookie(
         response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60
     )  # 7 days
+
+    # Log successful login
+    audit_service.log_login(
+        db=db,
+        tenant_id=tenant.id,
+        user_id=user.id,
+        request=http_request,
+    )
 
     return LoginResponse(
         user=UserResponse(
@@ -211,8 +268,24 @@ def delete_auth_cookie(response: Response, key: str) -> None:
 
 
 @router.post("/auth/logout")
-def logout(response: Response):
-    """Clear auth cookies."""
+def logout(
+    http_request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Clear auth cookies and log the logout."""
+    tenant = get_current_tenant()
+
+    # Log logout before clearing cookies
+    if tenant and user:
+        audit_service.log_logout(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            request=http_request,
+        )
+
     delete_auth_cookie(response, "access_token")
     delete_auth_cookie(response, "refresh_token")
     return {"message": "Logged out"}
