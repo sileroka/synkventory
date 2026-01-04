@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
 
 
 def to_camel(string: str) -> str:
@@ -44,6 +45,11 @@ class Location(LocationBase):
         from_attributes=True,
     )
 
-    id: str
+    id: UUID
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_serializer("id")
+    def serialize_uuid(self, value: Optional[UUID]) -> Optional[str]:
+        """Serialize UUID fields to strings."""
+        return str(value) if value else None

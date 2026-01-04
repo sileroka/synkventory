@@ -84,6 +84,11 @@ def upgrade() -> None:
         unique=True,
     )
 
+    # Grant permissions to app role
+    op.execute(
+        "GRANT SELECT, INSERT, UPDATE, DELETE ON category_attributes TO synkventory_app"
+    )
+
     # Enable RLS
     op.execute("ALTER TABLE category_attributes ENABLE ROW LEVEL SECURITY")
 
@@ -98,14 +103,14 @@ def upgrade() -> None:
         """
     )
 
-    # Admin bypass policy
+    # Admin bypass policy (uses app.is_admin setting, not a role)
     op.execute(
         """
         CREATE POLICY category_attributes_admin_bypass ON category_attributes
             FOR ALL
-            TO synkventory_admin
-            USING (true)
-            WITH CHECK (true)
+            TO synkventory_app
+            USING (current_setting('app.is_admin', true) = 'true')
+            WITH CHECK (current_setting('app.is_admin', true) = 'true')
         """
     )
 
