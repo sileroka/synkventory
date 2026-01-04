@@ -564,6 +564,12 @@ def delete_tenant_user(
 # ----- Audit Logs (Cross-Tenant) -----
 
 
+def to_camel(string: str) -> str:
+    """Convert snake_case to camelCase."""
+    components = string.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
 class AdminAuditLogResponse(BaseModel):
     """Admin audit log response with tenant info."""
 
@@ -581,8 +587,11 @@ class AdminAuditLogResponse(BaseModel):
     user_agent: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True,
+        "alias_generator": to_camel,
+        "populate_by_name": True,
+    }
 
 
 class AdminAuditLogListResponse(BaseModel):
@@ -591,8 +600,16 @@ class AdminAuditLogListResponse(BaseModel):
     data: List[AdminAuditLogResponse]
     meta: dict
 
+    model_config = {
+        "populate_by_name": True,
+    }
 
-@router.get("/audit-logs", response_model=AdminAuditLogListResponse)
+
+@router.get(
+    "/audit-logs",
+    response_model=AdminAuditLogListResponse,
+    response_model_by_alias=True,
+)
 def list_admin_audit_logs(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(

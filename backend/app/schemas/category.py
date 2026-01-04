@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 
 
 def to_camel(string: str) -> str:
@@ -46,9 +47,14 @@ class Category(CategoryBase):
         from_attributes=True,
     )
 
-    id: str
+    id: UUID
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_serializer("id", "parent_id")
+    def serialize_uuid(self, value: Optional[UUID]) -> Optional[str]:
+        """Serialize UUID fields to strings."""
+        return str(value) if value else None
 
 
 class CategoryTreeNode(Category):
