@@ -57,8 +57,9 @@ class Category(BaseModel):
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    tenant_id: Optional[UUID] = None
 
-    @field_serializer("id", "parent_id")
+    @field_serializer("id", "parent_id", "tenant_id")
     def serialize_uuid(self, value: Optional[UUID]) -> Optional[str]:
         """Serialize UUID fields to strings."""
         return str(value) if value else None
