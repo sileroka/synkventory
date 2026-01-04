@@ -479,6 +479,24 @@ body {
   .p-dialog-header {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--synk-neutral-200);
+
+    // Close button styling - make it visible with off-white color
+    .p-dialog-header-close {
+      color: var(--synk-neutral-100) !important;
+      
+      &:hover {
+        color: white !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      &:focus {
+        box-shadow: none !important;
+      }
+
+      .p-icon {
+        color: inherit;
+      }
+    }
   }
 
   .p-dialog-content {
