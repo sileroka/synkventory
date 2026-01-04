@@ -11,7 +11,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { UserListComponent } from './features/users/user-list.component';
 import { LandingComponent } from './features/landing/landing.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
-import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard } from './core/guards/admin.guard';
+import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
 import { TenantService } from './core/services/tenant.service';
 
@@ -21,6 +21,7 @@ import { AdminLayoutComponent } from './features/admin/layout/admin-layout.compo
 import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
 import { TenantListComponent } from './features/admin/tenants/tenant-list.component';
 import { TenantDetailComponent } from './features/admin/tenants/tenant-detail.component';
+import { AdminUserListComponent } from './features/admin/admin-users/admin-user-list.component';
 
 /**
  * Guard for catch-all route - redirects appropriately based on portal
@@ -72,6 +73,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'tenants', component: TenantListComponent },
       { path: 'tenants/:id', component: TenantDetailComponent },
+      { path: 'admins', component: AdminUserListComponent, canActivate: [superAdminGuard] },
     ]
   },
 

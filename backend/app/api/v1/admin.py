@@ -197,6 +197,41 @@ def create_admin_user(
     return AdminUserResponse.model_validate(new_admin)
 
 
+@router.patch("/admin-users/{admin_id}", response_model=AdminUserResponse)
+def update_admin_user(
+    admin_id: UUID,
+    data: AdminUserUpdate,
+    admin_user: AdminUser = Depends(get_current_admin_user),
+    db: Session = Depends(get_db_no_tenant),
+):
+    """Update an admin user. Requires super admin."""
+    if not admin_user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required",
+        )
+
+    target_admin = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    if not target_admin:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Admin user not found",
+        )
+
+    # Update fields if provided
+    if data.name is not None:
+        target_admin.name = data.name
+    if data.is_super_admin is not None:
+        target_admin.is_super_admin = data.is_super_admin
+    if data.is_active is not None:
+        target_admin.is_active = data.is_active
+
+    db.commit()
+    db.refresh(target_admin)
+
+    return AdminUserResponse.model_validate(target_admin)
+
+
 # ----- Tenant Management -----
 
 

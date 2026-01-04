@@ -131,7 +131,9 @@ def login(
 
     # Set HttpOnly cookies
     set_auth_cookie(response, "access_token", tokens.access_token, 30 * 60)  # 30 min
-    set_auth_cookie(response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60)  # 7 days
+    set_auth_cookie(
+        response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60
+    )  # 7 days
 
     return LoginResponse(
         user=UserResponse(

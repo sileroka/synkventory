@@ -134,4 +134,8 @@ export class AdminApiService {
   createAdminUser(data: AdminUserCreate): Observable<AdminUser> {
     return this.http.post<AdminUser>(`${this.apiUrl}/admin-users`, data, { withCredentials: true });
   }
+
+  updateAdminUser(adminId: string, data: Partial<{ name: string; is_super_admin: boolean; is_active: boolean }>): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(`${this.apiUrl}/admin-users/${adminId}`, data, { withCredentials: true });
+  }
 }
