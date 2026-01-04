@@ -48,9 +48,17 @@ export const routes: Routes = [
   // Protected routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'inventory', component: InventoryListComponent, canActivate: [authGuard] },
+  // Special inventory routes - must be BEFORE :id wildcard
+  { path: 'inventory/new', redirectTo: 'inventory', pathMatch: 'full' },
+  { path: 'inventory/import', redirectTo: 'inventory', pathMatch: 'full' },
   { path: 'inventory/:id', component: InventoryDetailComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationListComponent, canActivate: [authGuard] },
+  { path: 'locations/new', redirectTo: 'locations', pathMatch: 'full' },
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },
+  // Stock movements routes
+  { path: 'stock-movements', redirectTo: 'reports/movements', pathMatch: 'full' },
+  { path: 'stock-movements/receive', redirectTo: 'reports/movements', pathMatch: 'full' },
+  { path: 'stock-movements/transfer', redirectTo: 'reports/movements', pathMatch: 'full' },
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
 
