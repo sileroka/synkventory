@@ -35,6 +35,7 @@ from app.schemas.response import (
     MessageResponse,
 )
 from app.services.audit import audit_service
+from app.services.storage import storage_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -46,6 +47,31 @@ def get_response_meta(request: Request) -> ResponseMeta:
         timestamp=datetime.utcnow(),
         request_id=getattr(request.state, "request_id", None),
     )
+
+
+def add_image_url(item: InventoryItemModel) -> dict:
+    """Convert inventory item to dict and add signed image URL if available."""
+    item_dict = {
+        "id": item.id,
+        "name": item.name,
+        "sku": item.sku,
+        "description": item.description,
+        "quantity": item.quantity,
+        "reorder_point": item.reorder_point,
+        "unit_price": item.unit_price,
+        "status": item.status,
+        "category_id": item.category_id,
+        "location_id": item.location_id,
+        "category": item.category,
+        "location": item.location,
+        "created_at": item.created_at,
+        "updated_at": item.updated_at,
+        "created_by": item.created_by,
+        "updated_by": item.updated_by,
+        "image_key": item.image_key,
+        "image_url": storage_service.get_signed_url(item.image_key) if item.image_key else None,
+    }
+    return item_dict
 
 
 @router.get("", response_model=ListResponse[InventoryItem])
@@ -131,9 +157,12 @@ def get_inventory_items(
     # Calculate offset and apply pagination
     skip = (page - 1) * page_size
     items = query.offset(skip).limit(page_size).all()
+    
+    # Add signed image URLs to items
+    items_with_urls = [add_image_url(item) for item in items]
 
     return ListResponse(
-        data=items,
+        data=items_with_urls,
         meta=PaginationMeta(
             timestamp=datetime.utcnow(),
             request_id=getattr(request.state, "request_id", None),
@@ -233,7 +262,7 @@ def get_inventory_item(item_id: UUID, request: Request, db: Session = Depends(ge
     )
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    return DataResponse(data=item, meta=get_response_meta(request))
+    return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
 
 
 @router.post("", response_model=DataResponse[InventoryItem], status_code=201)
@@ -247,13 +276,14 @@ def create_inventory_item(
     Create a new inventory item.
     """
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info(f"[CREATE] Received item data: {item.model_dump()}")
-    
+
     tenant = get_current_tenant()
     if not tenant:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    
+
     logger.info(f"[CREATE] Tenant: {tenant.id}")
 
     # Check if SKU already exists
@@ -267,11 +297,11 @@ def create_inventory_item(
     try:
         # Convert string UUIDs to proper UUID objects for foreign keys
         item_data = item.model_dump()
-        if item_data.get('category_id'):
-            item_data['category_id'] = UUID(item_data['category_id'])
-        if item_data.get('location_id'):
-            item_data['location_id'] = UUID(item_data['location_id'])
-        
+        if item_data.get("category_id"):
+            item_data["category_id"] = UUID(item_data["category_id"])
+        if item_data.get("location_id"):
+            item_data["location_id"] = UUID(item_data["location_id"])
+
         # Create item with tenant_id from context
         db_item = InventoryItemModel(
             **item_data,
@@ -310,7 +340,7 @@ def create_inventory_item(
         .filter(InventoryItemModel.id == db_item.id)
         .first()
     )
-    return DataResponse(data=db_item, meta=get_response_meta(request))
+    return DataResponse(data=add_image_url(db_item), meta=get_response_meta(request))
 
 
 @router.put("/{item_id}", response_model=DataResponse[InventoryItem])
@@ -386,7 +416,7 @@ def update_inventory_item(
         .filter(InventoryItemModel.id == db_item.id)
         .first()
     )
-    return DataResponse(data=db_item, meta=get_response_meta(request))
+    return DataResponse(data=add_image_url(db_item), meta=get_response_meta(request))
 
 
 @router.delete("/{item_id}", response_model=MessageResponse)

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,10 +15,14 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToolbarModule } from 'primeng/toolbar';
+import { FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { InventoryService, IInventoryFilters } from '../../services/inventory.service';
 import { LocationService } from '../../features/locations/services/location.service';
 import { CategoryService } from '../../features/categories/services/category.service';
+import { UploadService } from '../../services/upload.service';
 import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../../models/inventory-item.model';
 import { ILocation } from '../../features/locations/models/location.model';
 import { ICategory } from '../../features/categories/models/category.model';
@@ -51,13 +55,18 @@ interface IMultiSelectOption {
     DropdownModule,
     MultiSelectModule,
     TooltipModule,
-    ToolbarModule
+    ToolbarModule,
+    FileUploadModule,
+    ImageModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-list.component.html',
   styleUrl: './inventory-list.component.scss'
 })
 export class InventoryListComponent implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  
   items: IInventoryItem[] = [];
   displayDialog: boolean = false;
   displayDetailDialog: boolean = false;
@@ -71,6 +80,9 @@ export class InventoryListComponent implements OnInit {
   isEditMode: boolean = false;
   loading: boolean = false;
   loadingDetail: boolean = false;
+  uploadingImage: boolean = false;
+  selectedImageFile: File | null = null;
+  imagePreviewUrl: string | null = null;
 
   // Selection for bulk actions
   selectedItems: IInventoryItem[] = [];
@@ -116,6 +128,7 @@ export class InventoryListComponent implements OnInit {
     private inventoryService: InventoryService,
     private locationService: LocationService,
     private categoryService: CategoryService,
+    private uploadService: UploadService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router
@@ -392,6 +405,8 @@ export class InventoryListComponent implements OnInit {
   showAddDialog() {
     this.selectedItem = this.getEmptyItem();
     this.isEditMode = false;
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = null;
     this.displayDialog = true;
   }
 
@@ -402,13 +417,91 @@ export class InventoryListComponent implements OnInit {
       locationId: item.location?.id || item.locationId || null
     };
     this.isEditMode = true;
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = item.imageUrl || null;
     this.displayDialog = true;
+  }
+
+  onImageSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Invalid File',
+          detail: 'Please select a valid image (JPEG, PNG, GIF, or WebP)'
+        });
+        return;
+      }
+      
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'File Too Large',
+          detail: 'Image must be less than 10MB'
+        });
+        return;
+      }
+      
+      this.selectedImageFile = file;
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagePreviewUrl = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  triggerFileInput() {
+    this.fileInput?.nativeElement?.click();
+  }
+
+  removeImage() {
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = null;
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
+  private uploadImageIfNeeded(itemId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.selectedImageFile) {
+        resolve();
+        return;
+      }
+      
+      this.uploadingImage = true;
+      this.uploadService.uploadInventoryImage(itemId, this.selectedImageFile).subscribe({
+        next: () => {
+          this.uploadingImage = false;
+          resolve();
+        },
+        error: (err) => {
+          this.uploadingImage = false;
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Image Upload Failed',
+            detail: 'Item was saved but image upload failed'
+          });
+          resolve(); // Don't reject - item was still saved
+        }
+      });
+    });
   }
 
   saveItem() {
     if (this.isEditMode && this.selectedItem.id) {
       this.inventoryService.updateItem(this.selectedItem.id, this.selectedItem).subscribe({
-        next: () => {
+        next: async () => {
+          await this.uploadImageIfNeeded(this.selectedItem.id!);
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
@@ -427,7 +520,10 @@ export class InventoryListComponent implements OnInit {
       });
     } else {
       this.inventoryService.createItem(this.selectedItem).subscribe({
-        next: () => {
+        next: async (createdItem) => {
+          if (createdItem.id && this.selectedImageFile) {
+            await this.uploadImageIfNeeded(createdItem.id);
+          }
           this.messageService.add({
             severity: 'success',
             summary: 'Success',

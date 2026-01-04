@@ -105,6 +105,8 @@ class InventoryItem(InventoryItemBase):
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+    image_key: Optional[str] = None
+    image_url: Optional[str] = None  # Populated at runtime with signed URL
 
     @field_validator(
         "id", "created_by", "updated_by", "category_id", "location_id", mode="before"

@@ -95,6 +95,36 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     # ==========================================================================
+    # DigitalOcean Spaces Settings (S3-compatible storage)
+    # ==========================================================================
+    SPACES_ACCESS_KEY: Optional[str] = None
+    SPACES_SECRET_KEY: Optional[str] = None
+    SPACES_BUCKET: str = "synkventory-storage"
+    SPACES_REGION: str = "sfo3"
+    SPACES_ENDPOINT: Optional[str] = None
+    
+    # Signed URL expiration in seconds (default 1 hour)
+    SPACES_URL_EXPIRATION: int = 3600
+    
+    # Max file size in bytes (default 10MB)
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024
+    
+    # Allowed image types
+    ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/gif,image/webp"
+
+    @property
+    def spaces_endpoint_url(self) -> str:
+        """Get the Spaces endpoint URL."""
+        if self.SPACES_ENDPOINT:
+            return self.SPACES_ENDPOINT
+        return f"https://{self.SPACES_REGION}.digitaloceanspaces.com"
+
+    @property
+    def allowed_image_types_list(self) -> list:
+        """Get allowed image types as a list."""
+        return [t.strip() for t in self.ALLOWED_IMAGE_TYPES.split(",")]
+
+    # ==========================================================================
     # Database URL Property
     # ==========================================================================
     @property

@@ -40,6 +40,8 @@ export interface IInventoryItem {
   locationId?: string | null;
   category?: IRelatedCategory | null;
   location?: IRelatedLocation | null;
+  imageKey?: string | null;
+  imageUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

@@ -143,6 +143,7 @@
         <th style="width: 3rem">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
+        <th style="width: 4rem">Image</th>
         <th pSortableColumn="sku" style="width: 7rem">
           <div class="flex align-items-center justify-content-between">
             <p-columnFilter type="text" field="sku" display="menu" [showMatchModes]="true" [showOperator]="false"></p-columnFilter>
@@ -247,6 +248,15 @@
       <tr [ngClass]="getRowClass(item)">
         <td>
           <p-tableCheckbox [value]="item"></p-tableCheckbox>
+        </td>
+        <td>
+          <img *ngIf="item.imageUrl" [src]="item.imageUrl" alt="{{ item.name }}" 
+               class="item-thumbnail border-round" 
+               style="width: 40px; height: 40px; object-fit: cover;">
+          <span *ngIf="!item.imageUrl" class="item-thumbnail-placeholder flex align-items-center justify-content-center border-round surface-200" 
+                style="width: 40px; height: 40px;">
+            <i class="pi pi-image text-400"></i>
+          </span>
         </td>
         <td>{{ item.sku }}</td>
         <td>
@@ -381,12 +391,68 @@
         placeholder="Select a location"
         class="w-full" styleClass="w-full" appendTo="body"></p-dropdown>
     </div>
+
+    <!-- Image Upload Section -->
+    <div>
+      <label class="block mb-2">Item Image</label>
+      <div class="image-upload-container">
+        <!-- Image Preview -->
+        <div *ngIf="imagePreviewUrl" class="image-preview mb-2" style="position: relative;">
+          <img [src]="imagePreviewUrl" alt="Item preview" 
+               class="border-round" 
+               style="max-width: 100%; max-height: 200px; object-fit: contain;">
+          <p-button 
+            icon="pi pi-times" 
+            [rounded]="true" 
+            severity="danger"
+            size="small"
+            class="remove-image-btn absolute"
+            [style]="{'position': 'absolute', 'top': '5px', 'right': '5px'}"
+            (onClick)="removeImage()"
+            pTooltip="Remove Image">
+          </p-button>
+        </div>
+        
+        <!-- Upload Button -->
+        <div *ngIf="!imagePreviewUrl" class="upload-placeholder flex flex-column align-items-center justify-content-center border-round border-dashed surface-border p-4 cursor-pointer"
+             style="border-width: 2px; min-height: 120px;"
+             (click)="triggerFileInput()">
+          <i class="pi pi-image text-4xl text-400 mb-2"></i>
+          <span class="text-600">Click to upload image</span>
+          <span class="text-400 text-sm">JPEG, PNG, GIF, WebP (max 10MB)</span>
+        </div>
+        
+        <!-- Hidden File Input -->
+        <input type="file" 
+               #fileInput
+               (change)="onImageSelect($event)"
+               accept="image/jpeg,image/png,image/gif,image/webp"
+               style="display: none;">
+        
+        <!-- Change Image Button (when image exists) -->
+        <p-button *ngIf="imagePreviewUrl" 
+                  label="Change Image" 
+                  icon="pi pi-upload"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  class="mt-2"
+                  (onClick)="triggerFileInput()">
+        </p-button>
+      </div>
+      
+      <!-- Upload Progress -->
+      <div *ngIf="uploadingImage" class="flex align-items-center gap-2 mt-2">
+        <p-progressSpinner [style]="{width: '20px', height: '20px'}" strokeWidth="4"></p-progressSpinner>
+        <span class="text-600">Uploading image...</span>
+      </div>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
     <p-button label="Cancel" icon="pi pi-times" (onClick)="displayDialog = false"
       severity="secondary"></p-button>
-    <p-button label="Save" icon="pi pi-check" (onClick)="saveItem()"></p-button>
+    <p-button label="Save" icon="pi pi-check" (onClick)="saveItem()" [disabled]="uploadingImage"></p-button>
   </ng-template>
 </p-dialog>
 
@@ -400,6 +466,13 @@
   [resizable]="false">
 
   <div class="flex flex-column gap-4" *ngIf="detailItem">
+    <!-- Item Image (if exists) -->
+    <div *ngIf="detailItem.imageUrl" class="flex justify-content-center mb-2">
+      <img [src]="detailItem.imageUrl" [alt]="detailItem.name" 
+           class="border-round shadow-2" 
+           style="max-width: 100%; max-height: 250px; object-fit: contain;">
+    </div>
+
     <!-- Item Summary -->
     <div class="grid">
       <div class="col-6">
