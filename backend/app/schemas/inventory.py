@@ -1,7 +1,8 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
+from pydantic import BaseModel, ConfigDict, field_serializer
+from typing import Optional, List, Any
 from datetime import datetime
+from uuid import UUID
 
 
 def to_camel(string: str) -> str:
@@ -29,6 +30,10 @@ class RelatedLocation(BaseModel):
     name: str
     code: str
 
+    @field_serializer("id")
+    def serialize_id(self, v: Any) -> str:
+        return str(v) if v else None
+
 
 class RelatedCategory(BaseModel):
     """Minimal category info for embedding in inventory response."""
@@ -40,6 +45,10 @@ class RelatedCategory(BaseModel):
     id: str
     name: str
     code: str
+
+    @field_serializer("id")
+    def serialize_id(self, v: Any) -> str:
+        return str(v) if v else None
 
 
 class InventoryItemBase(BaseModel):
@@ -94,6 +103,10 @@ class InventoryItem(InventoryItemBase):
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+
+    @field_serializer("id", "created_by", "updated_by", "category_id", "location_id")
+    def serialize_uuid(self, v: Any) -> Optional[str]:
+        return str(v) if v else None
 
 
 class LowStockAlert(BaseModel):
