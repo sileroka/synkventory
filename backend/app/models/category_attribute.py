@@ -31,12 +31,15 @@ class CategoryAttribute(Base):
         nullable=False,
         index=True,
     )
+    # Nullable for global attributes (apply to all categories)
     category_id = Column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
+    # Flag to indicate global attribute (applies to all items)
+    is_global = Column(Boolean, default=False, nullable=False)
 
     # Attribute definition
     name = Column(String(100), nullable=False)  # Display name
@@ -66,11 +69,22 @@ class CategoryAttribute(Base):
     # Indexes
     __table_args__ = (
         Index("ix_category_attributes_tenant_category", "tenant_id", "category_id"),
+        Index("ix_category_attributes_tenant_global", "tenant_id", "is_global"),
+        # Partial unique index for category-specific attributes
         Index(
             "ix_category_attributes_category_key",
             "category_id",
             "key",
             unique=True,
+            postgresql_where=("category_id IS NOT NULL"),
+        ),
+        # Partial unique index for global attributes
+        Index(
+            "ix_category_attributes_global_key",
+            "tenant_id",
+            "key",
+            unique=True,
+            postgresql_where=("is_global = true"),
         ),
     )
 

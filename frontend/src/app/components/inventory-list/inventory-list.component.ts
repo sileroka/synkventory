@@ -453,46 +453,93 @@ export class InventoryListComponent implements OnInit {
 
   loadCategoryAttributes(categoryId: string) {
     this.loadingAttributes = true;
-    this.categoryAttributeService.getAttributesByCategory(categoryId).subscribe({
-      next: (result) => {
-        this.categoryAttributes = result.items.filter(attr => attr.isActive);
-        // Initialize custom attributes with defaults for new fields
-        if (!this.selectedItem.customAttributes) {
-          this.selectedItem.customAttributes = {};
-        }
-        this.categoryAttributes.forEach(attr => {
-          if (!(attr.key in this.selectedItem.customAttributes!)) {
-            // Set default value if specified
-            if (attr.defaultValue) {
-              if (attr.attributeType === 'number') {
-                this.selectedItem.customAttributes![attr.key] = parseFloat(attr.defaultValue);
-              } else if (attr.attributeType === 'boolean') {
-                this.selectedItem.customAttributes![attr.key] = attr.defaultValue === 'true';
-              } else {
-                this.selectedItem.customAttributes![attr.key] = attr.defaultValue;
-              }
-            } else {
-              // Set appropriate empty default based on type
-              if (attr.attributeType === 'boolean') {
-                this.selectedItem.customAttributes![attr.key] = false;
-              } else if (attr.attributeType === 'number') {
-                this.selectedItem.customAttributes![attr.key] = null;
-              } else {
-                this.selectedItem.customAttributes![attr.key] = '';
-              }
+    // Load both global attributes and category-specific attributes
+    this.categoryAttributeService.getGlobalAttributes().subscribe({
+      next: (globalResult) => {
+        const globalAttrs = globalResult.items.filter(attr => attr.isActive);
+
+        this.categoryAttributeService.getAttributesByCategory(categoryId).subscribe({
+          next: (result) => {
+            const categoryAttrs = result.items.filter(attr => attr.isActive);
+            // Combine global + category attributes (global first)
+            this.categoryAttributes = [...globalAttrs, ...categoryAttrs];
+            // Initialize custom attributes with defaults for new fields
+            if (!this.selectedItem.customAttributes) {
+              this.selectedItem.customAttributes = {};
             }
+            this.categoryAttributes.forEach(attr => {
+              if (!(attr.key in this.selectedItem.customAttributes!)) {
+                // Set default value if specified
+                if (attr.defaultValue) {
+                  if (attr.attributeType === 'number') {
+                    this.selectedItem.customAttributes![attr.key] = parseFloat(attr.defaultValue);
+                  } else if (attr.attributeType === 'boolean') {
+                    this.selectedItem.customAttributes![attr.key] = attr.defaultValue === 'true';
+                  } else {
+                    this.selectedItem.customAttributes![attr.key] = attr.defaultValue;
+                  }
+                } else {
+                  // Set appropriate empty default based on type
+                  if (attr.attributeType === 'boolean') {
+                    this.selectedItem.customAttributes![attr.key] = false;
+                  } else if (attr.attributeType === 'number') {
+                    this.selectedItem.customAttributes![attr.key] = null;
+                  } else {
+                    this.selectedItem.customAttributes![attr.key] = '';
+                  }
+                }
+              }
+            });
+            this.loadingAttributes = false;
+          },
+          error: () => {
+            // If category attributes fail, still use global ones
+            this.categoryAttributes = globalAttrs;
+            this.loadingAttributes = false;
           }
         });
-        this.loadingAttributes = false;
       },
       error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load category attributes'
+        // Fallback to just category attributes
+        this.categoryAttributeService.getAttributesByCategory(categoryId).subscribe({
+          next: (result) => {
+            this.categoryAttributes = result.items.filter(attr => attr.isActive);
+            if (!this.selectedItem.customAttributes) {
+              this.selectedItem.customAttributes = {};
+            }
+            this.categoryAttributes.forEach(attr => {
+              if (!(attr.key in this.selectedItem.customAttributes!)) {
+                if (attr.defaultValue) {
+                  if (attr.attributeType === 'number') {
+                    this.selectedItem.customAttributes![attr.key] = parseFloat(attr.defaultValue);
+                  } else if (attr.attributeType === 'boolean') {
+                    this.selectedItem.customAttributes![attr.key] = attr.defaultValue === 'true';
+                  } else {
+                    this.selectedItem.customAttributes![attr.key] = attr.defaultValue;
+                  }
+                } else {
+                  if (attr.attributeType === 'boolean') {
+                    this.selectedItem.customAttributes![attr.key] = false;
+                  } else if (attr.attributeType === 'number') {
+                    this.selectedItem.customAttributes![attr.key] = null;
+                  } else {
+                    this.selectedItem.customAttributes![attr.key] = '';
+                  }
+                }
+              }
+            });
+            this.loadingAttributes = false;
+          },
+          error: () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to load category attributes'
+            });
+            this.categoryAttributes = [];
+            this.loadingAttributes = false;
+          }
         });
-        this.categoryAttributes = [];
-        this.loadingAttributes = false;
       }
     });
   }

@@ -86,6 +86,37 @@ export class CategoryAttributeService {
   }
 
   /**
+   * Get all global attributes (apply to all inventory items).
+   */
+  getGlobalAttributes(
+    includeInactive = false
+  ): Observable<ICategoryAttributeListResponse> {
+    let params = new HttpParams();
+    if (includeInactive) {
+      params = params.set('include_inactive', 'true');
+    }
+    return this.http
+      .get<ICategoryAttribute[]>(`${this.apiUrl}/attributes/global`, {
+        params,
+        withCredentials: true,
+      })
+      .pipe(map((items) => ({ items })));
+  }
+
+  /**
+   * Create a new global attribute.
+   */
+  createGlobalAttribute(
+    data: ICategoryAttributeCreate
+  ): Observable<ICategoryAttribute> {
+    return this.http.post<ICategoryAttribute>(
+      `${this.apiUrl}/attributes/global`,
+      { ...data, isGlobal: true },
+      { withCredentials: true }
+    );
+  }
+
+  /**
    * Reorder attributes within a category.
    */
   reorderAttributes(

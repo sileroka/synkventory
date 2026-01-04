@@ -6,7 +6,7 @@
     <div>
       <h1>Custom Fields</h1>
       <p class="text-color-secondary mt-1 mb-0">
-        Define custom attributes for inventory items by category
+        Define custom attributes for inventory items by category or globally
       </p>
     </div>
   </div>
@@ -15,10 +15,26 @@
     <!-- Categories List -->
     <div class="col-12 md:col-4">
       <div class="category-panel">
-        <h3 class="mb-3">Categories</h3>
+        <h3 class="mb-3">Scope</h3>
         <p class="text-color-secondary text-sm mb-3">
-          Select a category to manage its custom fields
+          Select Global or a category to manage custom fields
         </p>
+
+        <!-- Global Option -->
+        <div
+          class="global-item"
+          [class.selected]="isGlobalSelected()"
+          (click)="selectGlobal()">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-globe"></i>
+            <span>Global Fields</span>
+          </div>
+          <span class="text-xs text-color-secondary">All items</span>
+        </div>
+
+        <div class="divider my-3">
+          <span class="text-xs text-color-secondary px-2">Categories</span>
+        </div>
 
         @if (loading()) {
           <div class="flex justify-content-center py-4">
@@ -34,7 +50,7 @@
             @for (category of categories(); track category.id) {
               <li
                 class="category-item"
-                [class.selected]="selectedCategory()?.id === category.id"
+                [class.selected]="selectedCategory()?.id === category.id && !isGlobalSelected()"
                 (click)="selectCategory(category)">
                 <div class="flex align-items-center gap-2">
                   <i class="pi pi-folder"></i>
@@ -51,18 +67,22 @@
     <!-- Attributes Panel -->
     <div class="col-12 md:col-8">
       <div class="attributes-panel">
-        @if (!selectedCategory()) {
+        @if (!selectedCategory() && !isGlobalSelected()) {
           <div class="empty-state">
             <i class="pi pi-cog text-5xl text-color-secondary mb-3"></i>
-            <h3 class="text-color-secondary">Select a Category</h3>
+            <h3 class="text-color-secondary">Select a Scope</h3>
             <p class="text-color-secondary">
-              Choose a category from the list to view and manage its custom fields
+              Choose Global or a category from the list to view and manage custom fields
             </p>
           </div>
         } @else {
           <div class="flex justify-content-between align-items-center mb-3">
             <h3 class="mb-0">
-              Custom Fields for "{{ selectedCategory()?.name }}"
+              @if (isGlobalSelected()) {
+                Global Custom Fields
+              } @else {
+                Custom Fields for "{{ selectedCategory()?.name }}"
+              }
             </h3>
             <p-button
               label="Add Field"
@@ -70,6 +90,13 @@
               (onClick)="showAddDialog()">
             </p-button>
           </div>
+
+          @if (isGlobalSelected()) {
+            <p class="text-color-secondary text-sm mb-3">
+              <i class="pi pi-info-circle mr-1"></i>
+              Global fields apply to all inventory items regardless of category
+            </p>
+          }
 
           @if (attributesLoading()) {
             <div class="flex justify-content-center py-4">

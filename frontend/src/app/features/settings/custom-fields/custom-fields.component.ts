@@ -70,6 +70,7 @@ export class CustomFieldsComponent implements OnInit {
   // State
   categories = signal<ICategory[]>([]);
   selectedCategory = signal<ICategory | null>(null);
+  isGlobalSelected = signal(false); // For global attributes
   attributes = signal<ICategoryAttribute[]>([]);
   loading = signal(false);
   attributesLoading = signal(false);
@@ -112,10 +113,35 @@ export class CustomFieldsComponent implements OnInit {
   }
 
   selectCategory(category: ICategory) {
+    this.isGlobalSelected.set(false);
     this.selectedCategory.set(category);
     if (category.id) {
       this.loadAttributes(category.id);
     }
+  }
+
+  selectGlobal() {
+    this.selectedCategory.set(null);
+    this.isGlobalSelected.set(true);
+    this.loadGlobalAttributes();
+  }
+
+  loadGlobalAttributes() {
+    this.attributesLoading.set(true);
+    this.attributeService.getGlobalAttributes().subscribe({
+      next: (response) => {
+        this.attributes.set(response.items);
+        this.attributesLoading.set(false);
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load global attributes',
+        });
+        this.attributesLoading.set(false);
+      },
+    });
   }
 
   loadAttributes(categoryId: string) {
@@ -137,11 +163,11 @@ export class CustomFieldsComponent implements OnInit {
   }
 
   showAddDialog() {
-    if (!this.selectedCategory()) {
+    if (!this.selectedCategory() && !this.isGlobalSelected()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Select Category',
-        detail: 'Please select a category first',
+        detail: 'Please select a category or Global first',
       });
       return;
     }
@@ -153,7 +179,8 @@ export class CustomFieldsComponent implements OnInit {
 
   showEditDialog(attribute: ICategoryAttribute) {
     this.currentAttribute = {
-      categoryId: attribute.categoryId,
+      categoryId: attribute.categoryId || undefined,
+      isGlobal: attribute.isGlobal,
       name: attribute.name,
       key: attribute.key,
       description: attribute.description || '',
@@ -170,10 +197,9 @@ export class CustomFieldsComponent implements OnInit {
 
   saveAttribute() {
     const category = this.selectedCategory();
-    if (!category || !category.id) return;
+    const isGlobal = this.isGlobalSelected();
 
-    // Set categoryId
-    this.currentAttribute.categoryId = category.id;
+    if (!category && !isGlobal) return;
 
     // Generate key from name if not set
     if (!this.currentAttribute.key) {
@@ -194,7 +220,11 @@ export class CustomFieldsComponent implements OnInit {
               detail: 'Attribute updated successfully',
             });
             this.displayDialog.set(false);
-            if (category.id) this.loadAttributes(category.id);
+            if (isGlobal) {
+              this.loadGlobalAttributes();
+            } else if (category?.id) {
+              this.loadAttributes(category.id);
+            }
           },
           error: () => {
             this.messageService.add({
@@ -204,7 +234,31 @@ export class CustomFieldsComponent implements OnInit {
             });
           },
         });
-    } else {
+    } else if (isGlobal) {
+      // Create global attribute
+      this.attributeService
+        .createGlobalAttribute(this.currentAttribute)
+        .subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Global attribute created successfully',
+            });
+            this.displayDialog.set(false);
+            this.loadGlobalAttributes();
+          },
+          error: () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to create global attribute',
+            });
+          },
+        });
+    } else if (category?.id) {
+      // Set categoryId for category-specific attribute
+      this.currentAttribute.categoryId = category.id;
       this.attributeService
         .createAttribute(category.id, this.currentAttribute)
         .subscribe({
@@ -215,7 +269,7 @@ export class CustomFieldsComponent implements OnInit {
               detail: 'Attribute created successfully',
             });
             this.displayDialog.set(false);
-            if (category.id) this.loadAttributes(category.id);
+            this.loadAttributes(category.id!);
           },
           error: () => {
             this.messageService.add({
@@ -230,7 +284,9 @@ export class CustomFieldsComponent implements OnInit {
 
   deleteAttribute(attribute: ICategoryAttribute) {
     const category = this.selectedCategory();
-    if (!category || !category.id) return;
+    const isGlobal = this.isGlobalSelected();
+
+    if (!category && !isGlobal) return;
 
     this.confirmationService.confirm({
       message: `Are you sure you want to delete the attribute "${attribute.name}"?`,
@@ -244,7 +300,11 @@ export class CustomFieldsComponent implements OnInit {
               summary: 'Success',
               detail: 'Attribute deleted successfully',
             });
-            if (category.id) this.loadAttributes(category.id);
+            if (isGlobal) {
+              this.loadGlobalAttributes();
+            } else if (category?.id) {
+              this.loadAttributes(category.id);
+            }
           },
           error: () => {
             this.messageService.add({

@@ -25,6 +25,93 @@ from app.schemas.category_attribute import (
 router = APIRouter()
 
 
+@router.get("/attributes/global", response_model=List[CategoryAttribute])
+def get_global_attributes(
+    include_inactive: bool = False,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Get all global attributes that apply to all inventory items.
+    Returns attributes ordered by display_order.
+    """
+    query = db.query(CategoryAttributeModel).filter(
+        CategoryAttributeModel.is_global == True
+    )
+
+    if not include_inactive:
+        query = query.filter(CategoryAttributeModel.is_active == True)
+
+    attributes = query.order_by(asc(CategoryAttributeModel.display_order)).all()
+    return attributes
+
+
+@router.post(
+    "/attributes/global",
+    response_model=CategoryAttribute,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_global_attribute(
+    data: CategoryAttributeCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Create a new global attribute that applies to all inventory items.
+    """
+    tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context required",
+        )
+
+    # Check for duplicate key in global attributes
+    existing = (
+        db.query(CategoryAttributeModel)
+        .filter(
+            CategoryAttributeModel.is_global == True,
+            CategoryAttributeModel.key == data.key,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Global attribute with key '{data.key}' already exists",
+        )
+
+    # Get max display_order for global attributes
+    max_order = (
+        db.query(CategoryAttributeModel.display_order)
+        .filter(CategoryAttributeModel.is_global == True)
+        .order_by(CategoryAttributeModel.display_order.desc())
+        .first()
+    )
+    next_order = (max_order[0] + 1) if max_order else 0
+
+    attribute = CategoryAttributeModel(
+        tenant_id=tenant.id,
+        category_id=None,
+        is_global=True,
+        name=data.name,
+        key=data.key,
+        attribute_type=data.attribute_type.value,
+        description=data.description,
+        options=data.options,
+        is_required=data.is_required,
+        default_value=data.default_value,
+        display_order=data.display_order if data.display_order > 0 else next_order,
+        created_by=user.id,
+    )
+
+    db.add(attribute)
+    db.commit()
+    db.refresh(attribute)
+
+    return attribute
+
+
 @router.get(
     "/categories/{category_id}/attributes", response_model=List[CategoryAttribute]
 )

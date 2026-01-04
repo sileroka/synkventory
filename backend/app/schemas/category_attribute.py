@@ -51,7 +51,8 @@ class CategoryAttributeBase(BaseModel):
 class CategoryAttributeCreate(CategoryAttributeBase):
     """Schema for creating a category attribute."""
 
-    category_id: str
+    category_id: Optional[str] = None
+    is_global: bool = False
 
 
 class CategoryAttributeUpdate(BaseModel):
@@ -81,7 +82,8 @@ class CategoryAttribute(CategoryAttributeBase):
     )
 
     id: str
-    category_id: str
+    category_id: Optional[str] = None
+    is_global: bool = False
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

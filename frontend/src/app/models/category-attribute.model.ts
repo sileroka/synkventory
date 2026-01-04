@@ -4,7 +4,8 @@
 
 export interface ICategoryAttribute {
   id: string;
-  categoryId: string;
+  categoryId?: string; // Null for global attributes
+  isGlobal: boolean;
   name: string;
   key: string;
   attributeType: AttributeType;
@@ -21,7 +22,8 @@ export interface ICategoryAttribute {
 export type AttributeType = 'text' | 'number' | 'boolean' | 'date' | 'select';
 
 export interface ICategoryAttributeCreate {
-  categoryId: string;
+  categoryId?: string; // Null for global attributes
+  isGlobal?: boolean;
   name: string;
   key: string;
   attributeType: AttributeType;
