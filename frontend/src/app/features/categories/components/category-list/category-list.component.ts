@@ -88,6 +88,14 @@ export class CategoryListComponent implements OnInit {
       next: (result) => {
         this.flatCategories = result.items;
         this.updateParentOptions();
+      },
+      error: (err) => {
+        console.error('Failed to load flat categories:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load parent category options'
+        });
       }
     });
   }

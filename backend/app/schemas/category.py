@@ -40,7 +40,8 @@ class CategoryUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
-class Category(CategoryBase):
+class Category(BaseModel):
+    """Category response model - reads from ORM."""
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,
@@ -48,6 +49,11 @@ class Category(CategoryBase):
     )
 
     id: UUID
+    name: str
+    code: str
+    description: Optional[str] = None
+    parent_id: Optional[UUID] = None
+    is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
