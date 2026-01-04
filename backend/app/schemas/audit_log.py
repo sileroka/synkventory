@@ -75,7 +75,7 @@ class AuditLogBase(BaseModel):
     entity_id: Optional[UUID] = None
     entity_name: Optional[str] = None
     changes: Optional[Dict[str, Any]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    extra_data: Optional[Dict[str, Any]] = None
 
 
 class AuditLogCreate(AuditLogBase):

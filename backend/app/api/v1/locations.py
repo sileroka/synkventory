@@ -101,6 +101,8 @@ def create_location(
     Create a new location.
     """
     tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant context required")
 
     # Check if code already exists
     existing_location = (
@@ -109,7 +111,11 @@ def create_location(
     if existing_location:
         raise HTTPException(status_code=400, detail="Location code already exists")
 
-    db_location = LocationModel(**location.model_dump())
+    # Create location with tenant_id from context
+    db_location = LocationModel(
+        **location.model_dump(),
+        tenant_id=tenant.id,
+    )
     db.add(db_location)
     db.commit()
     db.refresh(db_location)

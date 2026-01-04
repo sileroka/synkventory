@@ -120,7 +120,7 @@ def login(
             action=AuditAction.LOGIN_FAILED,
             entity_type=EntityType.USER,
             entity_id=None,
-            metadata={
+            extra_data={
                 "email": login_request.email,
                 "reason": "user_not_found",
             },
@@ -137,7 +137,7 @@ def login(
             action=AuditAction.LOGIN_FAILED,
             entity_type=EntityType.USER,
             entity_id=user.id,
-            metadata={"reason": "user_inactive"},
+            extra_data={"reason": "user_inactive"},
             request=http_request,
         )
         raise auth_error
@@ -152,7 +152,7 @@ def login(
                 action=AuditAction.LOGIN_FAILED,
                 entity_type=EntityType.USER,
                 entity_id=user.id,
-                metadata={"reason": "user_locked"},
+                extra_data={"reason": "user_locked"},
                 request=http_request,
             )
             raise auth_error
@@ -166,7 +166,7 @@ def login(
             action=AuditAction.LOGIN_FAILED,
             entity_type=EntityType.USER,
             entity_id=user.id,
-            metadata={"reason": "invalid_password"},
+            extra_data={"reason": "invalid_password"},
             request=http_request,
         )
         raise auth_error

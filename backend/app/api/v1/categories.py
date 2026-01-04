@@ -158,6 +158,8 @@ def create_category(
     Create a new category.
     """
     tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant context required")
 
     # Check if code already exists
     existing_category = (
@@ -176,7 +178,11 @@ def create_category(
         if not parent:
             raise HTTPException(status_code=400, detail="Parent category not found")
 
-    db_category = CategoryModel(**category.model_dump())
+    # Create category with tenant_id from context
+    db_category = CategoryModel(
+        **category.model_dump(),
+        tenant_id=tenant.id,
+    )
     db.add(db_category)
     db.commit()
     db.refresh(db_category)

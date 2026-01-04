@@ -68,7 +68,7 @@ class AuditService:
         entity_id: Optional[UUID] = None,
         entity_name: Optional[str] = None,
         changes: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
         request: Optional[Request] = None,
     ) -> Optional[AuditLog]:
         """
@@ -83,7 +83,7 @@ class AuditService:
             entity_id: ID of the affected entity
             entity_name: Human-readable name of the entity
             changes: Dict of changes made (for updates: {field: {old, new}})
-            metadata: Additional context data
+            extra_data: Additional context data
             request: FastAPI request object (for IP, user agent)
 
         Returns:
@@ -103,7 +103,7 @@ class AuditService:
                 entity_id=entity_id,
                 entity_name=entity_name,
                 changes=changes,
-                metadata=metadata,
+                extra_data=extra_data,
                 ip_address=ip_address,
                 user_agent=user_agent,
             )
@@ -292,11 +292,11 @@ class AuditService:
         request: Optional[Request] = None,
     ) -> Optional[AuditLog]:
         """Log a bulk operation."""
-        metadata = {
+        extra_data = {
             "count": count,
         }
         if data:
-            metadata.update(data)
+            extra_data.update(data)
 
         return self.log(
             db=db,
@@ -304,7 +304,7 @@ class AuditService:
             user_id=user_id,
             action=action,
             entity_type=entity_type,
-            metadata=metadata,
+            extra_data=extra_data,
             request=request,
         )
 

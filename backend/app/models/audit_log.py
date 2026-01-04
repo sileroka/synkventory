@@ -48,7 +48,7 @@ class AuditLog(Base):
 
     # Details of the change
     changes = Column(JSONB, nullable=True)  # {field: {old: x, new: y}}
-    metadata = Column(JSONB, nullable=True)  # Additional context
+    extra_data = Column(JSONB, nullable=True)  # Additional context
 
     # Request context
     ip_address = Column(String(45), nullable=True)  # IPv6 max length

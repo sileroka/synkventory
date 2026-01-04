@@ -247,6 +247,8 @@ def create_inventory_item(
     Create a new inventory item.
     """
     tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant context required")
 
     # Check if SKU already exists
     existing_item = (
@@ -255,7 +257,12 @@ def create_inventory_item(
     if existing_item:
         raise HTTPException(status_code=400, detail="SKU already exists")
 
-    db_item = InventoryItemModel(**item.model_dump())
+    # Create item with tenant_id from context
+    db_item = InventoryItemModel(
+        **item.model_dump(),
+        tenant_id=tenant.id,
+        created_by=user.id,
+    )
     db.add(db_item)
     db.commit()
     db.refresh(db_item)

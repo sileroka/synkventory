@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column("entity_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("entity_name", sa.String(255), nullable=True),
         sa.Column("changes", postgresql.JSONB, nullable=True),
-        sa.Column("metadata", postgresql.JSONB, nullable=True),
+        sa.Column("extra_data", postgresql.JSONB, nullable=True),
         sa.Column("ip_address", sa.String(45), nullable=True),
         sa.Column("user_agent", sa.String(512), nullable=True),
         sa.Column(

@@ -108,6 +108,8 @@ def create_stock_movement(
     - transfer: both required, removes from from_location, adds to to_location
     """
     tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant context required")
 
     # Get the inventory item
     item = (
@@ -203,7 +205,7 @@ def create_stock_movement(
         to_loc_qty.quantity += movement.quantity
         to_loc_qty.updated_at = datetime.utcnow()
 
-    # Create the movement record
+    # Create the movement record with tenant_id
     db_movement = StockMovementModel(
         inventory_item_id=movement.inventory_item_id,
         movement_type=MovementType(movement.movement_type.value),
@@ -212,6 +214,8 @@ def create_stock_movement(
         to_location_id=movement.to_location_id,
         reference_number=movement.reference_number,
         notes=movement.notes,
+        tenant_id=tenant.id,
+        created_by=user.id,
     )
     db.add(db_movement)
 
