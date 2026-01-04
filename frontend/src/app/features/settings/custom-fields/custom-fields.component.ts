@@ -174,7 +174,7 @@ export class CustomFieldsComponent implements OnInit {
 
     // Set categoryId
     this.currentAttribute.categoryId = category.id;
-    
+
     // Generate key from name if not set
     if (!this.currentAttribute.key) {
       this.currentAttribute.key = this.currentAttribute.name

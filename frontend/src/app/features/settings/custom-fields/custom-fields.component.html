@@ -19,7 +19,7 @@
         <p class="text-color-secondary text-sm mb-3">
           Select a category to manage its custom fields
         </p>
-        
+
         @if (loading()) {
           <div class="flex justify-content-center py-4">
             <i class="pi pi-spin pi-spinner text-2xl"></i>
@@ -32,8 +32,8 @@
         } @else {
           <ul class="category-list">
             @for (category of categories(); track category.id) {
-              <li 
-                class="category-item" 
+              <li
+                class="category-item"
                 [class.selected]="selectedCategory()?.id === category.id"
                 (click)="selectCategory(category)">
                 <div class="flex align-items-center gap-2">
@@ -64,9 +64,9 @@
             <h3 class="mb-0">
               Custom Fields for "{{ selectedCategory()?.name }}"
             </h3>
-            <p-button 
-              label="Add Field" 
-              icon="pi pi-plus" 
+            <p-button
+              label="Add Field"
+              icon="pi pi-plus"
               (onClick)="showAddDialog()">
             </p-button>
           </div>
@@ -81,16 +81,16 @@
               <p class="text-color-secondary mb-3">
                 No custom fields defined for this category
               </p>
-              <p-button 
-                label="Add First Field" 
-                icon="pi pi-plus" 
+              <p-button
+                label="Add First Field"
+                icon="pi pi-plus"
                 severity="secondary"
                 (onClick)="showAddDialog()">
               </p-button>
             </div>
           } @else {
-            <p-table 
-              [value]="attributes()" 
+            <p-table
+              [value]="attributes()"
               [tableStyle]="{ 'min-width': '40rem' }"
               styleClass="p-datatable-striped">
               <ng-template pTemplate="header">
@@ -111,7 +111,7 @@
                     }
                   </td>
                   <td>
-                    <p-tag 
+                    <p-tag
                       [value]="getTypeLabel(attr.attributeType)"
                       [icon]="'pi ' + getTypeIcon(attr.attributeType)"
                       [severity]="getTypeSeverity(attr.attributeType)">
@@ -128,18 +128,18 @@
                     }
                   </td>
                   <td>
-                    <p-button 
-                      icon="pi pi-pencil" 
-                      [rounded]="true" 
-                      [text]="true" 
+                    <p-button
+                      icon="pi pi-pencil"
+                      [rounded]="true"
+                      [text]="true"
                       severity="info"
                       pTooltip="Edit"
                       (onClick)="showEditDialog(attr)">
                     </p-button>
-                    <p-button 
-                      icon="pi pi-trash" 
-                      [rounded]="true" 
-                      [text]="true" 
+                    <p-button
+                      icon="pi pi-trash"
+                      [rounded]="true"
+                      [text]="true"
                       severity="danger"
                       pTooltip="Delete"
                       (onClick)="deleteAttribute(attr)">
@@ -163,25 +163,25 @@
   [style]="{ width: '500px' }"
   [draggable]="false"
   [resizable]="false">
-  
+
   <div class="flex flex-column gap-3">
     <div>
       <label for="attrName" class="block mb-2">Field Name *</label>
-      <input 
-        pInputText 
-        id="attrName" 
-        [(ngModel)]="currentAttribute.name" 
-        class="w-full" 
+      <input
+        pInputText
+        id="attrName"
+        [(ngModel)]="currentAttribute.name"
+        class="w-full"
         placeholder="e.g., Serial Number"
         required />
     </div>
 
     <div>
       <label for="attrDesc" class="block mb-2">Description</label>
-      <textarea 
-        pInputTextarea 
-        id="attrDesc" 
-        [(ngModel)]="currentAttribute.description" 
+      <textarea
+        pInputTextarea
+        id="attrDesc"
+        [(ngModel)]="currentAttribute.description"
         class="w-full"
         rows="2"
         placeholder="Optional description of this field">
@@ -216,10 +216,10 @@
     @if (currentAttribute.attributeType === 'select') {
       <div>
         <label for="attrOptions" class="block mb-2">Options (comma-separated) *</label>
-        <input 
-          pInputText 
-          id="attrOptions" 
-          [(ngModel)]="currentAttribute.options" 
+        <input
+          pInputText
+          id="attrOptions"
+          [(ngModel)]="currentAttribute.options"
           class="w-full"
           placeholder="Option 1, Option 2, Option 3" />
         <small class="text-color-secondary">Enter options separated by commas</small>
@@ -228,18 +228,18 @@
 
     <div>
       <label for="attrDefault" class="block mb-2">Default Value</label>
-      <input 
-        pInputText 
-        id="attrDefault" 
-        [(ngModel)]="currentAttribute.defaultValue" 
+      <input
+        pInputText
+        id="attrDefault"
+        [(ngModel)]="currentAttribute.defaultValue"
         class="w-full"
         placeholder="Optional default value" />
     </div>
 
     <div class="flex align-items-center gap-2">
-      <p-checkbox 
-        [(ngModel)]="currentAttribute.isRequired" 
-        [binary]="true" 
+      <p-checkbox
+        [(ngModel)]="currentAttribute.isRequired"
+        [binary]="true"
         inputId="attrRequired">
       </p-checkbox>
       <label for="attrRequired">Required field</label>
@@ -247,9 +247,9 @@
 
     <div>
       <label for="attrOrder" class="block mb-2">Display Order</label>
-      <p-inputNumber 
-        id="attrOrder" 
-        [(ngModel)]="currentAttribute.displayOrder" 
+      <p-inputNumber
+        id="attrOrder"
+        [(ngModel)]="currentAttribute.displayOrder"
         [min]="0"
         [showButtons]="true"
         [style]="{ width: '100%' }">
@@ -258,15 +258,15 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button 
-      label="Cancel" 
-      severity="secondary" 
-      [text]="true" 
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
       (onClick)="displayDialog.set(false)">
     </p-button>
-    <p-button 
-      [label]="isEditMode() ? 'Update' : 'Create'" 
-      icon="pi pi-check" 
+    <p-button
+      [label]="isEditMode() ? 'Update' : 'Create'"
+      icon="pi pi-check"
       (onClick)="saveAttribute()"
       [disabled]="!currentAttribute.name">
     </p-button>
