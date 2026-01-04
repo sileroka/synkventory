@@ -123,7 +123,7 @@ export class NavigationService {
       items: [
         {
           id: 'custom-fields',
-          label: 'Custom Fields',
+          label: 'Attributes',
           icon: 'pi-cog',
           route: '/settings/custom-fields',
           roles: [UserRole.ADMIN, UserRole.MANAGER]
