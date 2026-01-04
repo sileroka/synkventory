@@ -23,6 +23,9 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    # Disable automatic trailing slash redirects - they break reverse proxy routing
+    # when the proxy strips a path prefix (e.g., /api -> /)
+    redirect_slashes=False,
 )
 
 # ==========================================================================
