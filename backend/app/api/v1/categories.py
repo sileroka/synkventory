@@ -69,7 +69,7 @@ def get_categories(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(
-        25, ge=1, le=100, alias="pageSize", description="Items per page"
+        25, ge=1, le=1000, alias="pageSize", description="Items per page"
     ),
     is_active: bool = Query(
         None, alias="isActive", description="Filter by active status"
