@@ -91,7 +91,12 @@ class AuditService:
         """
         try:
             ip_address, user_agent = self._get_request_context(request)
-            user_email = self._get_user_email(db, user_id)
+            
+            # Get user email directly from user_id query to avoid session issues
+            user_email = None
+            if user_id:
+                user = db.query(User).filter(User.id == user_id).first()
+                user_email = user.email if user else None
 
             # Create audit log entry
             audit_log = AuditLog(
@@ -109,8 +114,9 @@ class AuditService:
             )
 
             db.add(audit_log)
-            db.commit()
-            db.refresh(audit_log)
+            # Use flush instead of commit to add to transaction without committing
+            # The calling code will commit the overall transaction
+            db.flush()
 
             logger.debug(
                 f"Audit log created: {action} {entity_type} "
@@ -121,7 +127,12 @@ class AuditService:
 
         except Exception as e:
             logger.error(f"Failed to create audit log: {e}")
-            db.rollback()
+            # Don't rollback - just log the error and let the calling code handle it
+            # Expunge the failed audit log object if it was added
+            try:
+                db.rollback()
+            except Exception:
+                pass
             return None
 
     def log_login(

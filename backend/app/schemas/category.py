@@ -42,6 +42,7 @@ class CategoryUpdate(BaseModel):
 
 class Category(BaseModel):
     """Category response model - reads from ORM."""
+
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,

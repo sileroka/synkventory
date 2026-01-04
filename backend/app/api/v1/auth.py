@@ -2,6 +2,7 @@
 Authentication API endpoints.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
@@ -24,6 +25,8 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services.audit import audit_service
 from app.models.audit_log import AuditAction, EntityType
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -178,29 +181,33 @@ def login(
         email=user.email,
     )
 
+    # Capture user data BEFORE any audit logging that might rollback
+    user_response = UserResponse(
+        id=str(user.id),
+        email=user.email,
+        name=user.name,
+        role=user.role,
+        is_active=user.is_active,
+    )
+
     # Set HttpOnly cookies
     set_auth_cookie(response, "access_token", tokens.access_token, 30 * 60)  # 30 min
     set_auth_cookie(
         response, "refresh_token", tokens.refresh_token, 7 * 24 * 60 * 60
     )  # 7 days
 
-    # Log successful login
-    audit_service.log_login(
-        db=db,
-        tenant_id=tenant.id,
-        user_id=user.id,
-        request=http_request,
-    )
-
-    return LoginResponse(
-        user=UserResponse(
-            id=str(user.id),
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            is_active=user.is_active,
+    # Log successful login (non-critical - don't fail login if audit fails)
+    try:
+        audit_service.log_login(
+            db=db,
+            tenant_id=tenant.id,
+            user_id=UUID(user_response.id),
+            request=http_request,
         )
-    )
+    except Exception as e:
+        logger.warning(f"Failed to log login audit: {e}")
+
+    return LoginResponse(user=user_response)
 
 
 @router.post("/auth/refresh")
