@@ -246,26 +246,46 @@ def create_inventory_item(
     """
     Create a new inventory item.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"[CREATE] Received item data: {item.model_dump()}")
+    
     tenant = get_current_tenant()
     if not tenant:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    
+    logger.info(f"[CREATE] Tenant: {tenant.id}")
 
     # Check if SKU already exists
     existing_item = (
         db.query(InventoryItemModel).filter(InventoryItemModel.sku == item.sku).first()
     )
     if existing_item:
+        logger.warning(f"[CREATE] SKU already exists: {item.sku}")
         raise HTTPException(status_code=400, detail="SKU already exists")
 
-    # Create item with tenant_id from context
-    db_item = InventoryItemModel(
-        **item.model_dump(),
-        tenant_id=tenant.id,
-        created_by=user.id,
-    )
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
+    try:
+        # Convert string UUIDs to proper UUID objects for foreign keys
+        item_data = item.model_dump()
+        if item_data.get('category_id'):
+            item_data['category_id'] = UUID(item_data['category_id'])
+        if item_data.get('location_id'):
+            item_data['location_id'] = UUID(item_data['location_id'])
+        
+        # Create item with tenant_id from context
+        db_item = InventoryItemModel(
+            **item_data,
+            tenant_id=tenant.id,
+            created_by=user.id,
+        )
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+        logger.info(f"[CREATE] Item created successfully: {db_item.id}")
+    except Exception as e:
+        logger.error(f"[CREATE] Failed to create item: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create item: {str(e)}")
 
     # Log the creation
     if tenant:
