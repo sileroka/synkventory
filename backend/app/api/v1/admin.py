@@ -595,20 +595,34 @@ class AdminAuditLogListResponse(BaseModel):
 @router.get("/audit-logs", response_model=AdminAuditLogListResponse)
 def list_admin_audit_logs(
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(50, ge=1, le=100, alias="pageSize", description="Items per page"),
-    tenant_id: Optional[UUID] = Query(None, alias="tenantId", description="Filter by tenant"),
+    page_size: int = Query(
+        50, ge=1, le=100, alias="pageSize", description="Items per page"
+    ),
+    tenant_id: Optional[UUID] = Query(
+        None, alias="tenantId", description="Filter by tenant"
+    ),
     user_id: Optional[UUID] = Query(None, alias="userId", description="Filter by user"),
-    action: Optional[str] = Query(None, description="Filter by action type (LOGIN, LOGOUT, etc.)"),
-    entity_type: Optional[str] = Query(None, alias="entityType", description="Filter by entity type"),
-    start_date: Optional[date] = Query(None, alias="startDate", description="Filter from this date"),
-    end_date: Optional[date] = Query(None, alias="endDate", description="Filter until this date"),
-    search: Optional[str] = Query(None, description="Search in user email or entity name"),
+    action: Optional[str] = Query(
+        None, description="Filter by action type (LOGIN, LOGOUT, etc.)"
+    ),
+    entity_type: Optional[str] = Query(
+        None, alias="entityType", description="Filter by entity type"
+    ),
+    start_date: Optional[date] = Query(
+        None, alias="startDate", description="Filter from this date"
+    ),
+    end_date: Optional[date] = Query(
+        None, alias="endDate", description="Filter until this date"
+    ),
+    search: Optional[str] = Query(
+        None, description="Search in user email or entity name"
+    ),
     admin_user: AdminUser = Depends(get_current_admin_user),
     db: Session = Depends(get_db_no_tenant),
 ):
     """
     Get audit logs across all tenants (admin access only).
-    
+
     Supports filtering by tenant, user, action type, date range, and search.
     """
     query = db.query(AuditLogModel)
@@ -624,7 +638,8 @@ def list_admin_audit_logs(
         query = query.filter(AuditLogModel.entity_type == entity_type)
     if start_date:
         query = query.filter(
-            AuditLogModel.created_at >= datetime.combine(start_date, datetime.min.time())
+            AuditLogModel.created_at
+            >= datetime.combine(start_date, datetime.min.time())
         )
     if end_date:
         query = query.filter(

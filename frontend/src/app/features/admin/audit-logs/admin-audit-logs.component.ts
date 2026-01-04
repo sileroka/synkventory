@@ -214,7 +214,7 @@ export class AdminAuditLogsComponent implements OnInit {
 
   parseUserAgent(ua?: string): string {
     if (!ua) return 'Unknown';
-    
+
     // Simple browser detection
     if (ua.includes('Chrome')) return 'Chrome';
     if (ua.includes('Firefox')) return 'Firefox';
