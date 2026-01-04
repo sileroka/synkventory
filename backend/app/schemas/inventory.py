@@ -128,6 +128,10 @@ class LowStockAlert(BaseModel):
     category: Optional[RelatedCategory] = None
     location: Optional[RelatedLocation] = None
 
+    @field_serializer("id")
+    def serialize_id(self, v: Any) -> Optional[str]:
+        return str(v) if v else None
+
 
 class BulkDeleteRequest(BaseModel):
     """Request schema for bulk delete operation."""
