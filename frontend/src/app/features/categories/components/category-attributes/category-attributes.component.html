@@ -127,34 +127,31 @@
   >
     <div class="form-grid">
       <div class="form-field">
-        <label for="name">Display Name *</label>
+        <label for="name">Attribute Name *</label>
         <input
           id="name"
           type="text"
           pInputText
           [(ngModel)]="selectedAttribute.name"
-          (ngModelChange)="onNameChange()"
           placeholder="e.g., Serial Number"
           [disabled]="isSaving()"
         />
       </div>
 
       <div class="form-field">
-        <label for="key">Field Key *</label>
-        <input
-          id="key"
-          type="text"
-          pInputText
-          [(ngModel)]="selectedAttribute.key"
-          placeholder="e.g., serial_number"
-          [disabled]="isEditMode() || isSaving()"
-          pattern="^[a-z][a-z0-9_]*$"
-        />
-        <small class="hint">Lowercase letters, numbers, underscores only</small>
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          pInputTextarea
+          [(ngModel)]="selectedAttribute.description"
+          rows="2"
+          placeholder="Optional description of this attribute"
+          [disabled]="isSaving()"
+        ></textarea>
       </div>
 
       <div class="form-field">
-        <label for="type">Field Type *</label>
+        <label for="type">Attribute Type *</label>
         <p-dropdown
           id="type"
           [options]="attributeTypes"
@@ -172,21 +169,9 @@
         </p-dropdown>
       </div>
 
-      <div class="form-field">
-        <label for="description">Description</label>
-        <textarea
-          id="description"
-          pInputTextarea
-          [(ngModel)]="selectedAttribute.description"
-          rows="2"
-          placeholder="Help text for users"
-          [disabled]="isSaving()"
-        ></textarea>
-      </div>
-
       @if (selectedAttribute.attributeType === 'select') {
         <div class="form-field">
-          <label for="options">Dropdown Options *</label>
+          <label for="options">Options (comma-separated) *</label>
           <input
             id="options"
             type="text"
@@ -195,7 +180,7 @@
             placeholder="Option 1, Option 2, Option 3"
             [disabled]="isSaving()"
           />
-          <small class="hint">Comma-separated list of options</small>
+          <small class="hint">Enter options separated by commas</small>
         </div>
       }
 
@@ -218,7 +203,18 @@
           inputId="required"
           [disabled]="isSaving()"
         />
-        <label for="required">Required field</label>
+        <label for="required">Required attribute</label>
+      </div>
+
+      <div class="form-field">
+        <label for="order">Display Order</label>
+        <p-inputNumber
+          id="order"
+          [(ngModel)]="selectedAttribute.displayOrder"
+          [min]="0"
+          [showButtons]="true"
+          [disabled]="isSaving()"
+        />
       </div>
     </div>
 

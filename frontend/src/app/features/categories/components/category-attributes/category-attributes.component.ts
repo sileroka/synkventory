@@ -134,24 +134,22 @@ export class CategoryAttributesComponent implements OnInit {
     this.showDialog.set(true);
   }
 
-  onNameChange(): void {
-    // Auto-generate key from name if creating new
-    if (!this.isEditMode() && this.selectedAttribute.name) {
+  saveAttribute(): void {
+    if (!this.selectedAttribute.name) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validation',
+        detail: 'Attribute name is required',
+      });
+      return;
+    }
+
+    // Auto-generate key from name if not set
+    if (!this.selectedAttribute.key) {
       this.selectedAttribute.key = this.selectedAttribute.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '');
-    }
-  }
-
-  saveAttribute(): void {
-    if (!this.selectedAttribute.name || !this.selectedAttribute.key) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation',
-        detail: 'Name and key are required',
-      });
-      return;
     }
 
     this.isSaving.set(true);
