@@ -3,218 +3,239 @@
   <p-confirmDialog></p-confirmDialog>
 
   @if (isLoading()) {
-    <div class="loading-container">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
+  <div class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
   } @else if (purchaseOrder()) {
-    <!-- Header -->
-    <div class="detail-header">
-      <div class="header-left">
-        <p-button
-          icon="pi pi-arrow-left"
-          [text]="true"
-          severity="secondary"
-          (click)="goBack()"
-          pTooltip="Back to list"
-        ></p-button>
-        <div class="header-info">
-          <h1>{{ purchaseOrder()!.poNumber }}</h1>
-          <div class="header-badges">
-            <p-tag
-              [value]="getStatusLabel(purchaseOrder()!.status)"
-              [severity]="getStatusSeverity(purchaseOrder()!.status)"
-            ></p-tag>
-            <p-tag
-              [value]="getPriorityLabel(purchaseOrder()!.priority)"
-              [severity]="getPrioritySeverity(purchaseOrder()!.priority)"
-            ></p-tag>
-            @if (purchaseOrder()!.isOverdue) {
-              <p-tag value="OVERDUE" severity="danger"></p-tag>
-            }
-          </div>
+  <!-- Header -->
+  <div class="detail-header">
+    <div class="header-left">
+      <p-button
+        icon="pi pi-arrow-left"
+        [text]="true"
+        severity="secondary"
+        (click)="goBack()"
+        pTooltip="Back to list"
+      ></p-button>
+      <div class="header-info">
+        <h1>{{ purchaseOrder()!.poNumber }}</h1>
+        <div class="header-badges">
+          <p-tag
+            [value]="getStatusLabel(purchaseOrder()!.status)"
+            [severity]="getStatusSeverity(purchaseOrder()!.status)"
+          ></p-tag>
+          <p-tag
+            [value]="getPriorityLabel(purchaseOrder()!.priority)"
+            [severity]="getPrioritySeverity(purchaseOrder()!.priority)"
+          ></p-tag>
+          @if (purchaseOrder()!.isOverdue) {
+          <p-tag value="OVERDUE" severity="danger"></p-tag>
+          }
         </div>
       </div>
-      <div class="header-actions">
-        @if (canEdit()) {
-          <p-button
-            label="Edit"
-            icon="pi pi-pencil"
-            [outlined]="true"
-            (click)="openEditDialog()"
-          ></p-button>
-        }
-        @if (canSubmit()) {
-          <p-button
-            label="Submit for Approval"
-            icon="pi pi-send"
-            (click)="submitForApproval()"
-          ></p-button>
-        }
-        @if (canApprove()) {
-          <p-button
-            label="Approve"
-            icon="pi pi-check"
-            severity="success"
-            (click)="approvePurchaseOrder()"
-          ></p-button>
-        }
-        @if (canMarkOrdered()) {
-          <p-button
-            label="Mark as Ordered"
-            icon="pi pi-shopping-cart"
-            (click)="markAsOrdered()"
-          ></p-button>
-        }
-        @if (canReceive()) {
-          <p-button
-            label="Receive Items"
-            icon="pi pi-inbox"
-            severity="success"
-            (click)="openReceiveDialog()"
-          ></p-button>
-        }
-        @if (canCancel()) {
-          <p-button
-            label="Cancel"
-            icon="pi pi-times"
-            severity="danger"
-            [outlined]="true"
-            (click)="cancelPurchaseOrder()"
-          ></p-button>
-        }
-        @if (canEdit()) {
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [outlined]="true"
-            pTooltip="Delete order"
-            (click)="deletePurchaseOrder()"
-          ></p-button>
+    </div>
+    <div class="header-actions">
+      @if (canEdit()) {
+      <p-button
+        label="Edit"
+        icon="pi pi-pencil"
+        [outlined]="true"
+        (click)="openEditDialog()"
+      ></p-button>
+      } @if (canSubmit()) {
+      <p-button
+        label="Submit for Approval"
+        icon="pi pi-send"
+        (click)="submitForApproval()"
+      ></p-button>
+      } @if (canApprove()) {
+      <p-button
+        label="Approve"
+        icon="pi pi-check"
+        severity="success"
+        (click)="approvePurchaseOrder()"
+      ></p-button>
+      } @if (canMarkOrdered()) {
+      <p-button
+        label="Mark as Ordered"
+        icon="pi pi-shopping-cart"
+        (click)="markAsOrdered()"
+      ></p-button>
+      } @if (canReceive()) {
+      <p-button
+        label="Receive Items"
+        icon="pi pi-inbox"
+        severity="success"
+        (click)="openReceiveDialog()"
+      ></p-button>
+      } @if (canCancel()) {
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        severity="danger"
+        [outlined]="true"
+        (click)="cancelPurchaseOrder()"
+      ></p-button>
+      } @if (canEdit()) {
+      <p-button
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        pTooltip="Delete order"
+        (click)="deletePurchaseOrder()"
+      ></p-button>
+      }
+    </div>
+  </div>
+
+  <!-- Status Timeline -->
+  <p-card styleClass="timeline-card">
+    <div class="timeline-wrapper">
+      @for (event of statusTimeline(); track event.status) {
+      <div
+        class="timeline-item"
+        [class.active]="event.isActive"
+        [class.complete]="event.isComplete"
+      >
+        <div
+          class="timeline-icon"
+          [style.background-color]="
+            event.isComplete || event.isActive ? event.color : '#e2e8f0'
+          "
+        >
+          <i [class]="event.icon"></i>
+        </div>
+        <div class="timeline-content">
+          <span class="timeline-label">{{ event.label }}</span>
+          @if (event.date) {
+          <span class="timeline-date">{{ event.date | date : "short" }}</span>
+          }
+        </div>
+        @if (!$last) {
+        <div
+          class="timeline-connector"
+          [class.complete]="event.isComplete"
+        ></div>
         }
       </div>
+      }
     </div>
+  </p-card>
 
-    <!-- Status Timeline -->
-    <p-card styleClass="timeline-card">
-      <div class="timeline-wrapper">
-        @for (event of statusTimeline(); track event.status) {
-          <div class="timeline-item" [class.active]="event.isActive" [class.complete]="event.isComplete">
-            <div class="timeline-icon" [style.background-color]="event.isComplete || event.isActive ? event.color : '#e2e8f0'">
-              <i [class]="event.icon"></i>
-            </div>
-            <div class="timeline-content">
-              <span class="timeline-label">{{ event.label }}</span>
-              @if (event.date) {
-                <span class="timeline-date">{{ event.date | date: 'short' }}</span>
-              }
-            </div>
-            @if (!$last) {
-              <div class="timeline-connector" [class.complete]="event.isComplete"></div>
-            }
-          </div>
-        }
+  <div class="detail-grid">
+    <!-- Supplier Info -->
+    <p-card header="Supplier Information">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Supplier Name</label>
+          <span>{{ purchaseOrder()!.supplierName || "—" }}</span>
+        </div>
+        <div class="info-item">
+          <label>Contact Person</label>
+          <span>{{ purchaseOrder()!.supplierContact || "—" }}</span>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <span>{{ purchaseOrder()!.supplierEmail || "—" }}</span>
+        </div>
+        <div class="info-item">
+          <label>Phone</label>
+          <span>{{ purchaseOrder()!.supplierPhone || "—" }}</span>
+        </div>
       </div>
     </p-card>
 
-    <div class="detail-grid">
-      <!-- Supplier Info -->
-      <p-card header="Supplier Information">
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Supplier Name</label>
-            <span>{{ purchaseOrder()!.supplierName || '—' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Contact Person</label>
-            <span>{{ purchaseOrder()!.supplierContact || '—' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Email</label>
-            <span>{{ purchaseOrder()!.supplierEmail || '—' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Phone</label>
-            <span>{{ purchaseOrder()!.supplierPhone || '—' }}</span>
-          </div>
+    <!-- Order Info -->
+    <p-card header="Order Details">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Expected Date</label>
+          <span [class.text-danger]="purchaseOrder()!.isOverdue">
+            {{
+              purchaseOrder()!.expectedDate
+                ? (purchaseOrder()!.expectedDate | date : "mediumDate")
+                : "—"
+            }}
+          </span>
         </div>
-      </p-card>
+        <div class="info-item">
+          <label>Receiving Location</label>
+          <span>{{ purchaseOrder()!.receivingLocationName || "—" }}</span>
+        </div>
+        <div class="info-item">
+          <label>Created</label>
+          <span>{{ purchaseOrder()!.createdAt | date : "medium" }}</span>
+        </div>
+        <div class="info-item">
+          <label>Created By</label>
+          <span>{{ purchaseOrder()!.requestedByName || "—" }}</span>
+        </div>
+      </div>
+      @if (purchaseOrder()!.notes) {
+      <div class="notes-section">
+        <label>Notes</label>
+        <p>{{ purchaseOrder()!.notes }}</p>
+      </div>
+      }
+    </p-card>
+  </div>
 
-      <!-- Order Info -->
-      <p-card header="Order Details">
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Expected Date</label>
-            <span [class.text-danger]="purchaseOrder()!.isOverdue">
-              {{ purchaseOrder()!.expectedDate ? (purchaseOrder()!.expectedDate | date: 'mediumDate') : '—' }}
+  <!-- Line Items -->
+  <p-card header="Line Items">
+    <p-table
+      [value]="purchaseOrder()!.lineItems"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>SKU</th>
+          <th>Item</th>
+          <th>Qty Ordered</th>
+          <th>Qty Received</th>
+          <th>Unit Price</th>
+          <th>Line Total</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>
+            <code>{{ item.itemSku }}</code>
+          </td>
+          <td>{{ item.itemName }}</td>
+          <td>{{ item.quantityOrdered }}</td>
+          <td>
+            <span
+              [class.text-success]="
+                item.quantityReceived === item.quantityOrdered
+              "
+            >
+              {{ item.quantityReceived }}
             </span>
-          </div>
-          <div class="info-item">
-            <label>Receiving Location</label>
-            <span>{{ purchaseOrder()!.receivingLocationName || '—' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Created</label>
-            <span>{{ purchaseOrder()!.createdAt | date: 'medium' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Created By</label>
-            <span>{{ purchaseOrder()!.requestedByName || '—' }}</span>
-          </div>
-        </div>
-        @if (purchaseOrder()!.notes) {
-          <div class="notes-section">
-            <label>Notes</label>
-            <p>{{ purchaseOrder()!.notes }}</p>
-          </div>
-        }
-      </p-card>
-    </div>
-
-    <!-- Line Items -->
-    <p-card header="Line Items">
-      <p-table [value]="purchaseOrder()!.lineItems" styleClass="p-datatable-sm p-datatable-striped">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>SKU</th>
-            <th>Item</th>
-            <th>Qty Ordered</th>
-            <th>Qty Received</th>
-            <th>Unit Price</th>
-            <th>Line Total</th>
-            <th>Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-item>
-          <tr>
-            <td><code>{{ item.itemSku }}</code></td>
-            <td>{{ item.itemName }}</td>
-            <td>{{ item.quantityOrdered }}</td>
-            <td>
-              <span [class.text-success]="item.quantityReceived === item.quantityOrdered">
-                {{ item.quantityReceived }}
-              </span>
-            </td>
-            <td>{{ item.unitPrice | currency }}</td>
-            <td>{{ item.quantityOrdered * item.unitPrice | currency }}</td>
-            <td>
-              @if (item.quantityReceived === 0) {
-                <p-tag value="Pending" severity="secondary"></p-tag>
-              } @else if (item.quantityReceived < item.quantityOrdered) {
-                <p-tag value="Partial" severity="warning"></p-tag>
-              } @else {
-                <p-tag value="Received" severity="success"></p-tag>
-              }
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="footer">
-          <tr>
-            <td colspan="5" class="text-right"><strong>Total Amount:</strong></td>
-            <td colspan="2"><strong>{{ purchaseOrder()!.totalAmount | currency }}</strong></td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-card>
+          </td>
+          <td>{{ item.unitPrice | currency }}</td>
+          <td>{{ item.quantityOrdered * item.unitPrice | currency }}</td>
+          <td>
+            @if (item.quantityReceived === 0) {
+            <p-tag value="Pending" severity="secondary"></p-tag>
+            } @else if (item.quantityReceived < item.quantityOrdered) {
+            <p-tag value="Partial" severity="warning"></p-tag>
+            } @else {
+            <p-tag value="Received" severity="success"></p-tag>
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr>
+          <td colspan="5" class="text-right"><strong>Total Amount:</strong></td>
+          <td colspan="2">
+            <strong>{{ purchaseOrder()!.totalAmount | currency }}</strong>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
   }
 </div>
 
@@ -226,7 +247,9 @@
   [style]="{ width: '700px' }"
 >
   <div class="receive-dialog">
-    <p class="receive-instructions">Enter the quantities received for each item.</p>
+    <p class="receive-instructions">
+      Enter the quantities received for each item.
+    </p>
 
     <table class="receive-table">
       <thead>
@@ -239,30 +262,40 @@
         </tr>
       </thead>
       <tbody>
-        @for (receiveItem of receiveItems; track receiveItem.lineItemId; let i = $index) {
-          <tr>
-            <td>{{ getLineItem(receiveItem.lineItemId)?.itemName }}</td>
-            <td>{{ getLineItem(receiveItem.lineItemId)?.quantityOrdered }}</td>
-            <td>{{ getLineItem(receiveItem.lineItemId)?.quantityReceived }}</td>
-            <td>{{ getRemainingQuantity(receiveItem.lineItemId) }}</td>
-            <td>
-              <p-inputNumber
-                [(ngModel)]="receiveItems[i].quantityReceived"
-                [min]="0"
-                [max]="getRemainingQuantity(receiveItem.lineItemId)"
-                [showButtons]="true"
-                [style]="{ width: '100px' }"
-              ></p-inputNumber>
-            </td>
-          </tr>
+        @for (receiveItem of receiveItems; track receiveItem.lineItemId; let i =
+        $index) {
+        <tr>
+          <td>{{ getLineItem(receiveItem.lineItemId)?.itemName }}</td>
+          <td>{{ getLineItem(receiveItem.lineItemId)?.quantityOrdered }}</td>
+          <td>{{ getLineItem(receiveItem.lineItemId)?.quantityReceived }}</td>
+          <td>{{ getRemainingQuantity(receiveItem.lineItemId) }}</td>
+          <td>
+            <p-inputNumber
+              [(ngModel)]="receiveItems[i].quantityReceived"
+              [min]="0"
+              [max]="getRemainingQuantity(receiveItem.lineItemId)"
+              [showButtons]="true"
+              [style]="{ width: '100px' }"
+            ></p-inputNumber>
+          </td>
+        </tr>
         }
       </tbody>
     </table>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" [text]="true" (click)="showReceiveDialog.set(false)"></p-button>
-    <p-button label="Receive Items" icon="pi pi-check" (click)="receiveLineItems()"></p-button>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (click)="showReceiveDialog.set(false)"
+    ></p-button>
+    <p-button
+      label="Receive Items"
+      icon="pi pi-check"
+      (click)="receiveLineItems()"
+    ></p-button>
   </ng-template>
 </p-dialog>
 
@@ -279,19 +312,36 @@
       <div class="form-grid">
         <div class="form-field">
           <label for="editSupplierName">Supplier Name</label>
-          <input id="editSupplierName" pInputText [(ngModel)]="editData.supplierName" />
+          <input
+            id="editSupplierName"
+            pInputText
+            [(ngModel)]="editData.supplierName"
+          />
         </div>
         <div class="form-field">
           <label for="editSupplierContact">Contact Person</label>
-          <input id="editSupplierContact" pInputText [(ngModel)]="editData.supplierContact" />
+          <input
+            id="editSupplierContact"
+            pInputText
+            [(ngModel)]="editData.supplierContact"
+          />
         </div>
         <div class="form-field">
           <label for="editSupplierEmail">Email</label>
-          <input id="editSupplierEmail" pInputText [(ngModel)]="editData.supplierEmail" type="email" />
+          <input
+            id="editSupplierEmail"
+            pInputText
+            [(ngModel)]="editData.supplierEmail"
+            type="email"
+          />
         </div>
         <div class="form-field">
           <label for="editSupplierPhone">Phone</label>
-          <input id="editSupplierPhone" pInputText [(ngModel)]="editData.supplierPhone" />
+          <input
+            id="editSupplierPhone"
+            pInputText
+            [(ngModel)]="editData.supplierPhone"
+          />
         </div>
       </div>
     </div>
@@ -325,13 +375,27 @@
       </div>
       <div class="form-field full-width">
         <label for="editNotes">Notes</label>
-        <textarea id="editNotes" pInputTextarea [(ngModel)]="editData.notes" rows="3"></textarea>
+        <textarea
+          id="editNotes"
+          pInputTextarea
+          [(ngModel)]="editData.notes"
+          rows="3"
+        ></textarea>
       </div>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" [text]="true" (click)="showEditDialog.set(false)"></p-button>
-    <p-button label="Save Changes" icon="pi pi-check" (click)="savePurchaseOrder()"></p-button>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (click)="showEditDialog.set(false)"
+    ></p-button>
+    <p-button
+      label="Save Changes"
+      icon="pi pi-check"
+      (click)="savePurchaseOrder()"
+    ></p-button>
   </ng-template>
 </p-dialog>
