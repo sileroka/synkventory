@@ -3,7 +3,6 @@ Tenant middleware for subdomain-based multi-tenancy.
 """
 
 import os
-import logging
 from typing import Callable, Optional
 
 from fastapi import Request, Response
@@ -20,8 +19,6 @@ from app.core.tenant import (
 from app.db.session import SessionLocal
 from app.models.tenant import Tenant
 
-logger = logging.getLogger(__name__)
-
 
 class TenantMiddleware(BaseHTTPMiddleware):
     """
@@ -36,13 +33,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.base_domain = base_domain
         self.is_dev = os.getenv("ENVIRONMENT", "development") == "development"
-        logger.info(
-            f"[TENANT] TenantMiddleware initialized with base_domain={base_domain}, is_dev={self.is_dev}"
-        )
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        logger.info(f"[TENANT] Processing request: {request.url.path}")
-
         # Skip tenant check for health endpoints and docs
         skip_paths = [
             "/health",
@@ -55,23 +47,17 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if request.url.path in skip_paths or request.url.path.startswith(
             "/api/v1/health"
         ):
-            logger.info(f"[TENANT] Skipping tenant check for path: {request.url.path}")
             return await call_next(request)
 
         # Skip tenant check for admin portal endpoints
         if request.url.path.startswith("/api/v1/admin") or request.url.path.startswith(
             "/v1/admin"
         ):
-            logger.info(
-                f"[TENANT] Skipping tenant check for admin path: {request.url.path}"
-            )
             return await call_next(request)
 
         # Extract subdomain
         host = request.headers.get("host", "")
         subdomain: Optional[str] = None
-
-        logger.info(f"[TENANT] Host header: {host}")
 
         # In dev mode, allow X-Tenant-Slug header override for localhost testing
         if self.is_dev and ("localhost" in host or "127.0.0.1" in host):
@@ -79,14 +65,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
             if not subdomain:
                 # For local dev without header, use demo tenant
                 subdomain = "demo"
-            logger.info(f"[TENANT] Dev mode - using subdomain: {subdomain}")
         else:
             subdomain = extract_subdomain(host, self.base_domain)
-            logger.info(f"[TENANT] Extracted subdomain: {subdomain} from host: {host}")
 
         # No subdomain = root domain access = block
         if not subdomain:
-            logger.warning(f"[TENANT] No subdomain found, returning 404")
             return JSONResponse(
                 status_code=404,
                 content={"detail": "Not found"},
@@ -94,9 +77,6 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Look up tenant
         tenant_context = self._get_tenant_by_slug(subdomain)
-        logger.info(
-            f"[TENANT] Tenant lookup result for '{subdomain}': {tenant_context}"
-        )
 
         # Set context (even if None - auth will fail with generic error)
         if tenant_context:
