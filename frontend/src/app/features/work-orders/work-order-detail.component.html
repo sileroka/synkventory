@@ -1,256 +1,281 @@
 <div class="work-order-detail-container">
   @if (isLoading()) {
-    <div class="loading-container">
-      <p-progressSpinner strokeWidth="4" />
-      <p>Loading work order...</p>
-    </div>
+  <div class="loading-container">
+    <p-progressSpinner strokeWidth="4" />
+    <p>Loading work order...</p>
+  </div>
   } @else if (workOrder()) {
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-left">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-plain"
+        (click)="router.navigate(['/work-orders'])"
+        pTooltip="Back to Work Orders"
+        tooltipPosition="right"
+      ></button>
+      <div class="header-content">
+        <h1>{{ workOrder()!.workOrderNumber }}</h1>
+        <div class="header-tags">
+          <p-tag
+            [value]="helpers.getStatusLabel(workOrder()!.status)"
+            [severity]="helpers.getStatusSeverity(workOrder()!.status)"
+          />
+          <p-tag
+            [value]="helpers.getPriorityLabel(workOrder()!.priority)"
+            [severity]="helpers.getPrioritySeverity(workOrder()!.priority)"
+          />
+          @if (workOrder()!.isOverdue) {
+          <p-tag value="Overdue" severity="danger" />
+          }
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (canEdit()) {
+      <button
+        pButton
+        label="Edit"
+        icon="pi pi-pencil"
+        class="p-button-outlined"
+        (click)="openEditDialog()"
+      ></button>
+      <button
+        pButton
+        label="Change Status"
+        icon="pi pi-refresh"
+        class="p-button-outlined"
+        (click)="openStatusDialog()"
+        [disabled]="statusOptions().length === 0"
+      ></button>
+      } @if (canDelete()) {
+      <button
+        pButton
+        icon="pi pi-trash"
+        class="p-button-danger p-button-outlined"
+        pTooltip="Delete Work Order"
+        tooltipPosition="left"
+        (click)="confirmDelete()"
+      ></button>
+      }
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Main Info -->
+    <p-card header="Work Order Details" styleClass="details-card">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Assembly Item</label>
+          <div class="item-link" (click)="viewItem()">
+            @if (workOrder()!.item) {
+            <span class="item-sku">{{ workOrder()!.item!.sku }}</span>
+            <span class="item-name">{{ workOrder()!.item!.name }}</span>
+            } @else {
+            <span>{{ workOrder()!.itemId }}</span>
+            }
+            <i class="pi pi-external-link"></i>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>Due Date</label>
+          <span [class.overdue]="workOrder()!.isOverdue">
+            {{
+              workOrder()!.dueDate
+                ? (workOrder()!.dueDate | date : "medium")
+                : "Not set"
+            }}
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <label>Assigned To</label>
+          <span>
+            @if (workOrder()!.assignedTo) {
+            {{ workOrder()!.assignedTo!.firstName }}
+            {{
+              workOrder()!.assignedTo!.lastName ||
+                workOrder()!.assignedTo!.email
+            }}
+            } @else { Unassigned }
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <label>Output Location</label>
+          <span>{{
+            workOrder()!.outputLocation?.name || "Not specified"
+          }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Created</label>
+          <span>{{ workOrder()!.createdAt | date : "medium" }}</span>
+        </div>
+
+        @if (workOrder()!.startDate) {
+        <div class="detail-item">
+          <label>Started</label>
+          <span>{{ workOrder()!.startDate | date : "medium" }}</span>
+        </div>
+        } @if (workOrder()!.completedDate) {
+        <div class="detail-item">
+          <label>Completed</label>
+          <span>{{ workOrder()!.completedDate | date : "medium" }}</span>
+        </div>
+        }
+      </div>
+
+      @if (workOrder()!.description) {
+      <p-divider />
+      <div class="description">
+        <label>Description</label>
+        <p>{{ workOrder()!.description }}</p>
+      </div>
+      }
+    </p-card>
+
+    <!-- Progress Card -->
+    <p-card header="Production Progress" styleClass="progress-card">
+      <div class="progress-summary">
+        <div class="progress-bar-container">
+          <p-progressBar
+            [value]="workOrder()!.completionPercentage || 0"
+            [showValue]="false"
+            [style]="{ height: '20px' }"
+            [ngStyle]="{ '--progressbar-value-bg': getProgressColor() }"
+          />
+          <span class="progress-percent"
+            >{{
+              workOrder()!.completionPercentage || 0 | number : "1.0-0"
+            }}%</span
+          >
+        </div>
+
+        <div class="quantity-grid">
+          <div class="quantity-item">
+            <span class="quantity-value">{{
+              workOrder()!.quantityOrdered
+            }}</span>
+            <span class="quantity-label">Ordered</span>
+          </div>
+          <div class="quantity-item completed">
+            <span class="quantity-value">{{
+              workOrder()!.quantityCompleted
+            }}</span>
+            <span class="quantity-label">Completed</span>
+          </div>
+          <div class="quantity-item scrapped">
+            <span class="quantity-value">{{
+              workOrder()!.quantityScrapped
+            }}</span>
+            <span class="quantity-label">Scrapped</span>
+          </div>
+          <div class="quantity-item remaining">
+            <span class="quantity-value">{{
+              workOrder()!.quantityRemaining
+            }}</span>
+            <span class="quantity-label">Remaining</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <div class="progress-actions">
+        @if (canEdit()) {
         <button
           pButton
-          icon="pi pi-arrow-left"
-          class="p-button-text p-button-plain"
-          (click)="router.navigate(['/work-orders'])"
-          pTooltip="Back to Work Orders"
-          tooltipPosition="right"
+          label="Record Progress"
+          icon="pi pi-chart-line"
+          class="p-button-outlined"
+          (click)="openProgressDialog()"
         ></button>
-        <div class="header-content">
-          <h1>{{ workOrder()!.workOrderNumber }}</h1>
-          <div class="header-tags">
-            <p-tag
-              [value]="helpers.getStatusLabel(workOrder()!.status)"
-              [severity]="helpers.getStatusSeverity(workOrder()!.status)"
-            />
-            <p-tag
-              [value]="helpers.getPriorityLabel(workOrder()!.priority)"
-              [severity]="helpers.getPrioritySeverity(workOrder()!.priority)"
-            />
-            @if (workOrder()!.isOverdue) {
-              <p-tag value="Overdue" severity="danger" />
-            }
-          </div>
-        </div>
-      </div>
-      <div class="header-actions">
-        @if (canEdit()) {
-          <button
-            pButton
-            label="Edit"
-            icon="pi pi-pencil"
-            class="p-button-outlined"
-            (click)="openEditDialog()"
-          ></button>
-          <button
-            pButton
-            label="Change Status"
-            icon="pi pi-refresh"
-            class="p-button-outlined"
-            (click)="openStatusDialog()"
-            [disabled]="statusOptions().length === 0"
-          ></button>
-        }
-        @if (canDelete()) {
-          <button
-            pButton
-            icon="pi pi-trash"
-            class="p-button-danger p-button-outlined"
-            pTooltip="Delete Work Order"
-            tooltipPosition="left"
-            (click)="confirmDelete()"
-          ></button>
+        } @if (canBuild()) {
+        <button
+          pButton
+          label="Build Assemblies"
+          icon="pi pi-cog"
+          class="p-button-success"
+          (click)="openBuildDialog()"
+        ></button>
         }
       </div>
-    </div>
 
-    <div class="content-grid">
-      <!-- Main Info -->
-      <p-card header="Work Order Details" styleClass="details-card">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Assembly Item</label>
-            <div class="item-link" (click)="viewItem()">
-              @if (workOrder()!.item) {
-                <span class="item-sku">{{ workOrder()!.item!.sku }}</span>
-                <span class="item-name">{{ workOrder()!.item!.name }}</span>
-              } @else {
-                <span>{{ workOrder()!.itemId }}</span>
-              }
-              <i class="pi pi-external-link"></i>
-            </div>
-          </div>
-
-          <div class="detail-item">
-            <label>Due Date</label>
-            <span [class.overdue]="workOrder()!.isOverdue">
-              {{ workOrder()!.dueDate ? (workOrder()!.dueDate | date:'medium') : 'Not set' }}
-            </span>
-          </div>
-
-          <div class="detail-item">
-            <label>Assigned To</label>
-            <span>
-              @if (workOrder()!.assignedTo) {
-                {{ workOrder()!.assignedTo!.firstName }} {{ workOrder()!.assignedTo!.lastName || workOrder()!.assignedTo!.email }}
-              } @else {
-                Unassigned
-              }
-            </span>
-          </div>
-
-          <div class="detail-item">
-            <label>Output Location</label>
-            <span>{{ workOrder()!.outputLocation?.name || 'Not specified' }}</span>
-          </div>
-
-          <div class="detail-item">
-            <label>Created</label>
-            <span>{{ workOrder()!.createdAt | date:'medium' }}</span>
-          </div>
-
-          @if (workOrder()!.startDate) {
-            <div class="detail-item">
-              <label>Started</label>
-              <span>{{ workOrder()!.startDate | date:'medium' }}</span>
-            </div>
-          }
-
-          @if (workOrder()!.completedDate) {
-            <div class="detail-item">
-              <label>Completed</label>
-              <span>{{ workOrder()!.completedDate | date:'medium' }}</span>
-            </div>
-          }
-        </div>
-
-        @if (workOrder()!.description) {
-          <p-divider />
-          <div class="description">
-            <label>Description</label>
-            <p>{{ workOrder()!.description }}</p>
-          </div>
-        }
-      </p-card>
-
-      <!-- Progress Card -->
-      <p-card header="Production Progress" styleClass="progress-card">
-        <div class="progress-summary">
-          <div class="progress-bar-container">
-            <p-progressBar
-              [value]="workOrder()!.completionPercentage || 0"
-              [showValue]="false"
-              [style]="{ height: '20px' }"
-              [ngStyle]="{ '--progressbar-value-bg': getProgressColor() }"
-            />
-            <span class="progress-percent">{{ (workOrder()!.completionPercentage || 0) | number:'1.0-0' }}%</span>
-          </div>
-
-          <div class="quantity-grid">
-            <div class="quantity-item">
-              <span class="quantity-value">{{ workOrder()!.quantityOrdered }}</span>
-              <span class="quantity-label">Ordered</span>
-            </div>
-            <div class="quantity-item completed">
-              <span class="quantity-value">{{ workOrder()!.quantityCompleted }}</span>
-              <span class="quantity-label">Completed</span>
-            </div>
-            <div class="quantity-item scrapped">
-              <span class="quantity-value">{{ workOrder()!.quantityScrapped }}</span>
-              <span class="quantity-label">Scrapped</span>
-            </div>
-            <div class="quantity-item remaining">
-              <span class="quantity-value">{{ workOrder()!.quantityRemaining }}</span>
-              <span class="quantity-label">Remaining</span>
-            </div>
-          </div>
-        </div>
-
-        <p-divider />
-
-        <div class="progress-actions">
-          @if (canEdit()) {
-            <button
-              pButton
-              label="Record Progress"
-              icon="pi pi-chart-line"
-              class="p-button-outlined"
-              (click)="openProgressDialog()"
-            ></button>
-          }
-          @if (canBuild()) {
-            <button
-              pButton
-              label="Build Assemblies"
-              icon="pi pi-cog"
-              class="p-button-success"
-              (click)="openBuildDialog()"
-            ></button>
-          }
-        </div>
-
-        @if (availability()) {
-          <div class="availability-info">
-            <small>
-              <i class="pi pi-info-circle mr-1"></i>
-              Component availability allows building up to {{ availability()!.maxBuildable }} units
-            </small>
-          </div>
-        }
-      </p-card>
-
-      <!-- Cost Card -->
-      <p-card header="Cost Tracking" styleClass="cost-card">
-        <div class="cost-grid">
-          <div class="cost-item">
-            <label>Estimated Cost</label>
-            <span class="cost-value">
-              {{ workOrder()!.estimatedCost ? (workOrder()!.estimatedCost | currency) : 'N/A' }}
-            </span>
-          </div>
-          <div class="cost-item">
-            <label>Actual Cost</label>
-            <span class="cost-value">
-              {{ workOrder()!.actualCost ? (workOrder()!.actualCost | currency) : 'N/A' }}
-            </span>
-          </div>
-        </div>
-      </p-card>
-
-      <!-- BOM Components -->
-      @if (bomComponents().length > 0) {
-        <p-card header="Bill of Materials" styleClass="bom-card">
-          <p-table [value]="bomComponents()" styleClass="p-datatable-sm">
-            <ng-template pTemplate="header">
-              <tr>
-                <th>Component</th>
-                <th style="width: 100px">Required</th>
-                <th style="width: 100px">Available</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-comp>
-              <tr>
-                <td>
-                  <div class="component-info">
-                    <span class="sku">{{ comp.componentItem?.sku }}</span>
-                    <span class="name">{{ comp.componentItem?.name }}</span>
-                  </div>
-                </td>
-                <td>{{ comp.quantityRequired }} {{ comp.unitOfMeasure }}</td>
-                <td>{{ comp.componentItem?.totalQuantity || 0 }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-card>
+      @if (availability()) {
+      <div class="availability-info">
+        <small>
+          <i class="pi pi-info-circle mr-1"></i>
+          Component availability allows building up to
+          {{ availability()!.maxBuildable }} units
+        </small>
+      </div>
       }
+    </p-card>
 
-      <!-- Notes -->
-      @if (workOrder()!.notes) {
-        <p-card header="Notes" styleClass="notes-card">
-          <pre class="notes-content">{{ workOrder()!.notes }}</pre>
-        </p-card>
-      }
-    </div>
+    <!-- Cost Card -->
+    <p-card header="Cost Tracking" styleClass="cost-card">
+      <div class="cost-grid">
+        <div class="cost-item">
+          <label>Estimated Cost</label>
+          <span class="cost-value">
+            {{
+              workOrder()!.estimatedCost
+                ? (workOrder()!.estimatedCost | currency)
+                : "N/A"
+            }}
+          </span>
+        </div>
+        <div class="cost-item">
+          <label>Actual Cost</label>
+          <span class="cost-value">
+            {{
+              workOrder()!.actualCost
+                ? (workOrder()!.actualCost | currency)
+                : "N/A"
+            }}
+          </span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- BOM Components -->
+    @if (bomComponents().length > 0) {
+    <p-card header="Bill of Materials" styleClass="bom-card">
+      <p-table [value]="bomComponents()" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Component</th>
+            <th style="width: 100px">Required</th>
+            <th style="width: 100px">Available</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-comp>
+          <tr>
+            <td>
+              <div class="component-info">
+                <span class="sku">{{ comp.componentItem?.sku }}</span>
+                <span class="name">{{ comp.componentItem?.name }}</span>
+              </div>
+            </td>
+            <td>{{ comp.quantityRequired }} {{ comp.unitOfMeasure }}</td>
+            <td>{{ comp.componentItem?.totalQuantity || 0 }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+    }
+
+    <!-- Notes -->
+    @if (workOrder()!.notes) {
+    <p-card header="Notes" styleClass="notes-card">
+      <pre class="notes-content">{{ workOrder()!.notes }}</pre>
+    </p-card>
+    }
+  </div>
   }
 </div>
 
@@ -337,8 +362,18 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cancel" class="p-button-text" (click)="showEditDialog.set(false)"></button>
-    <button pButton label="Save" icon="pi pi-check" (click)="saveEdit()"></button>
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showEditDialog.set(false)"
+    ></button>
+    <button
+      pButton
+      label="Save"
+      icon="pi pi-check"
+      (click)="saveEdit()"
+    ></button>
   </ng-template>
 </p-dialog>
 
@@ -376,8 +411,19 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cancel" class="p-button-text" (click)="showStatusDialog.set(false)"></button>
-    <button pButton label="Update Status" icon="pi pi-check" (click)="updateStatus()" [disabled]="!newStatus"></button>
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showStatusDialog.set(false)"
+    ></button>
+    <button
+      pButton
+      label="Update Status"
+      icon="pi pi-check"
+      (click)="updateStatus()"
+      [disabled]="!newStatus"
+    ></button>
   </ng-template>
 </p-dialog>
 
@@ -421,8 +467,18 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cancel" class="p-button-text" (click)="showProgressDialog.set(false)"></button>
-    <button pButton label="Record" icon="pi pi-check" (click)="recordProgress()"></button>
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showProgressDialog.set(false)"
+    ></button>
+    <button
+      pButton
+      label="Record"
+      icon="pi pi-check"
+      (click)="recordProgress()"
+    ></button>
   </ng-template>
 </p-dialog>
 
@@ -436,7 +492,8 @@
 >
   <div class="form-grid">
     <p class="build-info">
-      This will consume components from inventory and produce the assembly items.
+      This will consume components from inventory and produce the assembly
+      items.
     </p>
 
     <div class="form-field">
@@ -462,7 +519,12 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cancel" class="p-button-text" (click)="showBuildDialog.set(false)"></button>
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showBuildDialog.set(false)"
+    ></button>
     <button
       pButton
       label="Build"
