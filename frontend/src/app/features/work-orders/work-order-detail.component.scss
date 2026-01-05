@@ -1,0 +1,295 @@
+.work-order-detail-container {
+  padding: 1.5rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+  color: var(--text-color-secondary);
+}
+
+// Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.header-content {
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+    font-family: var(--font-mono);
+  }
+}
+
+.header-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Content Grid
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+// Details Card
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+  }
+
+  span {
+    font-weight: 500;
+  }
+
+  .overdue {
+    color: #EF4444;
+  }
+}
+
+.item-link {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  color: var(--primary-color);
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .item-sku {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+
+  .item-name {
+    font-weight: 500;
+  }
+
+  i {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.description {
+  label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+}
+
+// Progress Card
+.progress-summary {
+  .progress-bar-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+
+    .progress-percent {
+      position: absolute;
+      right: 0;
+      top: -1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+}
+
+.quantity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+
+.quantity-item {
+  display: flex;
+  flex-direction: column;
+
+  .quantity-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .quantity-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+  }
+
+  &.completed .quantity-value { color: #10B981; }
+  &.scrapped .quantity-value { color: #EF4444; }
+  &.remaining .quantity-value { color: #F59E0B; }
+}
+
+.progress-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.availability-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-100);
+  border-radius: 6px;
+
+  small {
+    color: var(--text-color-secondary);
+  }
+}
+
+// Cost Card
+.cost-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cost-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+  }
+
+  .cost-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+// BOM Card
+.component-info {
+  display: flex;
+  flex-direction: column;
+
+  .sku {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+
+  .name {
+    font-weight: 500;
+  }
+}
+
+// Notes Card
+.notes-content {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background: var(--surface-100);
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+// Forms
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  small {
+    color: var(--text-color-secondary);
+    font-size: 0.75rem;
+  }
+}
+
+.build-info {
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--surface-100);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quantity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

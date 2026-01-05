@@ -71,6 +71,12 @@ export class NavigationService {
           ]
         },
         {
+          id: 'work-orders',
+          label: 'Work Orders',
+          icon: 'pi-clipboard',
+          route: '/work-orders'
+        },
+        {
           id: 'locations',
           label: 'Locations',
           icon: 'pi-map-marker',

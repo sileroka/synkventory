@@ -10,6 +10,7 @@ from app.models.stock_movement import StockMovement, MovementType
 from app.models.audit_log import AuditLog, AuditAction, EntityType
 from app.models.item_revision import ItemRevision, RevisionType
 from app.models.bill_of_material import BillOfMaterial
+from app.models.work_order import WorkOrder, WorkOrderStatus, WorkOrderPriority
 
 __all__ = [
     "Tenant",
@@ -29,4 +30,7 @@ __all__ = [
     "ItemRevision",
     "RevisionType",
     "BillOfMaterial",
+    "WorkOrder",
+    "WorkOrderStatus",
+    "WorkOrderPriority",
 ]

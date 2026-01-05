@@ -17,6 +17,7 @@ from app.api.v1 import (
     audit_logs,
     uploads,
     bom,
+    work_orders,
 )
 
 api_router = APIRouter()
@@ -25,6 +26,7 @@ api_router.include_router(auth.router, tags=["auth"])
 api_router.include_router(users.router, tags=["users"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(bom.router, prefix="/inventory", tags=["bill-of-materials"])
+api_router.include_router(work_orders.router, tags=["work-orders"])
 api_router.include_router(locations.router, prefix="/locations", tags=["locations"])
 api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
 api_router.include_router(category_attributes.router, tags=["category-attributes"])

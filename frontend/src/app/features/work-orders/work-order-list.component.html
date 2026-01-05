@@ -1,0 +1,333 @@
+<div class="work-order-list-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <i class="pi pi-clipboard mr-2"></i>
+        Work Orders
+      </h1>
+      <p class="text-muted">Track and manage production of assemblies</p>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="New Work Order"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        (click)="openCreateDialog()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  @if (stats()) {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats()!.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-value">{{ stats()!.pending }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card in-progress">
+        <div class="stat-value">{{ stats()!.inProgress }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card on-hold">
+        <div class="stat-value">{{ stats()!.onHold }}</div>
+        <div class="stat-label">On Hold</div>
+      </div>
+      <div class="stat-card overdue">
+        <div class="stat-value">{{ stats()!.overdue }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+  }
+
+  <p-card>
+    <!-- Filters -->
+    <div class="toolbar mb-3">
+      <div class="filters">
+        <p-dropdown
+          [options]="statusOptions"
+          [(ngModel)]="statusFilter"
+          (onChange)="onFilterChange()"
+          placeholder="Status"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          styleClass="filter-dropdown"
+        ></p-dropdown>
+        
+        <p-dropdown
+          [options]="priorityOptions"
+          [(ngModel)]="priorityFilter"
+          (onChange)="onFilterChange()"
+          placeholder="Priority"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          styleClass="filter-dropdown"
+        ></p-dropdown>
+        
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="includeCompleted"
+            (change)="onFilterChange()"
+          />
+          Include Completed
+        </label>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" />
+        <p>Loading work orders...</p>
+      </div>
+    } @else if (workOrders().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-clipboard empty-icon"></i>
+        <h3>No Work Orders</h3>
+        <p>Create your first work order to start tracking production.</p>
+        <button
+          pButton
+          label="Create Work Order"
+          icon="pi pi-plus"
+          class="p-button-outlined mt-3"
+          (click)="openCreateDialog()"
+        ></button>
+      </div>
+    } @else {
+      <p-table
+        [value]="workOrders()"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} work orders"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="work_order_number" style="width: 140px">WO # <p-sortIcon field="work_order_number" /></th>
+            <th>Assembly Item</th>
+            <th pSortableColumn="priority" style="width: 100px">Priority <p-sortIcon field="priority" /></th>
+            <th style="width: 180px">Progress</th>
+            <th pSortableColumn="status" style="width: 120px">Status <p-sortIcon field="status" /></th>
+            <th pSortableColumn="due_date" style="width: 120px">Due Date <p-sortIcon field="due_date" /></th>
+            <th style="width: 140px">Assigned To</th>
+            <th style="width: 100px">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-wo>
+          <tr [class.overdue-row]="wo.isOverdue">
+            <td>
+              <a [routerLink]="['/work-orders', wo.id]" class="wo-number">
+                {{ wo.workOrderNumber }}
+              </a>
+            </td>
+            <td>
+              <div class="item-info">
+                <span class="item-sku">{{ wo.itemSku }}</span>
+                <span class="item-name">{{ wo.itemName }}</span>
+              </div>
+            </td>
+            <td>
+              <p-tag
+                [value]="helpers.getPriorityLabel(wo.priority)"
+                [severity]="helpers.getPrioritySeverity(wo.priority)"
+              />
+            </td>
+            <td>
+              <div class="progress-cell">
+                <div class="progress-text">
+                  {{ wo.quantityCompleted }} / {{ wo.quantityOrdered }}
+                </div>
+                <p-progressBar
+                  [value]="wo.completionPercentage"
+                  [showValue]="false"
+                  [style]="{ height: '8px' }"
+                  [ngStyle]="{ '--progressbar-value-bg': getProgressColor(wo) }"
+                />
+              </div>
+            </td>
+            <td>
+              <p-tag
+                [value]="helpers.getStatusLabel(wo.status)"
+                [severity]="helpers.getStatusSeverity(wo.status)"
+              />
+            </td>
+            <td>
+              @if (wo.dueDate) {
+                <span [class.overdue-text]="wo.isOverdue">
+                  {{ wo.dueDate | date:'shortDate' }}
+                </span>
+              } @else {
+                <span class="no-date">—</span>
+              }
+            </td>
+            <td>
+              {{ wo.assignedToName || '—' }}
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  class="p-button-text p-button-sm"
+                  pTooltip="View Details"
+                  tooltipPosition="left"
+                  (click)="viewWorkOrder(wo)"
+                ></button>
+                @if (canDelete(wo)) {
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger"
+                    pTooltip="Delete"
+                    tooltipPosition="left"
+                    (click)="confirmDelete(wo)"
+                  ></button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+</div>
+
+<!-- Create Work Order Dialog -->
+<p-dialog
+  header="Create Work Order"
+  [(visible)]="showCreateDialog"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true"
+>
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="assembly">Assembly Item *</label>
+      <p-autoComplete
+        id="assembly"
+        [(ngModel)]="selectedAssembly"
+        [suggestions]="assemblySuggestions()"
+        (completeMethod)="searchAssemblies($event)"
+        (onSelect)="onAssemblySelect($event)"
+        field="name"
+        [dropdown]="true"
+        placeholder="Search for an assembly..."
+        [style]="{ width: '100%' }"
+        [inputStyle]="{ width: '100%' }"
+      >
+        <ng-template let-item pTemplate="item">
+          <div class="assembly-option">
+            <span class="sku">{{ item.sku }}</span>
+            <span class="name">{{ item.name }}</span>
+          </div>
+        </ng-template>
+      </p-autoComplete>
+      <small class="hint">Only items with a Bill of Materials are shown</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="quantity">Quantity *</label>
+        <p-inputNumber
+          id="quantity"
+          [(ngModel)]="newWorkOrder.quantityOrdered"
+          [min]="1"
+          [showButtons]="true"
+        ></p-inputNumber>
+      </div>
+
+      <div class="form-field">
+        <label for="priority">Priority</label>
+        <p-dropdown
+          id="priority"
+          [options]="priorityOptions.slice(1)"
+          [(ngModel)]="newWorkOrder.priority"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="dueDate">Due Date</label>
+      <p-calendar
+        id="dueDate"
+        [(ngModel)]="newWorkOrder.dueDate"
+        [showIcon]="true"
+        [showTime]="false"
+        dateFormat="yy-mm-dd"
+        [style]="{ width: '100%' }"
+      ></p-calendar>
+    </div>
+
+    <div class="form-field">
+      <label for="outputLocation">Output Location</label>
+      <p-dropdown
+        id="outputLocation"
+        [options]="locations()"
+        [(ngModel)]="newWorkOrder.outputLocationId"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select location..."
+        [showClear]="true"
+        [style]="{ width: '100%' }"
+      ></p-dropdown>
+    </div>
+
+    <div class="form-field">
+      <label for="assignedTo">Assigned To</label>
+      <p-dropdown
+        id="assignedTo"
+        [options]="users()"
+        [(ngModel)]="newWorkOrder.assignedToId"
+        optionLabel="email"
+        optionValue="id"
+        placeholder="Select user..."
+        [showClear]="true"
+        [style]="{ width: '100%' }"
+      ></p-dropdown>
+    </div>
+
+    <div class="form-field">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        pInputTextarea
+        [(ngModel)]="newWorkOrder.description"
+        rows="3"
+        [style]="{ width: '100%' }"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showCreateDialog.set(false)"
+    ></button>
+    <button
+      pButton
+      label="Create"
+      icon="pi pi-check"
+      (click)="createWorkOrder()"
+      [disabled]="!selectedAssembly()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast />
