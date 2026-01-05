@@ -1,0 +1,67 @@
+@import '../../../styles.scss';
+
+:host {
+  display: block;
+}
+
+.revision-marker {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.revision-item {
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.revision-detail {
+  .grid {
+    margin: 0;
+    
+    > div {
+      padding: 0.25rem 0.5rem;
+    }
+  }
+}
+
+// Timeline customization
+:host ::ng-deep {
+  .p-timeline {
+    .p-timeline-event {
+      min-height: auto;
+    }
+
+    .p-timeline-event-content {
+      padding: 0 0 0 1rem;
+    }
+
+    .p-timeline-event-separator {
+      flex: 0;
+    }
+  }
+
+  .p-timeline-event-opposite {
+    display: none;
+  }
+}
+
+// Compare table styling
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--surface-100);
+      font-weight: 600;
+    }
+  }
+}
+
+// Dialog styling
+:host ::ng-deep {
+  .p-dialog-content {
+    padding: 1.5rem;
+  }
+}

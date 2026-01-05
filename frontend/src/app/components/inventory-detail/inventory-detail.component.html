@@ -177,64 +177,82 @@
     </p-card>
   </div>
 
-  <!-- Right Column - Stock Movements -->
+  <!-- Right Column - Activity & Revision History -->
   <div class="col-12 lg:col-4">
-    <p-card>
-      <ng-template pTemplate="header">
-        <div class="flex justify-content-between align-items-center p-4 pb-0">
-          <h3 class="m-0">Recent Activity</h3>
-          <a routerLink="/stock-movements" [queryParams]="{itemId: item.id}" class="text-primary no-underline text-sm" *ngIf="totalMovements > 10">
+    <p-tabView>
+      <!-- Recent Activity Tab -->
+      <p-tabPanel header="Activity">
+        <ng-template pTemplate="header">
+          <i class="pi pi-clock mr-2"></i>
+          <span>Activity</span>
+        </ng-template>
+        
+        <div *ngIf="loadingMovements" class="p-3">
+          <div *ngFor="let _ of [1,2,3]" class="mb-3">
+            <p-skeleton width="100%" height="3rem"></p-skeleton>
+          </div>
+        </div>
+
+        <div class="flex justify-content-end mb-2" *ngIf="totalMovements > 10">
+          <a routerLink="/stock-movements" [queryParams]="{itemId: item.id}" class="text-primary no-underline text-sm">
             View all ({{ totalMovements }})
           </a>
         </div>
-      </ng-template>
 
-      <div *ngIf="loadingMovements" class="p-3">
-        <div *ngFor="let _ of [1,2,3]" class="mb-3">
-          <p-skeleton width="100%" height="3rem"></p-skeleton>
+        <p-timeline [value]="recentMovements" *ngIf="!loadingMovements && recentMovements.length > 0">
+          <ng-template pTemplate="marker" let-movement>
+            <span
+              class="flex align-items-center justify-content-center border-circle"
+              [style.backgroundColor]="getMovementColor(movement.movementType)"
+              style="width: 2rem; height: 2rem;">
+              <i [class]="getMovementIcon(movement.movementType)" class="text-white text-sm"></i>
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-movement>
+            <div class="mb-3">
+              <div class="flex align-items-center gap-2 mb-1">
+                <span class="font-semibold">{{ getMovementLabel(movement.movementType) }}</span>
+                <span
+                  class="font-bold"
+                  [class.text-green-500]="movement.movementType === 'receive'"
+                  [class.text-red-500]="movement.movementType === 'ship'">
+                  {{ movement.movementType === 'ship' ? '-' : '+' }}{{ movement.quantity }}
+                </span>
+              </div>
+              <div class="text-sm text-color-secondary" *ngIf="movement.fromLocation || movement.toLocation">
+                <span *ngIf="movement.fromLocation">From: {{ movement.fromLocation.name }}</span>
+                <span *ngIf="movement.fromLocation && movement.toLocation"> → </span>
+                <span *ngIf="movement.toLocation">To: {{ movement.toLocation.name }}</span>
+              </div>
+              <div class="text-sm text-color-secondary" *ngIf="movement.notes">
+                {{ movement.notes }}
+              </div>
+              <div class="text-xs text-color-secondary mt-1">
+                {{ formatDate(movement.createdAt) }}
+              </div>
+            </div>
+          </ng-template>
+        </p-timeline>
+
+        <div *ngIf="!loadingMovements && recentMovements.length === 0" class="text-center text-color-secondary p-4">
+          <i class="pi pi-history text-4xl mb-3 block"></i>
+          <p class="m-0">No stock movements recorded yet.</p>
         </div>
-      </div>
+      </p-tabPanel>
 
-      <p-timeline [value]="recentMovements" *ngIf="!loadingMovements && recentMovements.length > 0">
-        <ng-template pTemplate="marker" let-movement>
-          <span
-            class="flex align-items-center justify-content-center border-circle"
-            [style.backgroundColor]="getMovementColor(movement.movementType)"
-            style="width: 2rem; height: 2rem;">
-            <i [class]="getMovementIcon(movement.movementType)" class="text-white text-sm"></i>
-          </span>
+      <!-- Revision History Tab -->
+      <p-tabPanel header="Revisions">
+        <ng-template pTemplate="header">
+          <i class="pi pi-history mr-2"></i>
+          <span>Revisions</span>
         </ng-template>
-        <ng-template pTemplate="content" let-movement>
-          <div class="mb-3">
-            <div class="flex align-items-center gap-2 mb-1">
-              <span class="font-semibold">{{ getMovementLabel(movement.movementType) }}</span>
-              <span
-                class="font-bold"
-                [class.text-green-500]="movement.movementType === 'receive'"
-                [class.text-red-500]="movement.movementType === 'ship'">
-                {{ movement.movementType === 'ship' ? '-' : '+' }}{{ movement.quantity }}
-              </span>
-            </div>
-            <div class="text-sm text-color-secondary" *ngIf="movement.fromLocation || movement.toLocation">
-              <span *ngIf="movement.fromLocation">From: {{ movement.fromLocation.name }}</span>
-              <span *ngIf="movement.fromLocation && movement.toLocation"> → </span>
-              <span *ngIf="movement.toLocation">To: {{ movement.toLocation.name }}</span>
-            </div>
-            <div class="text-sm text-color-secondary" *ngIf="movement.notes">
-              {{ movement.notes }}
-            </div>
-            <div class="text-xs text-color-secondary mt-1">
-              {{ formatDate(movement.createdAt) }}
-            </div>
-          </div>
-        </ng-template>
-      </p-timeline>
-
-      <div *ngIf="!loadingMovements && recentMovements.length === 0" class="text-center text-color-secondary p-4">
-        <i class="pi pi-history text-4xl mb-3 block"></i>
-        <p class="m-0">No stock movements recorded yet.</p>
-      </div>
-    </p-card>
+        
+        <app-revision-history 
+          *ngIf="item?.id" 
+          [itemId]="item!.id!">
+        </app-revision-history>
+      </p-tabPanel>
+    </p-tabView>
   </div>
 </div>
 

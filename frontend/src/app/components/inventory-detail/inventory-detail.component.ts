@@ -16,12 +16,14 @@ import { DropdownModule } from 'primeng/dropdown';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TabViewModule } from 'primeng/tabview';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { InventoryService, ILocationQuantityResult, IStockMovementResult } from '../../services/inventory.service';
 import { LocationService } from '../../features/locations/services/location.service';
 import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../../models/inventory-item.model';
 import { IStockMovement, MovementType, IStockMovementCreate } from '../../models/stock-movement.model';
 import { ILocation } from '../../features/locations/models/location.model';
+import { RevisionHistoryComponent } from '../revision-history/revision-history.component';
 
 interface ILocationOption {
   label: string;
@@ -48,7 +50,9 @@ interface ILocationOption {
     DropdownModule,
     BreadcrumbModule,
     TooltipModule,
-    SkeletonModule
+    SkeletonModule,
+    TabViewModule,
+    RevisionHistoryComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-detail.component.html',

@@ -15,6 +15,7 @@ from app.models.inventory_location_quantity import (
     InventoryLocationQuantity as InventoryLocationQuantityModel,
 )
 from app.models.audit_log import AuditAction, EntityType
+from app.models.item_revision import ItemRevision as ItemRevisionModel, RevisionType
 from app.schemas.inventory import (
     InventoryItem,
     InventoryItemCreate,
@@ -27,6 +28,12 @@ from app.schemas.inventory import (
 )
 from app.schemas.stock_movement import StockMovement
 from app.schemas.inventory_location_quantity import InventoryLocationQuantity
+from app.schemas.item_revision import (
+    ItemRevision,
+    ItemRevisionSummary,
+    RevisionCompare,
+    RestoreRevisionRequest,
+)
 from app.schemas.response import (
     DataResponse,
     ListResponse,
@@ -36,6 +43,7 @@ from app.schemas.response import (
 )
 from app.services.audit import audit_service
 from app.services.storage import storage_service
+from app.services.revision import revision_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -333,6 +341,16 @@ def create_inventory_item(
             request=request,
         )
 
+        # Create initial revision
+        revision_service.create_revision(
+            db=db,
+            tenant_id=tenant.id,
+            item=db_item,
+            user_id=user.id,
+            revision_type=RevisionType.CREATE,
+        )
+        db.commit()
+
     # Reload with relationships
     db_item = (
         db.query(InventoryItemModel)
@@ -365,25 +383,30 @@ def update_inventory_item(
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # Capture old values for audit
+    # Capture old values for audit and revision
     old_values = {
         "name": db_item.name,
         "sku": db_item.sku,
+        "description": db_item.description,
         "quantity": db_item.quantity,
         "reorder_point": db_item.reorder_point,
+        "unit_price": db_item.unit_price,
         "status": db_item.status,
         "category_id": str(db_item.category_id) if db_item.category_id else None,
         "location_id": str(db_item.location_id) if db_item.location_id else None,
+        "image_key": db_item.image_key,
+        "custom_attributes": db_item.custom_attributes,
     }
 
     update_data = item.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_item, field, value)
 
+    db_item.updated_by = user.id
     db.commit()
     db.refresh(db_item)
 
-    # Log the update with changes
+    # Log the update with changes and create revision
     if tenant:
         # Build changes dict showing old/new values
         changes = {}
@@ -408,6 +431,16 @@ def update_inventory_item(
                 changes=changes,
                 request=request,
             )
+
+            # Create update revision
+            revision_service.create_update_revision(
+                db=db,
+                tenant_id=tenant.id,
+                item=db_item,
+                old_values=old_values,
+                user_id=user.id,
+            )
+            db.commit()
 
     # Reload with relationships
     db_item = (
@@ -761,3 +794,202 @@ def get_inventory_item_locations(
             total_pages=1,
         ),
     )
+
+
+# =============================================================================
+# Revision Control Endpoints
+# =============================================================================
+
+
+@router.get("/{item_id}/revisions", response_model=ListResponse[ItemRevisionSummary])
+def get_item_revisions(
+    item_id: UUID,
+    request: Request,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(
+        25, ge=1, le=100, alias="pageSize", description="Items per page"
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Get revision history for an inventory item.
+    Returns a paginated list of revisions in reverse chronological order.
+    """
+    # Verify item exists
+    item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    revisions, total = revision_service.get_revisions(
+        db=db,
+        inventory_item_id=item_id,
+        page=page,
+        page_size=page_size,
+    )
+
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+
+    return ListResponse(
+        data=revisions,
+        meta=PaginationMeta(
+            timestamp=datetime.utcnow(),
+            request_id=getattr(request.state, "request_id", None),
+            page=page,
+            page_size=page_size,
+            total_items=total,
+            total_pages=total_pages,
+        ),
+    )
+
+
+@router.get("/{item_id}/revisions/latest", response_model=DataResponse[ItemRevision])
+def get_latest_revision(
+    item_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Get the latest revision for an inventory item.
+    """
+    # Verify item exists
+    item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    revision = revision_service.get_latest_revision(db=db, inventory_item_id=item_id)
+    if not revision:
+        raise HTTPException(status_code=404, detail="No revisions found for this item")
+
+    return DataResponse(data=revision, meta=get_response_meta(request))
+
+
+@router.get(
+    "/{item_id}/revisions/{revision_number}", response_model=DataResponse[ItemRevision]
+)
+def get_item_revision(
+    item_id: UUID,
+    revision_number: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Get a specific revision by revision number.
+    """
+    # Verify item exists
+    item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    revision = revision_service.get_revision(
+        db=db,
+        inventory_item_id=item_id,
+        revision_number=revision_number,
+    )
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revision not found")
+
+    return DataResponse(data=revision, meta=get_response_meta(request))
+
+
+@router.get(
+    "/{item_id}/revisions/{from_rev}/compare/{to_rev}",
+    response_model=DataResponse[RevisionCompare],
+)
+def compare_revisions(
+    item_id: UUID,
+    from_rev: int,
+    to_rev: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Compare two revisions and return the differences.
+    """
+    # Verify item exists
+    item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    comparison = revision_service.compare_revisions(
+        db=db,
+        inventory_item_id=item_id,
+        from_revision_number=from_rev,
+        to_revision_number=to_rev,
+    )
+    if not comparison:
+        raise HTTPException(status_code=404, detail="One or both revisions not found")
+
+    return DataResponse(data=comparison, meta=get_response_meta(request))
+
+
+@router.post(
+    "/{item_id}/revisions/restore", response_model=DataResponse[InventoryItem]
+)
+def restore_revision(
+    item_id: UUID,
+    restore_request: RestoreRevisionRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Restore an inventory item to a previous revision state.
+    This creates a new revision of type RESTORE.
+    """
+    tenant = get_current_tenant()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+
+    # Get the item
+    db_item = (
+        db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    )
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Get the revision to restore
+    revision = revision_service.get_revision(
+        db=db,
+        inventory_item_id=item_id,
+        revision_number=restore_request.revision_number,
+    )
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revision not found")
+
+    # Restore the item to the revision state
+    new_revision = revision_service.restore_revision(
+        db=db,
+        tenant_id=tenant.id,
+        item=db_item,
+        revision=revision,
+        user_id=user.id,
+        reason=restore_request.reason,
+    )
+
+    db.commit()
+
+    # Log the restore action
+    audit_service.log_update(
+        db=db,
+        tenant_id=tenant.id,
+        user_id=user.id,
+        entity_type=EntityType.INVENTORY_ITEM,
+        entity_id=db_item.id,
+        entity_name=f"{db_item.sku} - {db_item.name}",
+        changes={"restored_to_revision": restore_request.revision_number},
+        request=request,
+    )
+
+    # Reload with relationships
+    db_item = (
+        db.query(InventoryItemModel)
+        .options(
+            joinedload(InventoryItemModel.category),
+            joinedload(InventoryItemModel.location),
+        )
+        .filter(InventoryItemModel.id == db_item.id)
+        .first()
+    )
+
+    return DataResponse(data=add_image_url(db_item), meta=get_response_meta(request))
+

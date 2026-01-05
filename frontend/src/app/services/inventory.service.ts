@@ -4,6 +4,12 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { IInventoryItem, IInventoryLocationQuantity, ILowStockAlert, InventoryStatus } from '../models/inventory-item.model';
 import { IStockMovement, IStockMovementCreate } from '../models/stock-movement.model';
+import {
+  IItemRevision,
+  IItemRevisionSummary,
+  IRevisionCompare,
+  IRestoreRevisionRequest
+} from '../models/item-revision.model';
 import { environment } from '../../environments/environment';
 import {
   IDataResponse,
@@ -29,6 +35,11 @@ export interface ILowStockAlertResult {
 
 export interface IStockMovementResult {
   items: IStockMovement[];
+  pagination: IPaginationMeta;
+}
+
+export interface IRevisionListResult {
+  items: IItemRevisionSummary[];
   pagination: IPaginationMeta;
 }
 
@@ -176,6 +187,59 @@ export class InventoryService {
 
   createStockMovement(movement: IStockMovementCreate): Observable<IStockMovement> {
     return this.http.post<IDataResponse<IStockMovement>>(this.stockMovementsUrl, movement)
+      .pipe(map(response => response.data));
+  }
+
+  // =========================================================================
+  // Revision Control Methods
+  // =========================================================================
+
+  /**
+   * Get revision history for an inventory item.
+   */
+  getItemRevisions(id: string, page: number = 1, pageSize: number = 25): Observable<IRevisionListResult> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<IListResponse<IItemRevisionSummary>>(`${this.apiUrl}/${id}/revisions`, { params })
+      .pipe(
+        map(response => ({
+          items: response.data,
+          pagination: response.meta
+        }))
+      );
+  }
+
+  /**
+   * Get the latest revision for an inventory item.
+   */
+  getLatestRevision(id: string): Observable<IItemRevision> {
+    return this.http.get<IDataResponse<IItemRevision>>(`${this.apiUrl}/${id}/revisions/latest`)
+      .pipe(map(response => response.data));
+  }
+
+  /**
+   * Get a specific revision by revision number.
+   */
+  getRevision(id: string, revisionNumber: number): Observable<IItemRevision> {
+    return this.http.get<IDataResponse<IItemRevision>>(`${this.apiUrl}/${id}/revisions/${revisionNumber}`)
+      .pipe(map(response => response.data));
+  }
+
+  /**
+   * Compare two revisions and return the differences.
+   */
+  compareRevisions(id: string, fromRev: number, toRev: number): Observable<IRevisionCompare> {
+    return this.http.get<IDataResponse<IRevisionCompare>>(`${this.apiUrl}/${id}/revisions/${fromRev}/compare/${toRev}`)
+      .pipe(map(response => response.data));
+  }
+
+  /**
+   * Restore an inventory item to a previous revision state.
+   */
+  restoreRevision(id: string, request: IRestoreRevisionRequest): Observable<IInventoryItem> {
+    return this.http.post<IDataResponse<IInventoryItem>>(`${this.apiUrl}/${id}/revisions/restore`, request)
       .pipe(map(response => response.data));
   }
 }

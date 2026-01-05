@@ -1,0 +1,334 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-card>
+  <ng-template pTemplate="header">
+    <div class="flex justify-content-between align-items-center p-4 pb-0">
+      <h3 class="m-0">
+        <i class="pi pi-history mr-2"></i>
+        Revision History
+      </h3>
+      <span class="text-color-secondary text-sm" *ngIf="totalRevisions > 0">
+        {{ totalRevisions }} revision{{ totalRevisions !== 1 ? 's' : '' }}
+      </span>
+    </div>
+  </ng-template>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && revisions.length === 0" class="p-3">
+    <div *ngFor="let _ of [1,2,3]" class="mb-3">
+      <p-skeleton width="100%" height="4rem"></p-skeleton>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && revisions.length === 0" class="text-center p-4">
+    <i class="pi pi-history text-4xl text-color-secondary mb-3"></i>
+    <p class="text-color-secondary m-0">No revision history available</p>
+  </div>
+
+  <!-- Revision Timeline -->
+  <p-timeline [value]="revisions" *ngIf="revisions.length > 0" align="left">
+    <ng-template pTemplate="marker" let-revision>
+      <span 
+        class="revision-marker flex align-items-center justify-content-center"
+        [style.background-color]="getRevisionTypeColor(revision.revisionType)"
+        [pTooltip]="getRevisionTypeLabel(revision.revisionType)">
+        <i [class]="getRevisionTypeIcon(revision.revisionType)" class="text-white text-sm"></i>
+      </span>
+    </ng-template>
+    <ng-template pTemplate="content" let-revision>
+      <div class="revision-item surface-ground border-round p-3 mb-2">
+        <div class="flex justify-content-between align-items-start flex-wrap gap-2">
+          <div class="flex-1">
+            <div class="flex align-items-center gap-2 mb-1">
+              <span class="font-semibold">v{{ revision.revisionNumber }}</span>
+              <p-tag 
+                [value]="getRevisionTypeLabel(revision.revisionType)"
+                [severity]="getRevisionTypeSeverity(revision.revisionType)"
+                styleClass="text-xs">
+              </p-tag>
+            </div>
+            <div class="text-sm text-color-secondary mb-1" *ngIf="revision.changeSummary">
+              {{ revision.changeSummary }}
+            </div>
+            <div class="text-xs text-color-secondary">
+              <span *ngIf="revision.creator">
+                by {{ revision.creator.name }}
+              </span>
+              <span *ngIf="!revision.creator && revision.createdBy">
+                by User
+              </span>
+              <span class="mx-1">•</span>
+              {{ formatDate(revision.createdAt) }}
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <p-button 
+              icon="pi pi-eye" 
+              [rounded]="true"
+              [text]="true"
+              severity="info"
+              size="small"
+              pTooltip="View Details"
+              (onClick)="viewRevisionDetail(revision)">
+            </p-button>
+            <p-button 
+              icon="pi pi-arrows-h" 
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              pTooltip="Compare"
+              (onClick)="openCompareDialog(revision)"
+              [disabled]="totalRevisions < 2">
+            </p-button>
+            <p-button 
+              icon="pi pi-history" 
+              [rounded]="true"
+              [text]="true"
+              severity="warning"
+              size="small"
+              pTooltip="Restore to this version"
+              (onClick)="openRestoreDialog(revision)"
+              [disabled]="revision.revisionNumber === revisions[0]?.revisionNumber">
+            </p-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-timeline>
+
+  <!-- Load More -->
+  <div class="text-center mt-3" *ngIf="hasMoreRevisions">
+    <p-button 
+      label="Load More" 
+      icon="pi pi-chevron-down"
+      [text]="true"
+      [loading]="loading"
+      (onClick)="loadMore()">
+    </p-button>
+  </div>
+</p-card>
+
+<!-- Revision Detail Dialog -->
+<p-dialog 
+  header="Revision Details" 
+  [(visible)]="displayDetailDialog" 
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [closable]="true">
+  
+  <div *ngIf="loadingDetail" class="p-4">
+    <p-skeleton width="100%" height="2rem" styleClass="mb-3"></p-skeleton>
+    <p-skeleton width="80%" height="1.5rem" styleClass="mb-2"></p-skeleton>
+    <p-skeleton width="60%" height="1.5rem"></p-skeleton>
+  </div>
+
+  <div *ngIf="!loadingDetail && selectedRevision" class="revision-detail">
+    <div class="flex align-items-center gap-2 mb-4">
+      <span class="text-2xl font-bold">v{{ selectedRevision.revisionNumber }}</span>
+      <p-tag 
+        [value]="getRevisionTypeLabel(selectedRevision.revisionType)"
+        [severity]="getRevisionTypeSeverity(selectedRevision.revisionType)">
+      </p-tag>
+    </div>
+
+    <div class="mb-4" *ngIf="selectedRevision.changeSummary">
+      <label class="text-sm text-color-secondary">Change Summary</label>
+      <p class="m-0 mt-1">{{ selectedRevision.changeSummary }}</p>
+    </div>
+
+    <!-- Snapshot Data -->
+    <div class="surface-ground border-round p-3 mb-4">
+      <label class="text-sm text-color-secondary font-semibold block mb-2">Item Snapshot</label>
+      <div class="grid">
+        <div class="col-6">
+          <div class="text-xs text-color-secondary">Name</div>
+          <div class="font-semibold">{{ selectedRevision.name }}</div>
+        </div>
+        <div class="col-6">
+          <div class="text-xs text-color-secondary">SKU</div>
+          <div class="font-semibold">{{ selectedRevision.sku }}</div>
+        </div>
+        <div class="col-6 mt-2">
+          <div class="text-xs text-color-secondary">Quantity</div>
+          <div class="font-semibold">{{ selectedRevision.quantity }}</div>
+        </div>
+        <div class="col-6 mt-2">
+          <div class="text-xs text-color-secondary">Unit Price</div>
+          <div class="font-semibold">{{ selectedRevision.unitPrice | currency }}</div>
+        </div>
+        <div class="col-6 mt-2">
+          <div class="text-xs text-color-secondary">Reorder Point</div>
+          <div class="font-semibold">{{ selectedRevision.reorderPoint }}</div>
+        </div>
+        <div class="col-6 mt-2">
+          <div class="text-xs text-color-secondary">Status</div>
+          <div class="font-semibold">{{ selectedRevision.status }}</div>
+        </div>
+      </div>
+      <div class="mt-3" *ngIf="selectedRevision.description">
+        <div class="text-xs text-color-secondary">Description</div>
+        <div>{{ selectedRevision.description }}</div>
+      </div>
+    </div>
+
+    <!-- Changes -->
+    <div *ngIf="selectedRevision.changes && (selectedRevision.changes | keyvalue).length > 0">
+      <label class="text-sm text-color-secondary font-semibold block mb-2">Changes in this revision</label>
+      <p-table [value]="selectedRevision.changes | keyvalue" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Field</th>
+            <th>Previous Value</th>
+            <th>New Value</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-change>
+          <tr>
+            <td class="font-semibold">{{ formatFieldName(change.key) }}</td>
+            <td class="text-color-secondary">{{ formatValue(change.value.old) }}</td>
+            <td>{{ formatValue(change.value.new) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="mt-4 text-sm text-color-secondary">
+      <span *ngIf="selectedRevision.creator">
+        Created by {{ selectedRevision.creator.name }}
+      </span>
+      <span class="mx-1">•</span>
+      {{ formatDate(selectedRevision.createdAt) }}
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" [text]="true" (onClick)="displayDetailDialog = false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Compare Dialog -->
+<p-dialog 
+  header="Compare Revisions" 
+  [(visible)]="displayCompareDialog" 
+  [modal]="true"
+  [style]="{width: '800px'}"
+  [closable]="true">
+  
+  <div class="mb-4">
+    <label class="text-sm text-color-secondary block mb-2">
+      Comparing revision v{{ compareFromRev }} with:
+    </label>
+    <div class="flex flex-wrap gap-2">
+      <p-button 
+        *ngFor="let rev of getOtherRevisions()"
+        [label]="'v' + rev.revisionNumber"
+        [outlined]="compareToRev !== rev.revisionNumber"
+        [severity]="compareToRev === rev.revisionNumber ? 'primary' : 'secondary'"
+        size="small"
+        (onClick)="compareWithRevision(rev.revisionNumber)">
+      </p-button>
+    </div>
+  </div>
+
+  <div *ngIf="loadingCompare" class="p-4 text-center">
+    <i class="pi pi-spin pi-spinner text-2xl"></i>
+    <p class="text-color-secondary mt-2">Loading comparison...</p>
+  </div>
+
+  <div *ngIf="compareResult && !loadingCompare">
+    <div class="surface-ground border-round p-3 mb-3">
+      <div class="flex justify-content-between">
+        <div>
+          <span class="text-sm text-color-secondary">From</span>
+          <div class="font-semibold">v{{ compareResult.fromRevision.revisionNumber }}</div>
+          <div class="text-xs text-color-secondary">{{ formatDate(compareResult.fromRevision.createdAt) }}</div>
+        </div>
+        <div class="flex align-items-center">
+          <i class="pi pi-arrow-right text-2xl text-color-secondary"></i>
+        </div>
+        <div class="text-right">
+          <span class="text-sm text-color-secondary">To</span>
+          <div class="font-semibold">v{{ compareResult.toRevision.revisionNumber }}</div>
+          <div class="text-xs text-color-secondary">{{ formatDate(compareResult.toRevision.createdAt) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="getChangedFields().length === 0" class="text-center p-4 text-color-secondary">
+      <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
+      <p class="m-0">No differences found between these revisions</p>
+    </div>
+
+    <p-table [value]="getChangedFields()" *ngIf="getChangedFields().length > 0" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 25%">Field</th>
+          <th style="width: 37.5%">v{{ compareResult.fromRevision.revisionNumber }}</th>
+          <th style="width: 37.5%">v{{ compareResult.toRevision.revisionNumber }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-field>
+        <tr>
+          <td class="font-semibold">{{ formatFieldName(field) }}</td>
+          <td class="text-color-secondary">{{ formatValue(compareResult!.differences[field].old) }}</td>
+          <td>{{ formatValue(compareResult!.differences[field].new) }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" [text]="true" (onClick)="displayCompareDialog = false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Restore Dialog -->
+<p-dialog 
+  header="Restore Revision" 
+  [(visible)]="displayRestoreDialog" 
+  [modal]="true"
+  [style]="{width: '450px'}"
+  [closable]="true">
+  
+  <div class="mb-4">
+    <p class="m-0 mb-3">
+      You are about to restore this item to <strong>revision v{{ selectedRevision?.revisionNumber }}</strong>.
+      This will overwrite the current item data with the values from that revision.
+    </p>
+    <div class="p-3 surface-ground border-round">
+      <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+      <span class="text-sm">A new "Restored" revision will be created to track this change.</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="restoreReason" class="block text-sm text-color-secondary mb-2">
+      Reason for restore (optional)
+    </label>
+    <input 
+      pInputText 
+      id="restoreReason" 
+      [(ngModel)]="restoreReason"
+      class="w-full"
+      placeholder="Enter reason for restoring this revision">
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancel" 
+      [text]="true" 
+      (onClick)="displayRestoreDialog = false"
+      [disabled]="restoring">
+    </p-button>
+    <p-button 
+      label="Restore" 
+      icon="pi pi-history"
+      severity="warning"
+      [loading]="restoring"
+      (onClick)="confirmRestore()">
+    </p-button>
+  </ng-template>
+</p-dialog>

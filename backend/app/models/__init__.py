@@ -8,6 +8,7 @@ from app.models.location import Location
 from app.models.inventory import InventoryItem
 from app.models.stock_movement import StockMovement, MovementType
 from app.models.audit_log import AuditLog, AuditAction, EntityType
+from app.models.item_revision import ItemRevision, RevisionType
 
 __all__ = [
     "Tenant",
@@ -24,4 +25,6 @@ __all__ = [
     "AuditAction",
     "EntityType",
     "CategoryAttribute",
+    "ItemRevision",
+    "RevisionType",
 ]
