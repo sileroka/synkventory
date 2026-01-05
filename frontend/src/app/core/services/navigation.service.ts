@@ -66,7 +66,8 @@ export class NavigationService {
           children: [
             { id: 'inventory-list', label: 'All Items', icon: 'pi-list', route: '/inventory' },
             { id: 'inventory-add', label: 'Add Item', icon: 'pi-plus', route: '/inventory/new' },
-            { id: 'inventory-import', label: 'Import', icon: 'pi-upload', route: '/inventory/import' }
+            { id: 'inventory-import', label: 'Import', icon: 'pi-upload', route: '/inventory/import' },
+            { id: 'bill-of-materials', label: 'Bill of Materials', icon: 'pi-sitemap', route: '/bill-of-materials' }
           ]
         },
         {

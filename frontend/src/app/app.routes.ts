@@ -10,6 +10,7 @@ import { StockMovementReportComponent } from './features/reports/components/stoc
 import { LoginComponent } from './features/auth/login/login.component';
 import { UserListComponent } from './features/users/user-list.component';
 import { LandingComponent } from './features/landing/landing.component';
+import { BomListComponent } from './features/bill-of-materials/bom-list.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
@@ -53,6 +54,7 @@ export const routes: Routes = [
   { path: 'inventory/new', redirectTo: 'inventory', pathMatch: 'full' },
   { path: 'inventory/import', redirectTo: 'inventory', pathMatch: 'full' },
   { path: 'inventory/:id', component: InventoryDetailComponent, canActivate: [authGuard] },
+  { path: 'bill-of-materials', component: BomListComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationListComponent, canActivate: [authGuard] },
   { path: 'locations/new', redirectTo: 'locations', pathMatch: 'full' },
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },
