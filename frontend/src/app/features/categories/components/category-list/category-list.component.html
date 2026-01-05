@@ -43,6 +43,7 @@
             [text]="true"
             severity="secondary"
             pTooltip="Custom Attributes"
+            tooltipPosition="left"
             (onClick)="openAttributesPanel(rowData)">
           </p-button>
           <p-button
@@ -51,6 +52,7 @@
             [text]="true"
             severity="success"
             pTooltip="Add Child"
+            tooltipPosition="left"
             (onClick)="showAddDialog(rowData)">
           </p-button>
           <p-button
@@ -58,6 +60,8 @@
             [rounded]="true"
             [text]="true"
             severity="info"
+            pTooltip="Edit"
+            tooltipPosition="left"
             (onClick)="showEditDialog(rowData)">
           </p-button>
           <p-button
@@ -65,6 +69,8 @@
             [rounded]="true"
             [text]="true"
             severity="danger"
+            pTooltip="Delete"
+            tooltipPosition="left"
             (onClick)="deleteCategory(rowData)">
           </p-button>
         </td>

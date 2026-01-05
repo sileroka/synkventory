@@ -19,6 +19,7 @@
         severity="secondary"
         (onClick)="close()"
         pTooltip="Close"
+        tooltipPosition="left"
       />
     </div>
   </header>
@@ -80,6 +81,7 @@
                 [text]="true"
                 (onClick)="showEditDialog(attr)"
                 pTooltip="Edit"
+                tooltipPosition="left"
               />
               <p-button
                 [icon]="attr.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'"
@@ -87,6 +89,7 @@
                 [severity]="attr.isActive ? 'secondary' : 'success'"
                 (onClick)="toggleActive(attr)"
                 [pTooltip]="attr.isActive ? 'Deactivate' : 'Activate'"
+                tooltipPosition="left"
               />
               <p-button
                 icon="pi pi-trash"
@@ -94,6 +97,7 @@
                 severity="danger"
                 (onClick)="confirmDelete(attr)"
                 pTooltip="Delete"
+                tooltipPosition="left"
               />
             </div>
           </td>

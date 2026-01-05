@@ -554,3 +554,51 @@ a {
     text-decoration: underline;
   }
 }
+
+// =============================================================================
+// PrimeNG Tooltip Overrides - Prevent edge cutoff
+// =============================================================================
+.p-tooltip {
+  // Constrain tooltip width and ensure it stays within viewport
+  max-width: min(300px, calc(100vw - 20px));
+  word-wrap: break-word;
+  
+  // Ensure tooltip is always visible within viewport
+  &[style*="left"] {
+    max-width: min(300px, calc(100vw - 20px));
+  }
+
+  .p-tooltip-text {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    background: var(--synk-neutral-900);
+    color: var(--synk-white);
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  // Arrow colors for all positions
+  &.p-tooltip-right .p-tooltip-arrow {
+    border-right-color: var(--synk-neutral-900);
+  }
+
+  &.p-tooltip-left .p-tooltip-arrow {
+    border-left-color: var(--synk-neutral-900);
+  }
+
+  &.p-tooltip-top .p-tooltip-arrow {
+    border-top-color: var(--synk-neutral-900);
+  }
+
+  &.p-tooltip-bottom .p-tooltip-arrow {
+    border-bottom-color: var(--synk-neutral-900);
+  }
+}
+
+// Ensure tooltips appended to body respect viewport boundaries
+body > .p-tooltip {
+  // Force tooltip to stay within viewport using CSS containment
+  contain: layout;
+}

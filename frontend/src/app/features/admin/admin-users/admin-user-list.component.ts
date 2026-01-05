@@ -83,6 +83,7 @@ import { AdminApiService, AdminUser, AdminUserCreate } from '../../../core/servi
                 [rounded]="true"
                 [text]="true"
                 pTooltip="Edit"
+                tooltipPosition="left"
                 (onClick)="editAdmin(admin)"
               />
               <p-button
@@ -91,6 +92,7 @@ import { AdminApiService, AdminUser, AdminUserCreate } from '../../../core/servi
                 [text]="true"
                 [severity]="admin.is_active ? 'warning' : 'success'"
                 [pTooltip]="admin.is_active ? 'Deactivate' : 'Activate'"
+                tooltipPosition="left"
                 (onClick)="toggleStatus(admin)"
               />
             </td>

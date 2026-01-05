@@ -81,6 +81,7 @@
               severity="info"
               size="small"
               pTooltip="View Details"
+              tooltipPosition="left"
               (onClick)="viewRevisionDetail(revision)"
             >
             </p-button>
@@ -91,6 +92,7 @@
               severity="secondary"
               size="small"
               pTooltip="Compare"
+              tooltipPosition="left"
               (onClick)="openCompareDialog(revision)"
               [disabled]="totalRevisions < 2"
             >
@@ -102,9 +104,11 @@
               severity="warning"
               size="small"
               pTooltip="Restore to this version"
+              tooltipPosition="left"
               (onClick)="openRestoreDialog(revision)"
               [disabled]="
-                revisions.length > 0 && revision.revisionNumber === revisions[0].revisionNumber
+                revisions.length > 0 &&
+                revision.revisionNumber === revisions[0].revisionNumber
               "
             >
             </p-button>

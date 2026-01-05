@@ -86,6 +86,7 @@
                 [severity]="user.is_active ? 'warning' : 'success'"
                 (onClick)="toggleUserStatus(user)"
                 [pTooltip]="user.is_active ? 'Deactivate' : 'Activate'"
+                tooltipPosition="left"
               />
               <p-button
                 icon="pi pi-trash"
@@ -93,6 +94,7 @@
                 severity="danger"
                 (onClick)="confirmDelete(user)"
                 pTooltip="Delete"
+                tooltipPosition="left"
               />
             </div>
           </td>

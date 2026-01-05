@@ -288,6 +288,7 @@
             [text]="true"
             severity="secondary"
             pTooltip="View Details"
+            tooltipPosition="left"
             (onClick)="viewItemDetail(item)">
           </p-button>
           <p-button
@@ -296,6 +297,7 @@
             [text]="true"
             severity="help"
             pTooltip="Quick Adjust"
+            tooltipPosition="left"
             (onClick)="showQuickAdjustDialog(item)">
           </p-button>
           <p-button
@@ -304,6 +306,7 @@
             [text]="true"
             severity="info"
             pTooltip="Edit"
+            tooltipPosition="left"
             (onClick)="showEditDialog(item)">
           </p-button>
           <p-button
@@ -312,6 +315,7 @@
             [text]="true"
             severity="danger"
             pTooltip="Delete"
+            tooltipPosition="left"
             (onClick)="deleteItem(item)">
           </p-button>
         </td>
@@ -488,7 +492,8 @@
             class="remove-image-btn absolute"
             [style]="{'position': 'absolute', 'top': '5px', 'right': '5px'}"
             (onClick)="removeImage()"
-            pTooltip="Remove Image">
+            pTooltip="Remove Image"
+            tooltipPosition="left">
           </p-button>
         </div>
 

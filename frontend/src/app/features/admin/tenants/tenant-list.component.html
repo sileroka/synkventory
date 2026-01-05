@@ -53,6 +53,7 @@
                 [text]="true"
                 [routerLink]="['/admin/tenants', tenant.id]"
                 pTooltip="Manage Users"
+                tooltipPosition="left"
               />
               <p-button
                 [icon]="tenant.is_active ? 'pi pi-ban' : 'pi pi-check'"
@@ -60,6 +61,7 @@
                 [severity]="tenant.is_active ? 'warning' : 'success'"
                 (onClick)="toggleTenantStatus(tenant)"
                 [pTooltip]="tenant.is_active ? 'Deactivate' : 'Activate'"
+                tooltipPosition="left"
               />
               @if (isSuperAdmin()) {
                 <p-button
@@ -68,6 +70,7 @@
                   severity="danger"
                   (onClick)="confirmDelete(tenant)"
                   pTooltip="Delete"
+                  tooltipPosition="left"
                 />
               }
             </div>
