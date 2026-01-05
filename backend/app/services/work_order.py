@@ -129,8 +129,8 @@ class WorkOrderService:
         elif not include_completed:
             query = query.filter(
                 WorkOrder.status.notin_([
-                    WorkOrderStatus.COMPLETED,
-                    WorkOrderStatus.CANCELLED,
+                    WorkOrderStatus.COMPLETED.value,
+                    WorkOrderStatus.CANCELLED.value,
                 ])
             )
         
@@ -152,10 +152,10 @@ class WorkOrderService:
             .order_by(
                 # Priority ordering: urgent first
                 case(
-                    (WorkOrder.priority == WorkOrderPriority.URGENT, 0),
-                    (WorkOrder.priority == WorkOrderPriority.HIGH, 1),
-                    (WorkOrder.priority == WorkOrderPriority.NORMAL, 2),
-                    (WorkOrder.priority == WorkOrderPriority.LOW, 3),
+                    (WorkOrder.priority == WorkOrderPriority.URGENT.value, 0),
+                    (WorkOrder.priority == WorkOrderPriority.HIGH.value, 1),
+                    (WorkOrder.priority == WorkOrderPriority.NORMAL.value, 2),
+                    (WorkOrder.priority == WorkOrderPriority.LOW.value, 3),
                 ),
                 WorkOrder.due_date.asc().nulls_last(),
                 WorkOrder.created_at.desc(),
@@ -691,8 +691,8 @@ class WorkOrderService:
             .filter(
                 WorkOrder.due_date < now,
                 WorkOrder.status.notin_([
-                    WorkOrderStatus.COMPLETED,
-                    WorkOrderStatus.CANCELLED,
+                    WorkOrderStatus.COMPLETED.value,
+                    WorkOrderStatus.CANCELLED.value,
                 ]),
             )
             .count()
@@ -716,8 +716,8 @@ class WorkOrderService:
         if not include_completed:
             query = query.filter(
                 WorkOrder.status.notin_([
-                    WorkOrderStatus.COMPLETED,
-                    WorkOrderStatus.CANCELLED,
+                    WorkOrderStatus.COMPLETED.value,
+                    WorkOrderStatus.CANCELLED.value,
                 ])
             )
         
