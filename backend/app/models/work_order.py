@@ -73,13 +73,21 @@ class WorkOrder(Base):
     
     # Status and priority
     status = Column(
-        SQLEnum(WorkOrderStatus, name="work_order_status"),
+        SQLEnum(
+            WorkOrderStatus,
+            name="work_order_status",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=WorkOrderStatus.DRAFT,
         index=True,
     )
     priority = Column(
-        SQLEnum(WorkOrderPriority, name="work_order_priority"),
+        SQLEnum(
+            WorkOrderPriority,
+            name="work_order_priority",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=WorkOrderPriority.NORMAL,
     )
