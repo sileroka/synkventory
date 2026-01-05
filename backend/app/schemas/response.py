@@ -74,3 +74,8 @@ class MessageResponse(BaseModel):
 
     message: str
     meta: ResponseMeta = Field(default_factory=ResponseMeta)
+
+
+# Aliases for backward compatibility
+APIResponse = DataResponse
+PaginatedResponse = ListResponse
