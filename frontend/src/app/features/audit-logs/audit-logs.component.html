@@ -106,7 +106,7 @@
             {{ formatDateTime(log.createdAt) }}
           </td>
           <td>
-            <span class="user-email">{{ log.userEmail || 'System' }}</span>
+            <span class="user-email">{{ log.userEmail || "System" }}</span>
           </td>
           <td>
             <p-tag
@@ -116,15 +116,17 @@
           </td>
           <td>
             <div class="entity-info">
-              <span class="entity-type">{{ formatEntityType(log.entityType) }}</span>
+              <span class="entity-type">{{
+                formatEntityType(log.entityType)
+              }}</span>
               @if (log.entityName) {
-                <span class="entity-name">{{ log.entityName }}</span>
+              <span class="entity-name">{{ log.entityName }}</span>
               }
             </div>
           </td>
           <td>
             <span class="ip-address" [pTooltip]="log.userAgent || 'Unknown'">
-              {{ log.ipAddress || '—' }}
+              {{ log.ipAddress || "—" }}
             </span>
           </td>
           <td>
@@ -159,58 +161,61 @@
   [style]="{ width: '600px' }"
 >
   @if (selectedLog()) {
-    <div class="detail-content">
-      <div class="detail-row">
-        <label>Time</label>
-        <span>{{ selectedLog()!.createdAt | date: 'medium' }}</span>
-      </div>
-      <div class="detail-row">
-        <label>User</label>
-        <span>{{ selectedLog()!.userEmail || 'System' }}</span>
-      </div>
-      <div class="detail-row">
-        <label>Action</label>
-        <p-tag
-          [value]="getActionLabel(selectedLog()!.action)"
-          [severity]="getActionSeverity(selectedLog()!.action)"
-        />
-      </div>
-      <div class="detail-row">
-        <label>Entity Type</label>
-        <span>{{ formatEntityType(selectedLog()!.entityType) }}</span>
-      </div>
-      @if (selectedLog()!.entityName) {
-        <div class="detail-row">
-          <label>Entity Name</label>
-          <span>{{ selectedLog()!.entityName }}</span>
-        </div>
-      }
-      @if (selectedLog()!.entityId) {
-        <div class="detail-row">
-          <label>Entity ID</label>
-          <code>{{ selectedLog()!.entityId }}</code>
-        </div>
-      }
-      <div class="detail-row">
-        <label>IP Address</label>
-        <span>{{ selectedLog()!.ipAddress || '—' }}</span>
-      </div>
-      @if (selectedLog()!.userAgent) {
-        <div class="detail-row">
-          <label>User Agent</label>
-          <span class="user-agent">{{ selectedLog()!.userAgent }}</span>
-        </div>
-      }
-      @if (selectedLog()!.extraData) {
-        <div class="detail-row extra-data">
-          <label>Additional Data</label>
-          <pre>{{ formatExtraData(selectedLog()!.extraData) }}</pre>
-        </div>
-      }
+  <div class="detail-content">
+    <div class="detail-row">
+      <label>Time</label>
+      <span>{{ selectedLog()!.createdAt | date : "medium" }}</span>
     </div>
+    <div class="detail-row">
+      <label>User</label>
+      <span>{{ selectedLog()!.userEmail || "System" }}</span>
+    </div>
+    <div class="detail-row">
+      <label>Action</label>
+      <p-tag
+        [value]="getActionLabel(selectedLog()!.action)"
+        [severity]="getActionSeverity(selectedLog()!.action)"
+      />
+    </div>
+    <div class="detail-row">
+      <label>Entity Type</label>
+      <span>{{ formatEntityType(selectedLog()!.entityType) }}</span>
+    </div>
+    @if (selectedLog()!.entityName) {
+    <div class="detail-row">
+      <label>Entity Name</label>
+      <span>{{ selectedLog()!.entityName }}</span>
+    </div>
+    } @if (selectedLog()!.entityId) {
+    <div class="detail-row">
+      <label>Entity ID</label>
+      <code>{{ selectedLog()!.entityId }}</code>
+    </div>
+    }
+    <div class="detail-row">
+      <label>IP Address</label>
+      <span>{{ selectedLog()!.ipAddress || "—" }}</span>
+    </div>
+    @if (selectedLog()!.userAgent) {
+    <div class="detail-row">
+      <label>User Agent</label>
+      <span class="user-agent">{{ selectedLog()!.userAgent }}</span>
+    </div>
+    } @if (selectedLog()!.extraData) {
+    <div class="detail-row extra-data">
+      <label>Additional Data</label>
+      <pre>{{ formatExtraData(selectedLog()!.extraData) }}</pre>
+    </div>
+    }
+  </div>
   }
 
   <ng-template pTemplate="footer">
-    <p-button label="Close" severity="secondary" [text]="true" (onClick)="showDetailDialog.set(false)" />
+    <p-button
+      label="Close"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showDetailDialog.set(false)"
+    />
   </ng-template>
 </p-dialog>
