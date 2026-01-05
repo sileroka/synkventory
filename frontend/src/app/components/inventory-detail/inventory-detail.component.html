@@ -2,7 +2,11 @@
 <p-confirmDialog></p-confirmDialog>
 
 <!-- Breadcrumb -->
-<p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" styleClass="mb-4"></p-breadcrumb>
+<p-breadcrumb
+  [model]="breadcrumbItems"
+  [home]="breadcrumbHome"
+  styleClass="mb-4"
+></p-breadcrumb>
 
 <!-- Loading State -->
 <div *ngIf="loading" class="grid">
@@ -11,7 +15,7 @@
       <p-skeleton width="60%" height="2rem" styleClass="mb-3"></p-skeleton>
       <p-skeleton width="30%" height="1.5rem" styleClass="mb-4"></p-skeleton>
       <div class="grid">
-        <div class="col-6 md:col-3" *ngFor="let _ of [1,2,3,4]">
+        <div class="col-6 md:col-3" *ngFor="let _ of [1, 2, 3, 4]">
           <p-skeleton width="100%" height="4rem"></p-skeleton>
         </div>
       </div>
@@ -34,7 +38,8 @@
           <p-tag
             [value]="getStatusLabel(item.status)"
             [severity]="getStatusSeverity(item.status)"
-            styleClass="text-lg px-3 py-2">
+            styleClass="text-lg px-3 py-2"
+          >
           </p-tag>
         </div>
       </ng-template>
@@ -44,9 +49,11 @@
         <div class="col-6 md:col-3">
           <div class="surface-ground border-round p-3 h-full">
             <div class="text-sm text-color-secondary mb-1">Quantity</div>
-            <div class="text-3xl font-bold"
+            <div
+              class="text-3xl font-bold"
               [class.text-red-500]="item.status === 'out_of_stock'"
-              [class.text-orange-500]="item.status === 'low_stock'">
+              [class.text-orange-500]="item.status === 'low_stock'"
+            >
               {{ item.quantity }}
             </div>
           </div>
@@ -64,7 +71,9 @@
         <div class="col-6 md:col-3">
           <div class="surface-ground border-round p-3 h-full">
             <div class="text-sm text-color-secondary mb-1">Unit Price</div>
-            <div class="text-3xl font-bold">{{ item.unitPrice | currency }}</div>
+            <div class="text-3xl font-bold">
+              {{ item.unitPrice | currency }}
+            </div>
           </div>
         </div>
 
@@ -72,7 +81,9 @@
         <div class="col-6 md:col-3">
           <div class="surface-ground border-round p-3 h-full">
             <div class="text-sm text-color-secondary mb-1">Total Value</div>
-            <div class="text-3xl font-bold text-primary">{{ item.quantity * item.unitPrice | currency }}</div>
+            <div class="text-3xl font-bold text-primary">
+              {{ item.quantity * item.unitPrice | currency }}
+            </div>
           </div>
         </div>
       </div>
@@ -87,11 +98,11 @@
       <div class="grid mt-4">
         <div class="col-6 md:col-3">
           <div class="text-sm text-color-secondary mb-1">Category</div>
-          <div class="font-semibold">{{ item.category?.name || '-' }}</div>
+          <div class="font-semibold">{{ item.category?.name || "-" }}</div>
         </div>
         <div class="col-6 md:col-3">
           <div class="text-sm text-color-secondary mb-1">Default Location</div>
-          <div class="font-semibold">{{ item.location?.name || '-' }}</div>
+          <div class="font-semibold">{{ item.location?.name || "-" }}</div>
         </div>
         <div class="col-6 md:col-3">
           <div class="text-sm text-color-secondary mb-1">Created</div>
@@ -109,13 +120,15 @@
             label="Edit"
             icon="pi pi-pencil"
             severity="info"
-            (onClick)="editItem()">
+            (onClick)="editItem()"
+          >
           </p-button>
           <p-button
             label="Adjust Stock"
             icon="pi pi-sliders-h"
             severity="help"
-            (onClick)="openQuickAdjust()">
+            (onClick)="openQuickAdjust()"
+          >
           </p-button>
           <p-button
             label="Transfer"
@@ -123,14 +136,16 @@
             severity="secondary"
             [outlined]="true"
             (onClick)="openTransfer()"
-            [disabled]="locationQuantities.length === 0">
+            [disabled]="locationQuantities.length === 0"
+          >
           </p-button>
           <p-button
             label="Delete"
             icon="pi pi-trash"
             severity="danger"
             [outlined]="true"
-            (onClick)="deleteItem()">
+            (onClick)="deleteItem()"
+          >
           </p-button>
         </div>
       </ng-template>
@@ -150,27 +165,41 @@
         <ng-template pTemplate="body" let-locQty>
           <tr>
             <td>
-              <span class="font-semibold">{{ locQty.location?.name || 'Unknown' }}</span>
-              <span class="text-color-secondary ml-2" *ngIf="locQty.location?.code">({{ locQty.location?.code }})</span>
+              <span class="font-semibold">{{
+                locQty.location?.name || "Unknown"
+              }}</span>
+              <span
+                class="text-color-secondary ml-2"
+                *ngIf="locQty.location?.code"
+                >({{ locQty.location?.code }})</span
+              >
             </td>
-            <td>{{ locQty.binLocation || '-' }}</td>
+            <td>{{ locQty.binLocation || "-" }}</td>
             <td class="text-right font-semibold">{{ locQty.quantity }}</td>
-            <td class="text-right">{{ locQty.quantity * (item!.unitPrice) | currency }}</td>
+            <td class="text-right">
+              {{ locQty.quantity * item!.unitPrice | currency }}
+            </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
             <td colspan="4" class="text-center text-color-secondary p-4">
               <i class="pi pi-info-circle mr-2"></i>
-              No location quantities recorded. Use stock movements to add inventory to locations.
+              No location quantities recorded. Use stock movements to add
+              inventory to locations.
             </td>
           </tr>
         </ng-template>
-        <ng-template pTemplate="footer" *ngIf="locationQuantities.length > 0 && item">
+        <ng-template
+          pTemplate="footer"
+          *ngIf="locationQuantities.length > 0 && item"
+        >
           <tr>
             <td colspan="2" class="font-bold">Total</td>
             <td class="text-right font-bold">{{ item.quantity }}</td>
-            <td class="text-right font-bold">{{ item.quantity * item.unitPrice | currency }}</td>
+            <td class="text-right font-bold">
+              {{ item.quantity * item.unitPrice | currency }}
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -186,43 +215,67 @@
           <i class="pi pi-clock mr-2"></i>
           <span>Activity</span>
         </ng-template>
-        
+
         <div *ngIf="loadingMovements" class="p-3">
-          <div *ngFor="let _ of [1,2,3]" class="mb-3">
+          <div *ngFor="let _ of [1, 2, 3]" class="mb-3">
             <p-skeleton width="100%" height="3rem"></p-skeleton>
           </div>
         </div>
 
         <div class="flex justify-content-end mb-2" *ngIf="totalMovements > 10">
-          <a routerLink="/stock-movements" [queryParams]="{itemId: item.id}" class="text-primary no-underline text-sm">
+          <a
+            routerLink="/stock-movements"
+            [queryParams]="{ itemId: item.id }"
+            class="text-primary no-underline text-sm"
+          >
             View all ({{ totalMovements }})
           </a>
         </div>
 
-        <p-timeline [value]="recentMovements" *ngIf="!loadingMovements && recentMovements.length > 0">
+        <p-timeline
+          [value]="recentMovements"
+          *ngIf="!loadingMovements && recentMovements.length > 0"
+        >
           <ng-template pTemplate="marker" let-movement>
             <span
               class="flex align-items-center justify-content-center border-circle"
               [style.backgroundColor]="getMovementColor(movement.movementType)"
-              style="width: 2rem; height: 2rem;">
-              <i [class]="getMovementIcon(movement.movementType)" class="text-white text-sm"></i>
+              style="width: 2rem; height: 2rem"
+            >
+              <i
+                [class]="getMovementIcon(movement.movementType)"
+                class="text-white text-sm"
+              ></i>
             </span>
           </ng-template>
           <ng-template pTemplate="content" let-movement>
             <div class="mb-3">
               <div class="flex align-items-center gap-2 mb-1">
-                <span class="font-semibold">{{ getMovementLabel(movement.movementType) }}</span>
+                <span class="font-semibold">{{
+                  getMovementLabel(movement.movementType)
+                }}</span>
                 <span
                   class="font-bold"
                   [class.text-green-500]="movement.movementType === 'receive'"
-                  [class.text-red-500]="movement.movementType === 'ship'">
-                  {{ movement.movementType === 'ship' ? '-' : '+' }}{{ movement.quantity }}
+                  [class.text-red-500]="movement.movementType === 'ship'"
+                >
+                  {{ movement.movementType === "ship" ? "-" : "+"
+                  }}{{ movement.quantity }}
                 </span>
               </div>
-              <div class="text-sm text-color-secondary" *ngIf="movement.fromLocation || movement.toLocation">
-                <span *ngIf="movement.fromLocation">From: {{ movement.fromLocation.name }}</span>
-                <span *ngIf="movement.fromLocation && movement.toLocation"> → </span>
-                <span *ngIf="movement.toLocation">To: {{ movement.toLocation.name }}</span>
+              <div
+                class="text-sm text-color-secondary"
+                *ngIf="movement.fromLocation || movement.toLocation"
+              >
+                <span *ngIf="movement.fromLocation"
+                  >From: {{ movement.fromLocation.name }}</span
+                >
+                <span *ngIf="movement.fromLocation && movement.toLocation">
+                  →
+                </span>
+                <span *ngIf="movement.toLocation"
+                  >To: {{ movement.toLocation.name }}</span
+                >
               </div>
               <div class="text-sm text-color-secondary" *ngIf="movement.notes">
                 {{ movement.notes }}
@@ -234,7 +287,10 @@
           </ng-template>
         </p-timeline>
 
-        <div *ngIf="!loadingMovements && recentMovements.length === 0" class="text-center text-color-secondary p-4">
+        <div
+          *ngIf="!loadingMovements && recentMovements.length === 0"
+          class="text-center text-color-secondary p-4"
+        >
           <i class="pi pi-history text-4xl mb-3 block"></i>
           <p class="m-0">No stock movements recorded yet.</p>
         </div>
@@ -246,10 +302,8 @@
           <i class="pi pi-history mr-2"></i>
           <span>Revisions</span>
         </ng-template>
-        
-        <app-revision-history 
-          *ngIf="item?.id" 
-          [itemId]="item!.id!">
+
+        <app-revision-history *ngIf="item?.id" [itemId]="item!.id!">
         </app-revision-history>
       </p-tabPanel>
     </p-tabView>
@@ -261,10 +315,10 @@
   [(visible)]="displayQuickAdjustDialog"
   header="Adjust Quantity"
   [modal]="true"
-  [style]="{width: '350px'}"
+  [style]="{ width: '350px' }"
   [draggable]="false"
-  [resizable]="false">
-
+  [resizable]="false"
+>
   <div class="flex flex-column gap-3" *ngIf="item">
     <div class="surface-ground border-round p-3 text-center">
       <div class="text-sm text-color-secondary mb-1">Current Quantity</div>
@@ -281,21 +335,35 @@
         [showButtons]="true"
         buttonLayout="horizontal"
         incrementButtonIcon="pi pi-plus"
-        decrementButtonIcon="pi pi-minus">
+        decrementButtonIcon="pi pi-minus"
+      >
       </p-inputNumber>
     </div>
 
     <div>
       <label for="adjustReason" class="block mb-2">Reason (optional)</label>
-      <input pInputText id="adjustReason" [(ngModel)]="quickAdjustReason"
-        class="w-full" placeholder="e.g., Inventory count correction" />
+      <input
+        pInputText
+        id="adjustReason"
+        [(ngModel)]="quickAdjustReason"
+        class="w-full"
+        placeholder="e.g., Inventory count correction"
+      />
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayQuickAdjustDialog = false"
-      severity="secondary"></p-button>
-    <p-button label="Save" icon="pi pi-check" (onClick)="saveQuickAdjust()"></p-button>
+    <p-button
+      label="Cancel"
+      icon="pi pi-times"
+      (onClick)="displayQuickAdjustDialog = false"
+      severity="secondary"
+    ></p-button>
+    <p-button
+      label="Save"
+      icon="pi pi-check"
+      (onClick)="saveQuickAdjust()"
+    ></p-button>
   </ng-template>
 </p-dialog>
 
@@ -304,10 +372,10 @@
   [(visible)]="displayTransferDialog"
   header="Transfer Stock"
   [modal]="true"
-  [style]="{width: '400px'}"
+  [style]="{ width: '400px' }"
   [draggable]="false"
-  [resizable]="false">
-
+  [resizable]="false"
+>
   <div class="flex flex-column gap-3" *ngIf="item">
     <div class="surface-ground border-round p-3">
       <div class="text-sm text-color-secondary mb-1">Item</div>
@@ -316,7 +384,9 @@
     </div>
 
     <div>
-      <label for="fromLocation" class="block mb-2 font-medium">From Location *</label>
+      <label for="fromLocation" class="block mb-2 font-medium"
+        >From Location *</label
+      >
       <p-dropdown
         id="fromLocation"
         [(ngModel)]="transferFromLocationId"
@@ -326,7 +396,8 @@
         placeholder="Select source location"
         class="w-full"
         styleClass="w-full"
-        appendTo="body">
+        appendTo="body"
+      >
       </p-dropdown>
       <small class="text-color-secondary" *ngIf="transferFromLocationId">
         Available: {{ getMaxTransferQuantity() }}
@@ -334,7 +405,9 @@
     </div>
 
     <div>
-      <label for="toLocation" class="block mb-2 font-medium">To Location *</label>
+      <label for="toLocation" class="block mb-2 font-medium"
+        >To Location *</label
+      >
       <p-dropdown
         id="toLocation"
         [(ngModel)]="transferToLocationId"
@@ -344,7 +417,8 @@
         placeholder="Select destination location"
         class="w-full"
         styleClass="w-full"
-        appendTo="body">
+        appendTo="body"
+      >
       </p-dropdown>
     </div>
 
@@ -356,25 +430,41 @@
         class="w-full"
         [min]="1"
         [max]="getMaxTransferQuantity()"
-        [showButtons]="true">
+        [showButtons]="true"
+      >
       </p-inputNumber>
     </div>
 
     <div>
       <label for="transferNotes" class="block mb-2">Notes (optional)</label>
-      <input pInputText id="transferNotes" [(ngModel)]="transferNotes"
-        class="w-full" placeholder="Transfer notes..." />
+      <input
+        pInputText
+        id="transferNotes"
+        [(ngModel)]="transferNotes"
+        class="w-full"
+        placeholder="Transfer notes..."
+      />
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayTransferDialog = false"
-      severity="secondary"></p-button>
+    <p-button
+      label="Cancel"
+      icon="pi pi-times"
+      (onClick)="displayTransferDialog = false"
+      severity="secondary"
+    ></p-button>
     <p-button
       label="Transfer"
       icon="pi pi-arrows-h"
       (onClick)="saveTransfer()"
-      [disabled]="!transferFromLocationId || !transferToLocationId || transferQuantity < 1 || transferFromLocationId === transferToLocationId">
+      [disabled]="
+        !transferFromLocationId ||
+        !transferToLocationId ||
+        transferQuantity < 1 ||
+        transferFromLocationId === transferToLocationId
+      "
+    >
     </p-button>
   </ng-template>
 </p-dialog>
