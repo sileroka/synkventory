@@ -1,18 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
+import { TreeTableModule } from 'primeng/treetable';
+import { TreeNode } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { LocationService } from '../../services/location.service';
-import { ILocation } from '../../models/location.model';
+import {
+  ILocation,
+  ILocationTreeNode,
+  LocationType,
+  LOCATION_TYPE_DISPLAY_NAMES,
+  LOCATION_TYPE_HIERARCHY,
+  getLocationTypeIcon
+} from '../../models/location.model';
+
+interface LocationTypeOption {
+  label: string;
+  value: LocationType;
+}
 
 @Component({
   selector: 'app-location-list',
@@ -20,31 +36,39 @@ import { ILocation } from '../../models/location.model';
   imports: [
     CommonModule,
     FormsModule,
-    TableModule,
+    TreeTableModule,
     ButtonModule,
     DialogModule,
     InputTextModule,
     InputTextareaModule,
+    InputNumberModule,
+    DropdownModule,
     ToastModule,
     ConfirmDialogModule,
     TagModule,
-    CheckboxModule
+    CheckboxModule,
+    TooltipModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './location-list.component.html',
   styleUrl: './location-list.component.scss'
 })
 export class LocationListComponent implements OnInit {
-  locations: ILocation[] = [];
+  locationTree: TreeNode[] = [];
   displayDialog: boolean = false;
   selectedLocation: ILocation = this.getEmptyLocation();
+  parentLocation: ILocationTreeNode | null = null;
   isEditMode: boolean = false;
   loading: boolean = false;
 
-  // Pagination
-  totalRecords: number = 0;
-  currentPage: number = 1;
-  pageSize: number = 25;
+  // Location type options for dropdown
+  locationTypeOptions: LocationTypeOption[] = [
+    { label: 'Warehouse', value: 'warehouse' },
+    { label: 'Row', value: 'row' },
+    { label: 'Bay', value: 'bay' },
+    { label: 'Level', value: 'level' },
+    { label: 'Position', value: 'position' }
+  ];
 
   constructor(
     private locationService: LocationService,
@@ -53,15 +77,14 @@ export class LocationListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadLocations();
+    this.loadLocationTree();
   }
 
-  loadLocations() {
+  loadLocationTree() {
     this.loading = true;
-    this.locationService.getLocations(this.currentPage, this.pageSize).subscribe({
-      next: (result) => {
-        this.locations = result.items;
-        this.totalRecords = result.pagination.totalItems;
+    this.locationService.getLocationTree().subscribe({
+      next: (tree) => {
+        this.locationTree = this.convertToTreeNodes(tree);
         this.loading = false;
       },
       error: () => {
@@ -75,20 +98,75 @@ export class LocationListComponent implements OnInit {
     });
   }
 
-  onPageChange(event: TableLazyLoadEvent) {
-    this.currentPage = Math.floor((event.first || 0) / (event.rows || this.pageSize)) + 1;
-    this.pageSize = event.rows || this.pageSize;
-    this.loadLocations();
+  convertToTreeNodes(locations: ILocationTreeNode[]): TreeNode[] {
+    return locations.map(loc => ({
+      data: loc,
+      children: loc.children ? this.convertToTreeNodes(loc.children) : [],
+      expanded: loc.locationType === 'warehouse' // Auto-expand warehouses
+    }));
   }
 
-  showAddDialog() {
-    this.selectedLocation = this.getEmptyLocation();
+  getLocationTypeIcon(type: LocationType): string {
+    return getLocationTypeIcon(type);
+  }
+
+  getLocationTypeLabel(type: LocationType): string {
+    return LOCATION_TYPE_DISPLAY_NAMES[type] || type;
+  }
+
+  getLocationTypeSeverity(type: LocationType): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<LocationType, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
+      warehouse: 'info',
+      row: 'success',
+      bay: 'warning',
+      level: 'secondary',
+      position: 'contrast'
+    };
+    return severities[type] || 'info';
+  }
+
+  canAddChild(location: ILocationTreeNode): boolean {
+    return LOCATION_TYPE_HIERARCHY[location.locationType] !== null;
+  }
+
+  getChildTypeLabel(location: ILocationTreeNode): string {
+    const childType = LOCATION_TYPE_HIERARCHY[location.locationType];
+    return childType ? LOCATION_TYPE_DISPLAY_NAMES[childType] : '';
+  }
+
+  showAddWarehouseDialog() {
+    this.selectedLocation = this.getEmptyLocation('warehouse');
+    this.parentLocation = null;
     this.isEditMode = false;
     this.displayDialog = true;
   }
 
-  showEditDialog(location: ILocation) {
-    this.selectedLocation = { ...location };
+  showAddChildDialog(parent: ILocationTreeNode) {
+    const childType = LOCATION_TYPE_HIERARCHY[parent.locationType];
+    if (!childType) return;
+
+    this.selectedLocation = this.getEmptyLocation(childType);
+    this.selectedLocation.parentId = parent.id;
+    this.parentLocation = parent;
+    this.isEditMode = false;
+    this.displayDialog = true;
+  }
+
+  showEditDialog(location: ILocationTreeNode) {
+    this.selectedLocation = {
+      id: location.id,
+      name: location.name,
+      code: location.code,
+      locationType: location.locationType,
+      parentId: location.parentId,
+      description: location.description,
+      address: location.address,
+      barcode: location.barcode,
+      capacity: location.capacity,
+      sortOrder: location.sortOrder,
+      isActive: location.isActive
+    };
+    this.parentLocation = null;
     this.isEditMode = true;
     this.displayDialog = true;
   }
@@ -102,14 +180,14 @@ export class LocationListComponent implements OnInit {
             summary: 'Success',
             detail: 'Location updated successfully'
           });
-          this.loadLocations();
+          this.loadLocationTree();
           this.displayDialog = false;
         },
-        error: () => {
+        error: (err) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to update location'
+            detail: err.error?.error?.message || 'Failed to update location'
           });
         }
       });
@@ -121,33 +199,41 @@ export class LocationListComponent implements OnInit {
             summary: 'Success',
             detail: 'Location created successfully'
           });
-          this.loadLocations();
+          this.loadLocationTree();
           this.displayDialog = false;
         },
-        error: () => {
+        error: (err) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to create location'
+            detail: err.error?.error?.message || 'Failed to create location'
           });
         }
       });
     }
   }
 
-  deleteLocation(location: ILocation) {
+  deleteLocation(location: ILocationTreeNode) {
+    const hasChildren = location.children && location.children.length > 0;
+    const message = hasChildren
+      ? `Are you sure you want to delete "${location.name}" and all its ${location.children.length} child location(s)?`
+      : `Are you sure you want to delete "${location.name}"?`;
+
     this.confirmationService.confirm({
-      message: `Are you sure you want to delete ${location.name}?`,
+      message,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         if (location.id) {
           this.locationService.deleteLocation(location.id).subscribe({
-            next: () => {
+            next: (msg) => {
               this.messageService.add({
                 severity: 'success',
                 summary: 'Success',
-                detail: 'Location deleted successfully'
+                detail: msg
               });
-              this.loadLocations();
+              this.loadLocationTree();
             },
             error: () => {
               this.messageService.add({
@@ -162,11 +248,27 @@ export class LocationListComponent implements OnInit {
     });
   }
 
-  getEmptyLocation(): ILocation {
+  getDialogTitle(): string {
+    if (this.isEditMode) {
+      return `Edit ${this.getLocationTypeLabel(this.selectedLocation.locationType)}`;
+    }
+    if (this.parentLocation) {
+      return `Add ${this.getLocationTypeLabel(this.selectedLocation.locationType)} to ${this.parentLocation.name}`;
+    }
+    return 'Add Warehouse';
+  }
+
+  getEmptyLocation(type: LocationType = 'warehouse'): ILocation {
     return {
       name: '',
       code: '',
+      locationType: type,
+      parentId: null,
+      description: '',
       address: '',
+      barcode: '',
+      capacity: undefined,
+      sortOrder: 0,
       isActive: true
     };
   }
