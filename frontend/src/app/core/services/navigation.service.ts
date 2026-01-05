@@ -77,6 +77,12 @@ export class NavigationService {
           route: '/work-orders'
         },
         {
+          id: 'purchase-orders',
+          label: 'Purchase Orders',
+          icon: 'pi-shopping-cart',
+          route: '/purchase-orders'
+        },
+        {
           id: 'locations',
           label: 'Locations',
           icon: 'pi-map-marker',

@@ -11,6 +11,12 @@ from app.models.audit_log import AuditLog, AuditAction, EntityType
 from app.models.item_revision import ItemRevision, RevisionType
 from app.models.bill_of_material import BillOfMaterial
 from app.models.work_order import WorkOrder, WorkOrderStatus, WorkOrderPriority
+from app.models.purchase_order import (
+    PurchaseOrder,
+    PurchaseOrderLineItem,
+    PurchaseOrderStatus,
+    PurchaseOrderPriority,
+)
 
 __all__ = [
     "Tenant",
@@ -33,4 +39,8 @@ __all__ = [
     "WorkOrder",
     "WorkOrderStatus",
     "WorkOrderPriority",
+    "PurchaseOrder",
+    "PurchaseOrderLineItem",
+    "PurchaseOrderStatus",
+    "PurchaseOrderPriority",
 ]

@@ -13,6 +13,8 @@ import { LandingComponent } from './features/landing/landing.component';
 import { BomListComponent } from './features/bill-of-materials/bom-list.component';
 import { WorkOrderListComponent } from './features/work-orders/work-order-list.component';
 import { WorkOrderDetailComponent } from './features/work-orders/work-order-detail.component';
+import { PurchaseOrderListComponent } from './features/purchase-orders/purchase-order-list.component';
+import { PurchaseOrderDetailComponent } from './features/purchase-orders/purchase-order-detail.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
@@ -59,6 +61,8 @@ export const routes: Routes = [
   { path: 'bill-of-materials', component: BomListComponent, canActivate: [authGuard] },
   { path: 'work-orders', component: WorkOrderListComponent, canActivate: [authGuard] },
   { path: 'work-orders/:id', component: WorkOrderDetailComponent, canActivate: [authGuard] },
+  { path: 'purchase-orders', component: PurchaseOrderListComponent, canActivate: [authGuard] },
+  { path: 'purchase-orders/:id', component: PurchaseOrderDetailComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationListComponent, canActivate: [authGuard] },
   { path: 'locations/new', redirectTo: 'locations', pathMatch: 'full' },
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },

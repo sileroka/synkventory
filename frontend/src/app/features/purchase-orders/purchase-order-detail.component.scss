@@ -1,0 +1,291 @@
+.purchase-order-detail-container {
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100%;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+// Header
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    .header-info {
+      h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .header-badges {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+// Timeline Card
+::ng-deep .timeline-card {
+  margin-bottom: 1.5rem;
+
+  .p-card-body {
+    padding: 1rem;
+  }
+}
+
+.timeline-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 1rem;
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+
+  .timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e2e8f0;
+    color: white;
+    font-size: 1rem;
+    z-index: 1;
+    transition: all 0.3s ease;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  .timeline-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0.5rem;
+
+    .timeline-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .timeline-date {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .timeline-connector {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: #e2e8f0;
+
+    &.complete {
+      background-color: #0d9488;
+    }
+  }
+
+  &.active,
+  &.complete {
+    .timeline-content .timeline-label {
+      color: #0f172a;
+    }
+  }
+}
+
+// Detail Grid
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    span {
+      font-size: 0.875rem;
+      color: #0f172a;
+    }
+  }
+}
+
+.notes-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+
+  label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #475569;
+    white-space: pre-wrap;
+  }
+}
+
+// Table
+::ng-deep .p-datatable {
+  .text-right {
+    text-align: right;
+  }
+
+  .text-success {
+    color: #10b981;
+    font-weight: 500;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    color: #475569;
+  }
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+// Receive Dialog
+.receive-dialog {
+  .receive-instructions {
+    margin-bottom: 1rem;
+    color: #475569;
+  }
+
+  .receive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      font-weight: 600;
+      color: #475569;
+      background-color: #f8fafc;
+    }
+  }
+}
+
+// Edit Form
+.edit-form {
+  .form-section {
+    margin-bottom: 1.5rem;
+
+    h3 {
+      margin: 0 0 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #334155;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+
+    &.full-width {
+      grid-column: span 2;
+
+      @media (max-width: 600px) {
+        grid-column: span 1;
+      }
+    }
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #475569;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+    }
+  }
+}
