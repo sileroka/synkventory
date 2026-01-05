@@ -38,16 +38,25 @@
   </div>
 
   <!-- Availability Summary -->
-  <div *ngIf="availability()" class="availability-card mb-4 p-3 border-round surface-card border-1 surface-border">
+  <div
+    *ngIf="availability()"
+    class="availability-card mb-4 p-3 border-round surface-card border-1 surface-border"
+  >
     <div class="flex align-items-center gap-3">
-      <div class="availability-icon flex align-items-center justify-content-center border-circle"
-           [style.background-color]="maxBuildable() > 0 ? '#10B981' : '#EF4444'"
-           style="width: 48px; height: 48px;">
+      <div
+        class="availability-icon flex align-items-center justify-content-center border-circle"
+        [style.background-color]="maxBuildable() > 0 ? '#10B981' : '#EF4444'"
+        style="width: 48px; height: 48px"
+      >
         <i class="pi pi-box text-white text-xl"></i>
       </div>
       <div class="flex-1">
         <div class="text-600 text-sm">Available to Build</div>
-        <div class="text-2xl font-semibold" [class.text-green-500]="maxBuildable() > 0" [class.text-red-500]="maxBuildable() === 0">
+        <div
+          class="text-2xl font-semibold"
+          [class.text-green-500]="maxBuildable() > 0"
+          [class.text-red-500]="maxBuildable() === 0"
+        >
           {{ maxBuildable() }} units
         </div>
       </div>
@@ -57,7 +66,9 @@
       </div>
       <div class="text-right">
         <div class="text-600 text-sm">Component Cost</div>
-        <div class="text-xl font-medium">{{ totalComponentCost() | currency }}</div>
+        <div class="text-xl font-medium">
+          {{ totalComponentCost() | currency }}
+        </div>
       </div>
     </div>
   </div>
@@ -93,19 +104,21 @@
               [src]="comp.componentItem.imageUrl"
               [alt]="comp.componentItem?.name"
               class="border-round"
-              style="width: 40px; height: 40px; object-fit: cover;"
+              style="width: 40px; height: 40px; object-fit: cover"
             />
             <span
               *ngIf="!comp.componentItem?.imageUrl"
               class="flex align-items-center justify-content-center border-round surface-200"
-              style="width: 40px; height: 40px;"
+              style="width: 40px; height: 40px"
             >
               <i class="pi pi-image text-400"></i>
             </span>
           </td>
           <td>
             <div class="font-medium">{{ comp.componentItem?.name }}</div>
-            <div *ngIf="comp.notes" class="text-500 text-sm">{{ comp.notes }}</div>
+            <div *ngIf="comp.notes" class="text-500 text-sm">
+              {{ comp.notes }}
+            </div>
           </td>
           <td class="text-500">{{ comp.componentItem?.sku }}</td>
           <td class="font-semibold">
@@ -114,8 +127,13 @@
           </td>
           <td>
             <span
-              [class.text-green-500]="(comp.componentItem?.quantity ?? 0) >= comp.quantityRequired"
-              [class.text-orange-500]="(comp.componentItem?.quantity ?? 0) > 0 && (comp.componentItem?.quantity ?? 0) < comp.quantityRequired"
+              [class.text-green-500]="
+                (comp.componentItem?.quantity ?? 0) >= comp.quantityRequired
+              "
+              [class.text-orange-500]="
+                (comp.componentItem?.quantity ?? 0) > 0 &&
+                (comp.componentItem?.quantity ?? 0) < comp.quantityRequired
+              "
               [class.text-red-500]="(comp.componentItem?.quantity ?? 0) === 0"
             >
               {{ comp.componentItem?.quantity ?? 0 }}
@@ -150,7 +168,9 @@
             <div class="text-500">
               <i class="pi pi-list text-4xl mb-3 block"></i>
               <p class="m-0 mb-2">No components defined</p>
-              <p class="m-0 text-sm">Add components to define how this item is built</p>
+              <p class="m-0 text-sm">
+                Add components to define how this item is built
+              </p>
             </div>
           </td>
         </tr>
@@ -170,7 +190,9 @@
     <div class="flex flex-column gap-4">
       <!-- Component Search -->
       <div class="field">
-        <label for="componentSearch" class="font-medium mb-2 block">Component Item *</label>
+        <label for="componentSearch" class="font-medium mb-2 block"
+          >Component Item *</label
+        >
         <p-autoComplete
           id="componentSearch"
           [(ngModel)]="selectedItem"
@@ -187,7 +209,9 @@
             <div class="flex align-items-center gap-2">
               <div>
                 <div class="font-medium">{{ item.name }}</div>
-                <div class="text-500 text-sm">{{ item.sku }} · {{ item.quantity }} in stock</div>
+                <div class="text-500 text-sm">
+                  {{ item.sku }} · {{ item.quantity }} in stock
+                </div>
               </div>
             </div>
           </ng-template>
@@ -196,7 +220,9 @@
 
       <!-- Quantity Required -->
       <div class="field">
-        <label for="quantityRequired" class="font-medium mb-2 block">Quantity Required *</label>
+        <label for="quantityRequired" class="font-medium mb-2 block"
+          >Quantity Required *</label
+        >
         <p-inputNumber
           id="quantityRequired"
           [(ngModel)]="newComponent().quantityRequired"
@@ -204,12 +230,16 @@
           [showButtons]="true"
           styleClass="w-full"
         />
-        <small class="text-500">How many of this component needed per assembly</small>
+        <small class="text-500"
+          >How many of this component needed per assembly</small
+        >
       </div>
 
       <!-- Unit of Measure -->
       <div class="field">
-        <label for="unitOfMeasure" class="font-medium mb-2 block">Unit of Measure</label>
+        <label for="unitOfMeasure" class="font-medium mb-2 block"
+          >Unit of Measure</label
+        >
         <input
           id="unitOfMeasure"
           type="text"
@@ -263,13 +293,16 @@
       <div class="build-summary p-3 border-round surface-100">
         <div class="text-lg font-semibold mb-2">Building: {{ itemName }}</div>
         <div class="text-500">
-          Maximum buildable with current stock: <strong class="text-primary">{{ maxBuildable() }}</strong>
+          Maximum buildable with current stock:
+          <strong class="text-primary">{{ maxBuildable() }}</strong>
         </div>
       </div>
 
       <!-- Quantity to Build -->
       <div class="field">
-        <label for="buildQuantity" class="font-medium mb-2 block">Quantity to Build</label>
+        <label for="buildQuantity" class="font-medium mb-2 block"
+          >Quantity to Build</label
+        >
         <p-inputNumber
           id="buildQuantity"
           [(ngModel)]="buildQuantity"
@@ -291,7 +324,8 @@
           >
             <span>{{ comp.componentName }}</span>
             <span class="font-semibold">
-              {{ comp.quantityRequired * buildQuantity() }} of {{ comp.quantityAvailable }}
+              {{ comp.quantityRequired * buildQuantity() }} of
+              {{ comp.quantityAvailable }}
             </span>
           </div>
         </div>
@@ -339,15 +373,20 @@
   >
     <div class="flex flex-column gap-4">
       <div class="unbuild-summary p-3 border-round surface-100">
-        <div class="text-lg font-semibold mb-2">Disassembling: {{ itemName }}</div>
+        <div class="text-lg font-semibold mb-2">
+          Disassembling: {{ itemName }}
+        </div>
         <div class="text-500">
-          Current stock available: <strong class="text-primary">{{ itemQuantity }}</strong>
+          Current stock available:
+          <strong class="text-primary">{{ itemQuantity }}</strong>
         </div>
       </div>
 
       <!-- Quantity to Unbuild -->
       <div class="field">
-        <label for="unbuildQuantity" class="font-medium mb-2 block">Quantity to Disassemble</label>
+        <label for="unbuildQuantity" class="font-medium mb-2 block"
+          >Quantity to Disassemble</label
+        >
         <p-inputNumber
           id="unbuildQuantity"
           [(ngModel)]="unbuildQuantity"

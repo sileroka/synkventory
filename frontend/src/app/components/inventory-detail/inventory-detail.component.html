@@ -314,8 +314,8 @@
           <span>BOM</span>
         </ng-template>
 
-        <app-bill-of-materials 
-          *ngIf="item?.id" 
+        <app-bill-of-materials
+          *ngIf="item?.id"
           [itemId]="item!.id!"
           [itemName]="item!.name"
           [itemQuantity]="item!.quantity"
@@ -330,8 +330,7 @@
           <span>Where Used</span>
         </ng-template>
 
-        <app-where-used *ngIf="item?.id" [itemId]="item!.id!">
-        </app-where-used>
+        <app-where-used *ngIf="item?.id" [itemId]="item!.id!"> </app-where-used>
       </p-tabPanel>
     </p-tabView>
   </div>
