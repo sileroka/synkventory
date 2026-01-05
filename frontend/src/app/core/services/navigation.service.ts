@@ -154,6 +154,13 @@ export class NavigationService {
           icon: 'pi-users',
           route: '/users',
           roles: [UserRole.ADMIN, UserRole.MANAGER]
+        },
+        {
+          id: 'audit-logs',
+          label: 'Activity Log',
+          icon: 'pi-history',
+          route: '/audit-logs',
+          roles: [UserRole.ADMIN, UserRole.MANAGER]
         }
       ]
     }

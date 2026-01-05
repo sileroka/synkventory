@@ -1,0 +1,168 @@
+.audit-logs-page {
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100%;
+}
+
+// Header
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+}
+
+// Filters
+.filters-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-item {
+  &.search-filter {
+    flex: 1;
+    min-width: 200px;
+
+    input {
+      width: 100%;
+    }
+  }
+
+  &.date-filter {
+    min-width: 200px;
+  }
+}
+
+// Table
+::ng-deep .p-datatable {
+  .timestamp {
+    font-size: 0.8rem;
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  .user-email {
+    font-size: 0.875rem;
+    color: #334155;
+  }
+
+  .entity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+
+    .entity-type {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .entity-name {
+      font-size: 0.875rem;
+      color: #0f172a;
+    }
+  }
+
+  .ip-address {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #64748b;
+    cursor: help;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+  color: #64748b;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+// Detail Dialog
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  span {
+    font-size: 0.875rem;
+    color: #0f172a;
+  }
+
+  code {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background-color: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    color: #475569;
+  }
+
+  .user-agent {
+    font-size: 0.75rem;
+    color: #64748b;
+    word-break: break-all;
+  }
+
+  &.extra-data {
+    pre {
+      margin: 0;
+      padding: 0.75rem;
+      background-color: #f8fafc;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      overflow-x: auto;
+      max-height: 200px;
+    }
+  }
+}

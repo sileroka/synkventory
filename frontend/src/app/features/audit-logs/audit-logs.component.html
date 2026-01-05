@@ -1,0 +1,216 @@
+<div class="audit-logs-page">
+  <p-toast />
+
+  <header class="page-header">
+    <div>
+      <h1>Activity Log</h1>
+      <p class="subtitle">View all user activity and system events</p>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchText"
+            placeholder="Search by email or entity..."
+            (keyup.enter)="onSearch()"
+          />
+        </span>
+      </div>
+
+      <!-- Action Filter -->
+      <div class="filter-item">
+        <p-dropdown
+          [options]="actions()"
+          [(ngModel)]="filters.action"
+          placeholder="All Actions"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Entity Type Filter -->
+      <div class="filter-item">
+        <p-dropdown
+          [options]="entityTypes()"
+          [(ngModel)]="filters.entityType"
+          placeholder="All Types"
+          [showClear]="true"
+          (onChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Date Range -->
+      <div class="filter-item date-filter">
+        <p-calendar
+          [(ngModel)]="dateRange"
+          selectionMode="range"
+          placeholder="Date Range"
+          [showIcon]="true"
+          dateFormat="mm/dd/yy"
+          [showClear]="true"
+          (onSelect)="onDateRangeChange()"
+          (onClear)="onDateRangeChange()"
+        />
+      </div>
+
+      <!-- Clear Filters -->
+      <div class="filter-item">
+        <p-button
+          icon="pi pi-filter-slash"
+          [text]="true"
+          severity="secondary"
+          (onClick)="clearFilters()"
+          pTooltip="Clear all filters"
+          tooltipPosition="bottom"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <p-card>
+    <p-table
+      [value]="logs()"
+      [loading]="isLoading()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [totalRecords]="totalItems()"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      (onLazyLoad)="onPageChange($event)"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 150px">Time</th>
+          <th>User</th>
+          <th style="width: 140px">Action</th>
+          <th>Entity</th>
+          <th style="width: 100px">IP</th>
+          <th style="width: 80px">Details</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-log>
+        <tr>
+          <td class="timestamp">
+            {{ formatDateTime(log.createdAt) }}
+          </td>
+          <td>
+            <span class="user-email">{{ log.userEmail || 'System' }}</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="getActionLabel(log.action)"
+              [severity]="getActionSeverity(log.action)"
+            />
+          </td>
+          <td>
+            <div class="entity-info">
+              <span class="entity-type">{{ formatEntityType(log.entityType) }}</span>
+              @if (log.entityName) {
+                <span class="entity-name">{{ log.entityName }}</span>
+              }
+            </div>
+          </td>
+          <td>
+            <span class="ip-address" [pTooltip]="log.userAgent || 'Unknown'">
+              {{ log.ipAddress || '—' }}
+            </span>
+          </td>
+          <td>
+            <p-button
+              icon="pi pi-eye"
+              [text]="true"
+              (onClick)="showDetails(log)"
+              pTooltip="View Details"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="empty-state">
+              <i class="pi pi-history"></i>
+              <p>No activity logs found</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Detail Dialog -->
+<p-dialog
+  header="Activity Details"
+  [(visible)]="showDetailDialog"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+>
+  @if (selectedLog()) {
+    <div class="detail-content">
+      <div class="detail-row">
+        <label>Time</label>
+        <span>{{ selectedLog()!.createdAt | date: 'medium' }}</span>
+      </div>
+      <div class="detail-row">
+        <label>User</label>
+        <span>{{ selectedLog()!.userEmail || 'System' }}</span>
+      </div>
+      <div class="detail-row">
+        <label>Action</label>
+        <p-tag
+          [value]="getActionLabel(selectedLog()!.action)"
+          [severity]="getActionSeverity(selectedLog()!.action)"
+        />
+      </div>
+      <div class="detail-row">
+        <label>Entity Type</label>
+        <span>{{ formatEntityType(selectedLog()!.entityType) }}</span>
+      </div>
+      @if (selectedLog()!.entityName) {
+        <div class="detail-row">
+          <label>Entity Name</label>
+          <span>{{ selectedLog()!.entityName }}</span>
+        </div>
+      }
+      @if (selectedLog()!.entityId) {
+        <div class="detail-row">
+          <label>Entity ID</label>
+          <code>{{ selectedLog()!.entityId }}</code>
+        </div>
+      }
+      <div class="detail-row">
+        <label>IP Address</label>
+        <span>{{ selectedLog()!.ipAddress || '—' }}</span>
+      </div>
+      @if (selectedLog()!.userAgent) {
+        <div class="detail-row">
+          <label>User Agent</label>
+          <span class="user-agent">{{ selectedLog()!.userAgent }}</span>
+        </div>
+      }
+      @if (selectedLog()!.extraData) {
+        <div class="detail-row extra-data">
+          <label>Additional Data</label>
+          <pre>{{ formatExtraData(selectedLog()!.extraData) }}</pre>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" severity="secondary" [text]="true" (onClick)="showDetailDialog.set(false)" />
+  </ng-template>
+</p-dialog>

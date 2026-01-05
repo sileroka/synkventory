@@ -15,6 +15,7 @@ import { WorkOrderListComponent } from './features/work-orders/work-order-list.c
 import { WorkOrderDetailComponent } from './features/work-orders/work-order-detail.component';
 import { PurchaseOrderListComponent } from './features/purchase-orders/purchase-order-list.component';
 import { PurchaseOrderDetailComponent } from './features/purchase-orders/purchase-order-detail.component';
+import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
 import { UserRole } from './models/user.model';
@@ -85,6 +86,12 @@ export const routes: Routes = [
   {
     path: 'users',
     component: UserListComponent,
+    canActivate: [roleGuard],
+    data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }
+  },
+  {
+    path: 'audit-logs',
+    component: AuditLogsComponent,
     canActivate: [roleGuard],
     data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }
   },
