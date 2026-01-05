@@ -6,7 +6,7 @@
   <nav class="breadcrumb">
     <a routerLink="/admin/tenants">Tenants</a>
     <i class="pi pi-chevron-right"></i>
-    <span>{{ tenant()?.name || 'Loading...' }}</span>
+    <span>{{ tenant()?.name || "Loading..." }}</span>
   </nav>
 
   <header class="page-header">
@@ -14,28 +14,34 @@
       <h1>{{ tenant()?.name }}</h1>
       <p class="subdomain">{{ tenant()?.slug }}.synkventory.com</p>
     </div>
-    <p-button label="Add User" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+    <p-button
+      label="Add User"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
   </header>
 
   <!-- Tenant Info Card -->
   @if (tenant()) {
-    <div class="info-card">
-      <div class="info-item">
-        <span class="label">Status</span>
-        <p-tag
-          [value]="tenant()!.is_active ? 'Active' : 'Inactive'"
-          [severity]="tenant()!.is_active ? 'success' : 'danger'"
-        />
-      </div>
-      <div class="info-item">
-        <span class="label">Users</span>
-        <span class="value">{{ tenant()!.user_count }}</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Created</span>
-        <span class="value">{{ tenant()!.created_at | date:'mediumDate' }}</span>
-      </div>
+  <div class="info-card">
+    <div class="info-item">
+      <span class="label">Status</span>
+      <p-tag
+        [value]="tenant()!.is_active ? 'Active' : 'Inactive'"
+        [severity]="tenant()!.is_active ? 'success' : 'danger'"
+      />
     </div>
+    <div class="info-item">
+      <span class="label">Users</span>
+      <span class="value">{{ tenant()!.user_count }}</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Created</span>
+      <span class="value">{{
+        tenant()!.created_at | date : "mediumDate"
+      }}</span>
+    </div>
+  </div>
   }
 
   <!-- Users Table -->
@@ -77,7 +83,7 @@
               [severity]="user.is_active ? 'success' : 'danger'"
             />
           </td>
-          <td>{{ user.created_at | date:'mediumDate' }}</td>
+          <td>{{ user.created_at | date : "mediumDate" }}</td>
           <td>
             <div class="action-buttons">
               <p-button
@@ -106,7 +112,11 @@
             <div class="empty-state">
               <i class="pi pi-users"></i>
               <p>No users in this tenant</p>
-              <p-button label="Add First User" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+              <p-button
+                label="Add First User"
+                icon="pi pi-plus"
+                (onClick)="openCreateDialog()"
+              />
             </div>
           </td>
         </tr>
@@ -168,7 +178,11 @@
     </div>
 
     <ng-template pTemplate="footer">
-      <p-button label="Cancel" [text]="true" (onClick)="showCreateDialog.set(false)" />
+      <p-button
+        label="Cancel"
+        [text]="true"
+        (onClick)="showCreateDialog.set(false)"
+      />
       <p-button
         label="Create"
         icon="pi pi-check"

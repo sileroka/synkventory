@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -24,6 +24,8 @@ import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../
 import { IStockMovement, MovementType, IStockMovementCreate } from '../../models/stock-movement.model';
 import { ILocation } from '../../features/locations/models/location.model';
 import { RevisionHistoryComponent } from '../revision-history/revision-history.component';
+import { BillOfMaterialsComponent } from '../bill-of-materials/bill-of-materials.component';
+import { WhereUsedComponent } from '../where-used/where-used.component';
 
 interface ILocationOption {
   label: string;
@@ -52,13 +54,15 @@ interface ILocationOption {
     TooltipModule,
     SkeletonModule,
     TabViewModule,
-    RevisionHistoryComponent
+    RevisionHistoryComponent,
+    BillOfMaterialsComponent,
+    WhereUsedComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-detail.component.html',
   styleUrl: './inventory-detail.component.scss'
 })
-export class InventoryDetailComponent implements OnInit {
+export class InventoryDetailComponent implements OnInit, OnDestroy {
   item: IInventoryItem | null = null;
   locationQuantities: IInventoryLocationQuantity[] = [];
   recentMovements: IStockMovement[] = [];
@@ -83,6 +87,9 @@ export class InventoryDetailComponent implements OnInit {
   transferNotes: string = '';
   locationOptions: ILocationOption[] = [];
 
+  // Event listener for BOM operations
+  private bomOperationHandler = this.onBomOperation.bind(this);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -98,6 +105,21 @@ export class InventoryDetailComponent implements OnInit {
       this.loadItem(itemId);
       this.loadMovements(itemId);
       this.loadLocations();
+    }
+
+    // Listen for BOM build/unbuild operations to refresh item data
+    window.addEventListener('bom-operation-complete', this.bomOperationHandler);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('bom-operation-complete', this.bomOperationHandler);
+  }
+
+  onBomOperation(event: Event) {
+    // Refresh item data after BOM build/unbuild
+    if (this.item?.id) {
+      this.loadItem(this.item.id);
+      this.loadMovements(this.item.id);
     }
   }
 

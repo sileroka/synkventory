@@ -4,15 +4,19 @@
 
   <div class="flex justify-content-between align-items-center mb-4">
     <h1>Category Management</h1>
-    <p-button label="Add Category" icon="pi pi-plus" (onClick)="showAddDialog()"></p-button>
+    <p-button
+      label="Add Category"
+      icon="pi pi-plus"
+      (onClick)="showAddDialog()"
+    ></p-button>
   </div>
 
   <p-treeTable
     [value]="categories"
     [loading]="loading"
-    [tableStyle]="{'min-width': '50rem'}"
-    styleClass="p-treetable-striped">
-
+    [tableStyle]="{ 'min-width': '50rem' }"
+    styleClass="p-treetable-striped"
+  >
     <ng-template pTemplate="header">
       <tr>
         <th>Name</th>
@@ -32,8 +36,11 @@
         <td>{{ rowData.code }}</td>
         <td>{{ rowData.description }}</td>
         <td>
-          <span class="status-badge" [ngClass]="rowData.isActive ? 'status-active' : 'status-inactive'">
-            {{ rowData.isActive ? 'Active' : 'Inactive' }}
+          <span
+            class="status-badge"
+            [ngClass]="rowData.isActive ? 'status-active' : 'status-inactive'"
+          >
+            {{ rowData.isActive ? "Active" : "Inactive" }}
           </span>
         </td>
         <td>
@@ -44,7 +51,8 @@
             severity="secondary"
             pTooltip="Custom Attributes"
             tooltipPosition="left"
-            (onClick)="openAttributesPanel(rowData)">
+            (onClick)="openAttributesPanel(rowData)"
+          >
           </p-button>
           <p-button
             icon="pi pi-plus"
@@ -53,7 +61,8 @@
             severity="success"
             pTooltip="Add Child"
             tooltipPosition="left"
-            (onClick)="showAddDialog(rowData)">
+            (onClick)="showAddDialog(rowData)"
+          >
           </p-button>
           <p-button
             icon="pi pi-pencil"
@@ -62,7 +71,8 @@
             severity="info"
             pTooltip="Edit"
             tooltipPosition="left"
-            (onClick)="showEditDialog(rowData)">
+            (onClick)="showEditDialog(rowData)"
+          >
           </p-button>
           <p-button
             icon="pi pi-trash"
@@ -71,7 +81,8 @@
             severity="danger"
             pTooltip="Delete"
             tooltipPosition="left"
-            (onClick)="deleteCategory(rowData)">
+            (onClick)="deleteCategory(rowData)"
+          >
           </p-button>
         </td>
       </tr>
@@ -79,7 +90,9 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="5" class="text-center">No categories found. Click "Add Category" to create one.</td>
+        <td colspan="5" class="text-center">
+          No categories found. Click "Add Category" to create one.
+        </td>
       </tr>
     </ng-template>
   </p-treeTable>
@@ -89,57 +102,92 @@
   [(visible)]="displayDialog"
   [header]="isEditMode ? 'Edit Category' : 'Add Category'"
   [modal]="true"
-  [style]="{width: '450px'}"
+  [style]="{ width: '450px' }"
   [draggable]="false"
-  [resizable]="false">
-
+  [resizable]="false"
+>
   <div class="flex flex-column gap-3">
     <div>
       <label for="name" class="block mb-2">Name *</label>
-      <input pInputText id="name" [(ngModel)]="selectedCategory.name" class="w-full" required />
+      <input
+        pInputText
+        id="name"
+        [(ngModel)]="selectedCategory.name"
+        class="w-full"
+        required
+      />
     </div>
 
     <div>
       <label for="code" class="block mb-2">Code *</label>
-      <input pInputText id="code" [(ngModel)]="selectedCategory.code" class="w-full" required />
+      <input
+        pInputText
+        id="code"
+        [(ngModel)]="selectedCategory.code"
+        class="w-full"
+        required
+      />
     </div>
 
     <div>
       <label for="description" class="block mb-2">Description</label>
-      <textarea pInputTextarea id="description" [(ngModel)]="selectedCategory.description"
-        class="w-full" rows="3"></textarea>
+      <textarea
+        pInputTextarea
+        id="description"
+        [(ngModel)]="selectedCategory.description"
+        class="w-full"
+        rows="3"
+      ></textarea>
     </div>
 
     <div>
       <label for="parentId" class="block mb-2">Parent Category</label>
-      <p-dropdown id="parentId" [(ngModel)]="selectedCategory.parentId"
-        [options]="parentOptions" optionLabel="label" optionValue="value"
+      <p-dropdown
+        id="parentId"
+        [(ngModel)]="selectedCategory.parentId"
+        [options]="parentOptions"
+        optionLabel="label"
+        optionValue="value"
         placeholder="Select Parent Category"
-        class="w-full" styleClass="w-full"
-        appendTo="body"></p-dropdown>
+        class="w-full"
+        styleClass="w-full"
+        appendTo="body"
+      ></p-dropdown>
     </div>
 
     <div class="flex align-items-center">
-      <p-checkbox [(ngModel)]="selectedCategory.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+      <p-checkbox
+        [(ngModel)]="selectedCategory.isActive"
+        [binary]="true"
+        inputId="isActive"
+      ></p-checkbox>
       <label for="isActive" class="ml-2">Active</label>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayDialog = false"
-      severity="secondary"></p-button>
-    <p-button label="Save" icon="pi pi-check" (onClick)="saveCategory()"></p-button>
+    <p-button
+      label="Cancel"
+      icon="pi pi-times"
+      (onClick)="displayDialog = false"
+      severity="secondary"
+    ></p-button>
+    <p-button
+      label="Save"
+      icon="pi pi-check"
+      (onClick)="saveCategory()"
+    ></p-button>
   </ng-template>
 </p-dialog>
 
 <!-- Custom Attributes Sidebar Panel -->
 @if (showAttributesPanel() && selectedCategoryForAttributes()) {
-  <div class="attributes-overlay" (click)="closeAttributesPanel()"></div>
-  <div class="attributes-panel">
-    <app-category-attributes
-      [categoryId]="selectedCategoryForAttributes()!.id!"
-      [categoryName]="selectedCategoryForAttributes()!.name"
-      (closed)="closeAttributesPanel()"
-    />
-  </div>
+<div class="attributes-overlay" (click)="closeAttributesPanel()"></div>
+<div class="attributes-panel">
+  <app-category-attributes
+    [categoryId]="selectedCategoryForAttributes()!.id!"
+    [categoryName]="selectedCategoryForAttributes()!.name"
+    (closed)="closeAttributesPanel()"
+  />
+</div>
 }

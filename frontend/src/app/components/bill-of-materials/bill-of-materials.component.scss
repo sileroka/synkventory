@@ -1,0 +1,95 @@
+.bom-container {
+  padding: 0;
+}
+
+.bom-header {
+  .bom-title {
+    h3 {
+      color: var(--text-color);
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.availability-card {
+  background: var(--surface-card);
+  
+  .availability-icon {
+    flex-shrink: 0;
+  }
+}
+
+.content-card {
+  background: var(--surface-card);
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+}
+
+// Table styling
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--surface-50);
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .p-datatable-tbody > tr {
+      &:hover {
+        background: var(--surface-hover);
+      }
+      
+      > td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+      }
+    }
+  }
+  
+  // Input number styling
+  .p-inputnumber {
+    &.w-full {
+      width: 100%;
+      
+      .p-inputtext {
+        width: 100%;
+      }
+    }
+  }
+  
+  // Autocomplete styling
+  .p-autocomplete {
+    &.w-full {
+      width: 100%;
+      
+      .p-autocomplete-input {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Dialog field styling
+.field {
+  margin-bottom: 0;
+  
+  label {
+    color: var(--text-color);
+  }
+  
+  small {
+    display: block;
+    margin-top: 0.25rem;
+  }
+}
+
+// Build/Unbuild summary
+.build-summary,
+.unbuild-summary {
+  background: var(--surface-100);
+  border: 1px solid var(--surface-border);
+}

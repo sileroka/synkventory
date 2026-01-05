@@ -9,6 +9,7 @@ from app.models.inventory import InventoryItem
 from app.models.stock_movement import StockMovement, MovementType
 from app.models.audit_log import AuditLog, AuditAction, EntityType
 from app.models.item_revision import ItemRevision, RevisionType
+from app.models.bill_of_material import BillOfMaterial
 
 __all__ = [
     "Tenant",
@@ -27,4 +28,5 @@ __all__ = [
     "CategoryAttribute",
     "ItemRevision",
     "RevisionType",
+    "BillOfMaterial",
 ]

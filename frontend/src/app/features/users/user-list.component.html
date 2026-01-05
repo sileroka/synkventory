@@ -73,7 +73,7 @@
         <td>
           <span class="user-name">{{ user.name }}</span>
           @if (user.id === currentUserId) {
-            <span class="you-badge">(you)</span>
+          <span class="you-badge">(you)</span>
           }
         </td>
         <td>{{ user.email }}</td>
@@ -85,14 +85,14 @@
         </td>
         <td>
           @if (user.isLocked) {
-            <p-tag value="Locked" severity="danger" />
+          <p-tag value="Locked" severity="danger" />
           } @else if (user.isActive) {
-            <p-tag value="Active" severity="success" />
+          <p-tag value="Active" severity="success" />
           } @else {
-            <p-tag value="Inactive" severity="secondary" />
+          <p-tag value="Inactive" severity="secondary" />
           }
         </td>
-        <td>{{ user.createdAt | date:'mediumDate' }}</td>
+        <td>{{ user.createdAt | date : "mediumDate" }}</td>
         <td>
           <div class="action-buttons">
             <p-button
@@ -104,37 +104,36 @@
               tooltipPosition="left"
               (onClick)="showEditDialog(user)"
             />
-            @if (user.id !== currentUserId) {
-              @if (user.isActive) {
-                <p-button
-                  icon="pi pi-ban"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="danger"
-                  pTooltip="Deactivate"
-                  tooltipPosition="left"
-                  (onClick)="confirmDeactivate(user)"
-                />
-              } @else {
-                <p-button
-                  icon="pi pi-check-circle"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="success"
-                  pTooltip="Activate"
-                  tooltipPosition="left"
-                  (onClick)="activateUser(user)"
-                />
-              }
-              <p-button
-                icon="pi pi-key"
-                [rounded]="true"
-                [text]="true"
-                severity="warning"
-                pTooltip="Reset Password"
-                tooltipPosition="left"
-                (onClick)="showResetPasswordDialog(user)"
-              />
+            @if (user.id !== currentUserId) { @if (user.isActive) {
+            <p-button
+              icon="pi pi-ban"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              pTooltip="Deactivate"
+              tooltipPosition="left"
+              (onClick)="confirmDeactivate(user)"
+            />
+            } @else {
+            <p-button
+              icon="pi pi-check-circle"
+              [rounded]="true"
+              [text]="true"
+              severity="success"
+              pTooltip="Activate"
+              tooltipPosition="left"
+              (onClick)="activateUser(user)"
+            />
+            }
+            <p-button
+              icon="pi pi-key"
+              [rounded]="true"
+              [text]="true"
+              severity="warning"
+              pTooltip="Reset Password"
+              tooltipPosition="left"
+              (onClick)="showResetPasswordDialog(user)"
+            />
             }
           </div>
         </td>
@@ -167,10 +166,12 @@
         type="text"
         pInputText
         formControlName="name"
-        [class.ng-invalid]="userForm.get('name')?.invalid && userForm.get('name')?.touched"
+        [class.ng-invalid]="
+          userForm.get('name')?.invalid && userForm.get('name')?.touched
+        "
       />
       @if (userForm.get('name')?.invalid && userForm.get('name')?.touched) {
-        <small class="p-error">Name is required</small>
+      <small class="p-error">Name is required</small>
       }
     </div>
 
@@ -181,30 +182,34 @@
         type="email"
         pInputText
         formControlName="email"
-        [class.ng-invalid]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+        [class.ng-invalid]="
+          userForm.get('email')?.invalid && userForm.get('email')?.touched
+        "
         [readonly]="!!editingUser"
       />
       @if (userForm.get('email')?.invalid && userForm.get('email')?.touched) {
-        <small class="p-error">Valid email is required</small>
+      <small class="p-error">Valid email is required</small>
       }
     </div>
 
     @if (!editingUser) {
-      <div class="form-field">
-        <label for="password">Password *</label>
-        <p-password
-          id="password"
-          formControlName="password"
-          [toggleMask]="true"
-          [feedback]="true"
-          styleClass="w-full"
-        />
-        @if (userForm.get('password')?.invalid && userForm.get('password')?.touched) {
-          <small class="p-error">
-            Password must be at least 8 characters with uppercase, lowercase, and a number
-          </small>
-        }
-      </div>
+    <div class="form-field">
+      <label for="password">Password *</label>
+      <p-password
+        id="password"
+        formControlName="password"
+        [toggleMask]="true"
+        [feedback]="true"
+        styleClass="w-full"
+      />
+      @if (userForm.get('password')?.invalid &&
+      userForm.get('password')?.touched) {
+      <small class="p-error">
+        Password must be at least 8 characters with uppercase, lowercase, and a
+        number
+      </small>
+      }
+    </div>
     }
 
     <div class="form-field">
@@ -248,7 +253,9 @@
 >
   <p class="reset-warning">
     <i class="pi pi-exclamation-triangle"></i>
-    You are about to reset the password for <strong>{{ resetPasswordUser?.name }}</strong>.
+    You are about to reset the password for
+    <strong>{{ resetPasswordUser?.name }}</strong
+    >.
   </p>
   <form [formGroup]="passwordForm" (ngSubmit)="resetPassword()">
     <div class="form-field">
@@ -260,10 +267,12 @@
         [feedback]="true"
         styleClass="w-full"
       />
-      @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
-        <small class="p-error">
-          Password must be at least 8 characters with uppercase, lowercase, and a number
-        </small>
+      @if (passwordForm.get('newPassword')?.invalid &&
+      passwordForm.get('newPassword')?.touched) {
+      <small class="p-error">
+        Password must be at least 8 characters with uppercase, lowercase, and a
+        number
+      </small>
       }
     </div>
 

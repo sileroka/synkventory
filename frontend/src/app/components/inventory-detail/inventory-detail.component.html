@@ -306,6 +306,33 @@
         <app-revision-history *ngIf="item?.id" [itemId]="item!.id!">
         </app-revision-history>
       </p-tabPanel>
+
+      <!-- Bill of Materials Tab -->
+      <p-tabPanel header="BOM">
+        <ng-template pTemplate="header">
+          <i class="pi pi-sitemap mr-2"></i>
+          <span>BOM</span>
+        </ng-template>
+
+        <app-bill-of-materials 
+          *ngIf="item?.id" 
+          [itemId]="item!.id!"
+          [itemName]="item!.name"
+          [itemQuantity]="item!.quantity"
+        >
+        </app-bill-of-materials>
+      </p-tabPanel>
+
+      <!-- Where Used Tab -->
+      <p-tabPanel header="Where Used">
+        <ng-template pTemplate="header">
+          <i class="pi pi-link mr-2"></i>
+          <span>Where Used</span>
+        </ng-template>
+
+        <app-where-used *ngIf="item?.id" [itemId]="item!.id!">
+        </app-where-used>
+      </p-tabPanel>
     </p-tabView>
   </div>
 </div>

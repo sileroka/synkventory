@@ -5,17 +5,24 @@
   <div class="flex justify-content-between align-items-center mb-4">
     <div>
       <h1 class="m-0">Warehouse Locations</h1>
-      <p class="text-500 mt-1 mb-0">Manage your warehouse structure: warehouses, rows, bays, levels, and positions</p>
+      <p class="text-500 mt-1 mb-0">
+        Manage your warehouse structure: warehouses, rows, bays, levels, and
+        positions
+      </p>
     </div>
-    <p-button label="Add Warehouse" icon="pi pi-building" (onClick)="showAddWarehouseDialog()"></p-button>
+    <p-button
+      label="Add Warehouse"
+      icon="pi pi-building"
+      (onClick)="showAddWarehouseDialog()"
+    ></p-button>
   </div>
 
   <p-treeTable
     [value]="locationTree"
     [loading]="loading"
     [scrollable]="true"
-    styleClass="p-treetable-sm">
-
+    styleClass="p-treetable-sm"
+  >
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 35%">Name</th>
@@ -32,7 +39,10 @@
       <tr [ttRow]="rowNode">
         <td>
           <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
-          <i [class]="getLocationTypeIcon(rowData.locationType)" class="mr-2"></i>
+          <i
+            [class]="getLocationTypeIcon(rowData.locationType)"
+            class="mr-2"
+          ></i>
           <span class="font-medium">{{ rowData.name }}</span>
         </td>
         <td>
@@ -41,20 +51,28 @@
         <td>
           <p-tag
             [value]="getLocationTypeLabel(rowData.locationType)"
-            [severity]="getLocationTypeSeverity(rowData.locationType)">
+            [severity]="getLocationTypeSeverity(rowData.locationType)"
+          >
           </p-tag>
         </td>
         <td>
-          <span *ngIf="rowData.barcode" class="text-500 font-mono text-sm">{{ rowData.barcode }}</span>
+          <span *ngIf="rowData.barcode" class="text-500 font-mono text-sm">{{
+            rowData.barcode
+          }}</span>
           <span *ngIf="!rowData.barcode" class="text-400">—</span>
         </td>
         <td>
-          <span *ngIf="rowData.capacity" class="text-600">{{ rowData.capacity }}</span>
+          <span *ngIf="rowData.capacity" class="text-600">{{
+            rowData.capacity
+          }}</span>
           <span *ngIf="!rowData.capacity" class="text-400">—</span>
         </td>
         <td>
-          <span class="status-badge" [ngClass]="rowData.isActive ? 'status-active' : 'status-inactive'">
-            {{ rowData.isActive ? 'Active' : 'Inactive' }}
+          <span
+            class="status-badge"
+            [ngClass]="rowData.isActive ? 'status-active' : 'status-inactive'"
+          >
+            {{ rowData.isActive ? "Active" : "Inactive" }}
           </span>
         </td>
         <td>
@@ -67,7 +85,8 @@
               severity="success"
               [pTooltip]="'Add ' + getChildTypeLabel(rowData)"
               tooltipPosition="left"
-              (onClick)="showAddChildDialog(rowData)">
+              (onClick)="showAddChildDialog(rowData)"
+            >
             </p-button>
             <p-button
               icon="pi pi-pencil"
@@ -76,7 +95,8 @@
               severity="info"
               pTooltip="Edit"
               tooltipPosition="left"
-              (onClick)="showEditDialog(rowData)">
+              (onClick)="showEditDialog(rowData)"
+            >
             </p-button>
             <p-button
               icon="pi pi-trash"
@@ -85,7 +105,8 @@
               severity="danger"
               pTooltip="Delete"
               tooltipPosition="left"
-              (onClick)="deleteLocation(rowData)">
+              (onClick)="deleteLocation(rowData)"
+            >
             </p-button>
           </div>
         </td>
@@ -98,7 +119,9 @@
           <div class="text-500">
             <i class="pi pi-building text-4xl mb-3 block"></i>
             <p class="m-0 mb-2">No warehouses found</p>
-            <p class="m-0 text-sm">Click "Add Warehouse" to create your first warehouse location</p>
+            <p class="m-0 text-sm">
+              Click "Add Warehouse" to create your first warehouse location
+            </p>
           </div>
         </td>
       </tr>
@@ -110,64 +133,113 @@
   [(visible)]="displayDialog"
   [header]="getDialogTitle()"
   [modal]="true"
-  [style]="{width: '550px'}"
+  [style]="{ width: '550px' }"
   [draggable]="false"
-  [resizable]="false">
-
+  [resizable]="false"
+>
   <div class="flex flex-column gap-3">
     <!-- Parent info (read-only when adding child) -->
     <div *ngIf="parentLocation" class="surface-100 border-round p-3 mb-2">
       <span class="text-500">Adding to: </span>
-      <span class="font-medium">{{ parentLocation.fullPath || parentLocation.name }}</span>
+      <span class="font-medium">{{
+        parentLocation.fullPath || parentLocation.name
+      }}</span>
     </div>
 
     <div class="grid">
       <div class="col-6">
-        <label for="name" class="block mb-2 font-medium">Name <span class="text-red-500">*</span></label>
-        <input pInputText id="name" [(ngModel)]="selectedLocation.name" class="w-full" required />
+        <label for="name" class="block mb-2 font-medium"
+          >Name <span class="text-red-500">*</span></label
+        >
+        <input
+          pInputText
+          id="name"
+          [(ngModel)]="selectedLocation.name"
+          class="w-full"
+          required
+        />
       </div>
 
       <div class="col-6">
-        <label for="code" class="block mb-2 font-medium">Code <span class="text-red-500">*</span></label>
-        <input pInputText id="code" [(ngModel)]="selectedLocation.code" class="w-full" required />
+        <label for="code" class="block mb-2 font-medium"
+          >Code <span class="text-red-500">*</span></label
+        >
+        <input
+          pInputText
+          id="code"
+          [(ngModel)]="selectedLocation.code"
+          class="w-full"
+          required
+        />
       </div>
     </div>
 
     <div *ngIf="selectedLocation.locationType === 'warehouse'">
       <label for="address" class="block mb-2 font-medium">Address</label>
-      <textarea pInputTextarea id="address" [(ngModel)]="selectedLocation.address"
-        class="w-full" rows="2"></textarea>
+      <textarea
+        pInputTextarea
+        id="address"
+        [(ngModel)]="selectedLocation.address"
+        class="w-full"
+        rows="2"
+      ></textarea>
     </div>
 
     <div>
-      <label for="description" class="block mb-2 font-medium">Description</label>
-      <textarea pInputTextarea id="description" [(ngModel)]="selectedLocation.description"
-        class="w-full" rows="2"></textarea>
+      <label for="description" class="block mb-2 font-medium"
+        >Description</label
+      >
+      <textarea
+        pInputTextarea
+        id="description"
+        [(ngModel)]="selectedLocation.description"
+        class="w-full"
+        rows="2"
+      ></textarea>
     </div>
 
     <div class="grid">
       <div class="col-6">
         <label for="barcode" class="block mb-2 font-medium">Barcode</label>
-        <input pInputText id="barcode" [(ngModel)]="selectedLocation.barcode" class="w-full" />
+        <input
+          pInputText
+          id="barcode"
+          [(ngModel)]="selectedLocation.barcode"
+          class="w-full"
+        />
       </div>
 
       <div class="col-6">
         <label for="capacity" class="block mb-2 font-medium">Capacity</label>
-        <p-inputNumber id="capacity" [(ngModel)]="selectedLocation.capacity"
-          [min]="0" class="w-full" [showButtons]="true"></p-inputNumber>
+        <p-inputNumber
+          id="capacity"
+          [(ngModel)]="selectedLocation.capacity"
+          [min]="0"
+          class="w-full"
+          [showButtons]="true"
+        ></p-inputNumber>
       </div>
     </div>
 
     <div class="grid">
       <div class="col-6">
         <label for="sortOrder" class="block mb-2 font-medium">Sort Order</label>
-        <p-inputNumber id="sortOrder" [(ngModel)]="selectedLocation.sortOrder"
-          [min]="0" class="w-full" [showButtons]="true"></p-inputNumber>
+        <p-inputNumber
+          id="sortOrder"
+          [(ngModel)]="selectedLocation.sortOrder"
+          [min]="0"
+          class="w-full"
+          [showButtons]="true"
+        ></p-inputNumber>
       </div>
 
       <div class="col-6 flex align-items-end">
         <div class="flex align-items-center">
-          <p-checkbox [(ngModel)]="selectedLocation.isActive" [binary]="true" inputId="isActive"></p-checkbox>
+          <p-checkbox
+            [(ngModel)]="selectedLocation.isActive"
+            [binary]="true"
+            inputId="isActive"
+          ></p-checkbox>
           <label for="isActive" class="ml-2">Active</label>
         </div>
       </div>
@@ -175,9 +247,17 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" icon="pi pi-times" (onClick)="displayDialog = false"
-      severity="secondary"></p-button>
-    <p-button label="Save" icon="pi pi-check" (onClick)="saveLocation()"
-      [disabled]="!selectedLocation.name || !selectedLocation.code"></p-button>
+    <p-button
+      label="Cancel"
+      icon="pi pi-times"
+      (onClick)="displayDialog = false"
+      severity="secondary"
+    ></p-button>
+    <p-button
+      label="Save"
+      icon="pi pi-check"
+      (onClick)="saveLocation()"
+      [disabled]="!selectedLocation.name || !selectedLocation.code"
+    ></p-button>
   </ng-template>
 </p-dialog>

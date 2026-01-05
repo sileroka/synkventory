@@ -1,24 +1,37 @@
 <div class="dashboard">
   <h1 class="mb-4">Dashboard</h1>
-  <p class="text-color-secondary mb-4">Welcome to Synkventory. Stock in sync.</p>
+  <p class="text-color-secondary mb-4">
+    Welcome to Synkventory. Stock in sync.
+  </p>
 
   <div class="grid">
     <!-- Low Stock Alert Card -->
     <div class="col-12 md:col-6 lg:col-4">
-      <p-card styleClass="dashboard-card low-stock-card" (click)="navigateToLowStock()">
+      <p-card
+        styleClass="dashboard-card low-stock-card"
+        (click)="navigateToLowStock()"
+      >
         <ng-template pTemplate="header">
           <div class="card-header">
             <i class="pi pi-exclamation-triangle text-4xl text-orange-500"></i>
           </div>
         </ng-template>
         <div class="card-content">
-          <div class="text-3xl font-bold mb-2" [class.text-orange-500]="lowStockCount > 0">
+          <div
+            class="text-3xl font-bold mb-2"
+            [class.text-orange-500]="lowStockCount > 0"
+          >
             {{ lowStockCount }}
           </div>
           <div class="text-color-secondary">Items Need Reorder</div>
         </div>
         <ng-template pTemplate="footer">
-          <p-button label="View All" icon="pi pi-arrow-right" [text]="true" size="small"></p-button>
+          <p-button
+            label="View All"
+            icon="pi pi-arrow-right"
+            [text]="true"
+            size="small"
+          ></p-button>
         </ng-template>
       </p-card>
     </div>
@@ -31,7 +44,11 @@
       Items Needing Reorder
     </h2>
 
-    <p-table [value]="lowStockAlerts" [loading]="loading" styleClass="p-datatable-sm p-datatable-striped">
+    <p-table
+      [value]="lowStockAlerts"
+      [loading]="loading"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
       <ng-template pTemplate="header">
         <tr>
           <th>SKU</th>
@@ -47,17 +64,33 @@
         <tr>
           <td>{{ alert.sku }}</td>
           <td>{{ alert.name }}</td>
-          <td class="font-semibold" [class.text-red-500]="alert.quantity === 0" [class.text-orange-500]="alert.quantity > 0">
+          <td
+            class="font-semibold"
+            [class.text-red-500]="alert.quantity === 0"
+            [class.text-orange-500]="alert.quantity > 0"
+          >
             {{ alert.quantity }}
           </td>
           <td>{{ alert.reorderPoint }}</td>
-          <td class="font-semibold text-primary">{{ alert.suggestedOrderQuantity }}</td>
-          <td>
-            <p-tag [value]="getStatusLabel(alert.status)" [severity]="getStatusSeverity(alert.status)"></p-tag>
+          <td class="font-semibold text-primary">
+            {{ alert.suggestedOrderQuantity }}
           </td>
           <td>
-            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="secondary"
-              pTooltip="View Item" tooltipPosition="left" (onClick)="navigateToItem(alert.id)"></p-button>
+            <p-tag
+              [value]="getStatusLabel(alert.status)"
+              [severity]="getStatusSeverity(alert.status)"
+            ></p-tag>
+          </td>
+          <td>
+            <p-button
+              icon="pi pi-eye"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              pTooltip="View Item"
+              tooltipPosition="left"
+              (onClick)="navigateToItem(alert.id)"
+            ></p-button>
           </td>
         </tr>
       </ng-template>
@@ -77,7 +110,9 @@
     <p-card>
       <div class="text-center py-4">
         <i class="pi pi-check-circle text-green-500 text-5xl mb-3"></i>
-        <h3 class="text-xl font-semibold text-green-700">All Inventory Levels Healthy</h3>
+        <h3 class="text-xl font-semibold text-green-700">
+          All Inventory Levels Healthy
+        </h3>
         <p class="text-color-secondary">No items currently need reordering.</p>
       </div>
     </p-card>

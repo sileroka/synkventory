@@ -24,7 +24,8 @@
         <div
           class="global-item"
           [class.selected]="isGlobalSelected()"
-          (click)="selectGlobal()">
+          (click)="selectGlobal()"
+        >
           <div class="flex align-items-center gap-2">
             <i class="pi pi-globe"></i>
             <span>Global Attributes</span>
@@ -37,29 +38,32 @@
         </div>
 
         @if (loading()) {
-          <div class="flex justify-content-center py-4">
-            <i class="pi pi-spin pi-spinner text-2xl"></i>
-          </div>
+        <div class="flex justify-content-center py-4">
+          <i class="pi pi-spin pi-spinner text-2xl"></i>
+        </div>
         } @else if (categories().length === 0) {
-          <div class="text-center py-4 text-color-secondary">
-            <i class="pi pi-folder-open text-3xl mb-2"></i>
-            <p>No categories found</p>
-          </div>
+        <div class="text-center py-4 text-color-secondary">
+          <i class="pi pi-folder-open text-3xl mb-2"></i>
+          <p>No categories found</p>
+        </div>
         } @else {
-          <ul class="category-list">
-            @for (category of categories(); track category.id) {
-              <li
-                class="category-item"
-                [class.selected]="selectedCategory()?.id === category.id && !isGlobalSelected()"
-                (click)="selectCategory(category)">
-                <div class="flex align-items-center gap-2">
-                  <i class="pi pi-folder"></i>
-                  <span>{{ category.name }}</span>
-                </div>
-                <span class="category-code">{{ category.code }}</span>
-              </li>
-            }
-          </ul>
+        <ul class="category-list">
+          @for (category of categories(); track category.id) {
+          <li
+            class="category-item"
+            [class.selected]="
+              selectedCategory()?.id === category.id && !isGlobalSelected()
+            "
+            (click)="selectCategory(category)"
+          >
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-folder"></i>
+              <span>{{ category.name }}</span>
+            </div>
+            <span class="category-code">{{ category.code }}</span>
+          </li>
+          }
+        </ul>
         }
       </div>
     </div>
@@ -68,117 +72,126 @@
     <div class="col-12 md:col-8">
       <div class="attributes-panel">
         @if (!selectedCategory() && !isGlobalSelected()) {
-          <div class="empty-state">
-            <i class="pi pi-cog text-5xl text-color-secondary mb-3"></i>
-            <h3 class="text-color-secondary">Select a Scope</h3>
-            <p class="text-color-secondary">
-              Choose Global or a category from the list to view and manage attributes
-            </p>
-          </div>
+        <div class="empty-state">
+          <i class="pi pi-cog text-5xl text-color-secondary mb-3"></i>
+          <h3 class="text-color-secondary">Select a Scope</h3>
+          <p class="text-color-secondary">
+            Choose Global or a category from the list to view and manage
+            attributes
+          </p>
+        </div>
         } @else {
-          <div class="flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">
-              @if (isGlobalSelected()) {
-                Global Attributes
-              } @else {
-                Attributes for "{{ selectedCategory()?.name }}"
-              }
-            </h3>
-            <p-button
-              label="Add Attribute"
-              icon="pi pi-plus"
-              (onClick)="showAddDialog()">
-            </p-button>
-          </div>
+        <div class="flex justify-content-between align-items-center mb-3">
+          <h3 class="mb-0">
+            @if (isGlobalSelected()) { Global Attributes } @else { Attributes
+            for "{{ selectedCategory()?.name }}" }
+          </h3>
+          <p-button
+            label="Add Attribute"
+            icon="pi pi-plus"
+            (onClick)="showAddDialog()"
+          >
+          </p-button>
+        </div>
 
-          @if (isGlobalSelected()) {
-            <p class="text-color-secondary text-sm mb-3">
-              <i class="pi pi-info-circle mr-1"></i>
-              Global attributes apply to all inventory items regardless of category
-            </p>
-          }
-
-          @if (attributesLoading()) {
-            <div class="flex justify-content-center py-4">
-              <i class="pi pi-spin pi-spinner text-2xl"></i>
-            </div>
-          } @else if (attributes().length === 0) {
-            <div class="empty-attributes">
-              <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
-              <p class="text-color-secondary mb-3">
-                No attributes defined for this category
-              </p>
-              <p-button
-                label="Add First Attribute"
-                icon="pi pi-plus"
-                severity="secondary"
-                (onClick)="showAddDialog()">
-              </p-button>
-            </div>
-          } @else {
-            <p-table
-              [value]="attributes()"
-              [tableStyle]="{ 'min-width': '40rem' }"
-              styleClass="p-datatable-striped">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Required</th>
-                  <th>Default Value</th>
-                  <th style="width: 120px">Actions</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-attr>
-                <tr>
-                  <td>
-                    <div class="font-semibold">{{ attr.name }}</div>
-                    @if (attr.description) {
-                      <div class="text-sm text-color-secondary">{{ attr.description }}</div>
-                    }
-                  </td>
-                  <td>
-                    <p-tag
-                      [value]="getTypeLabel(attr.attributeType)"
-                      [icon]="'pi ' + getTypeIcon(attr.attributeType)"
-                      [severity]="getTypeSeverity(attr.attributeType)">
-                    </p-tag>
-                  </td>
-                  <td>
-                    <i [class]="attr.isRequired ? 'pi pi-check text-green-500' : 'pi pi-times text-gray-400'"></i>
-                  </td>
-                  <td>
-                    @if (attr.defaultValue !== null && attr.defaultValue !== '') {
-                      <code class="default-value">{{ attr.defaultValue }}</code>
-                    } @else {
-                      <span class="text-color-secondary">—</span>
-                    }
-                  </td>
-                  <td>
-                    <p-button
-                      icon="pi pi-pencil"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="info"
-                      pTooltip="Edit"
-                      tooltipPosition="left"
-                      (onClick)="showEditDialog(attr)">
-                    </p-button>
-                    <p-button
-                      icon="pi pi-trash"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="danger"
-                      pTooltip="Delete"
-                      tooltipPosition="left"
-                      (onClick)="deleteAttribute(attr)">
-                    </p-button>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          }
-        }
+        @if (isGlobalSelected()) {
+        <p class="text-color-secondary text-sm mb-3">
+          <i class="pi pi-info-circle mr-1"></i>
+          Global attributes apply to all inventory items regardless of category
+        </p>
+        } @if (attributesLoading()) {
+        <div class="flex justify-content-center py-4">
+          <i class="pi pi-spin pi-spinner text-2xl"></i>
+        </div>
+        } @else if (attributes().length === 0) {
+        <div class="empty-attributes">
+          <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
+          <p class="text-color-secondary mb-3">
+            No attributes defined for this category
+          </p>
+          <p-button
+            label="Add First Attribute"
+            icon="pi pi-plus"
+            severity="secondary"
+            (onClick)="showAddDialog()"
+          >
+          </p-button>
+        </div>
+        } @else {
+        <p-table
+          [value]="attributes()"
+          [tableStyle]="{ 'min-width': '40rem' }"
+          styleClass="p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Default Value</th>
+              <th style="width: 120px">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-attr>
+            <tr>
+              <td>
+                <div class="font-semibold">{{ attr.name }}</div>
+                @if (attr.description) {
+                <div class="text-sm text-color-secondary">
+                  {{ attr.description }}
+                </div>
+                }
+              </td>
+              <td>
+                <p-tag
+                  [value]="getTypeLabel(attr.attributeType)"
+                  [icon]="'pi ' + getTypeIcon(attr.attributeType)"
+                  [severity]="getTypeSeverity(attr.attributeType)"
+                >
+                </p-tag>
+              </td>
+              <td>
+                <i
+                  [class]="
+                    attr.isRequired
+                      ? 'pi pi-check text-green-500'
+                      : 'pi pi-times text-gray-400'
+                  "
+                ></i>
+              </td>
+              <td>
+                @if (attr.defaultValue !== null && attr.defaultValue !== '') {
+                <code class="default-value">{{ attr.defaultValue }}</code>
+                } @else {
+                <span class="text-color-secondary">—</span>
+                }
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  pTooltip="Edit"
+                  tooltipPosition="left"
+                  (onClick)="showEditDialog(attr)"
+                >
+                </p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  pTooltip="Delete"
+                  tooltipPosition="left"
+                  (onClick)="deleteAttribute(attr)"
+                >
+                </p-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        } }
       </div>
     </div>
   </div>
@@ -191,8 +204,8 @@
   [modal]="true"
   [style]="{ width: '500px' }"
   [draggable]="false"
-  [resizable]="false">
-
+  [resizable]="false"
+>
   <div class="flex flex-column gap-3">
     <div>
       <label for="attrName" class="block mb-2">Attribute Name *</label>
@@ -202,7 +215,8 @@
         [(ngModel)]="currentAttribute.name"
         class="w-full"
         placeholder="e.g., Serial Number"
-        required />
+        required
+      />
     </div>
 
     <div>
@@ -213,7 +227,8 @@
         [(ngModel)]="currentAttribute.description"
         class="w-full"
         rows="2"
-        placeholder="Optional description of this attribute">
+        placeholder="Optional description of this attribute"
+      >
       </textarea>
     </div>
 
@@ -226,7 +241,8 @@
         optionLabel="label"
         optionValue="value"
         [style]="{ width: '100%' }"
-        appendTo="body">
+        appendTo="body"
+      >
         <ng-template let-option pTemplate="item">
           <div class="flex align-items-center gap-2">
             <i [class]="'pi ' + option.icon"></i>
@@ -243,16 +259,21 @@
     </div>
 
     @if (currentAttribute.attributeType === 'select') {
-      <div>
-        <label for="attrOptions" class="block mb-2">Options (comma-separated) *</label>
-        <input
-          pInputText
-          id="attrOptions"
-          [(ngModel)]="currentAttribute.options"
-          class="w-full"
-          placeholder="Option 1, Option 2, Option 3" />
-        <small class="text-color-secondary">Enter options separated by commas</small>
-      </div>
+    <div>
+      <label for="attrOptions" class="block mb-2"
+        >Options (comma-separated) *</label
+      >
+      <input
+        pInputText
+        id="attrOptions"
+        [(ngModel)]="currentAttribute.options"
+        class="w-full"
+        placeholder="Option 1, Option 2, Option 3"
+      />
+      <small class="text-color-secondary"
+        >Enter options separated by commas</small
+      >
+    </div>
     }
 
     <div>
@@ -262,14 +283,16 @@
         id="attrDefault"
         [(ngModel)]="currentAttribute.defaultValue"
         class="w-full"
-        placeholder="Optional default value" />
+        placeholder="Optional default value"
+      />
     </div>
 
     <div class="flex align-items-center gap-2">
       <p-checkbox
         [(ngModel)]="currentAttribute.isRequired"
         [binary]="true"
-        inputId="attrRequired">
+        inputId="attrRequired"
+      >
       </p-checkbox>
       <label for="attrRequired">Required attribute</label>
     </div>
@@ -281,7 +304,8 @@
         [(ngModel)]="currentAttribute.displayOrder"
         [min]="0"
         [showButtons]="true"
-        [style]="{ width: '100%' }">
+        [style]="{ width: '100%' }"
+      >
       </p-inputNumber>
     </div>
   </div>
@@ -291,13 +315,15 @@
       label="Cancel"
       severity="secondary"
       [text]="true"
-      (onClick)="displayDialog.set(false)">
+      (onClick)="displayDialog.set(false)"
+    >
     </p-button>
     <p-button
       [label]="isEditMode() ? 'Update' : 'Create'"
       icon="pi pi-check"
       (onClick)="saveAttribute()"
-      [disabled]="!currentAttribute.name">
+      [disabled]="!currentAttribute.name"
+    >
     </p-button>
   </ng-template>
 </p-dialog>

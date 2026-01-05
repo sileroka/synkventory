@@ -48,7 +48,7 @@
             <div class="attr-name">
               <span>{{ attr.name }}</span>
               @if (attr.description) {
-                <small class="description">{{ attr.description }}</small>
+              <small class="description">{{ attr.description }}</small>
               }
             </div>
           </td>
@@ -63,9 +63,9 @@
           </td>
           <td>
             @if (attr.isRequired) {
-              <p-tag value="Required" severity="warning" />
+            <p-tag value="Required" severity="warning" />
             } @else {
-              <span class="text-muted">Optional</span>
+            <span class="text-muted">Optional</span>
             }
           </td>
           <td>
@@ -174,18 +174,18 @@
       </div>
 
       @if (selectedAttribute.attributeType === 'select') {
-        <div class="form-field">
-          <label for="options">Options (comma-separated) *</label>
-          <input
-            id="options"
-            type="text"
-            pInputText
-            [(ngModel)]="selectedAttribute.options"
-            placeholder="Option 1, Option 2, Option 3"
-            [disabled]="isSaving()"
-          />
-          <small class="hint">Enter options separated by commas</small>
-        </div>
+      <div class="form-field">
+        <label for="options">Options (comma-separated) *</label>
+        <input
+          id="options"
+          type="text"
+          pInputText
+          [(ngModel)]="selectedAttribute.options"
+          placeholder="Option 1, Option 2, Option 3"
+          [disabled]="isSaving()"
+        />
+        <small class="hint">Enter options separated by commas</small>
+      </div>
       }
 
       <div class="form-field">

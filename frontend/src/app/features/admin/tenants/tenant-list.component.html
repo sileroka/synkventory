@@ -7,7 +7,11 @@
       <h1>Tenants</h1>
       <p>Manage all tenant organizations</p>
     </div>
-    <p-button label="Create Tenant" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+    <p-button
+      label="Create Tenant"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
   </header>
 
   <div class="content-card">
@@ -45,7 +49,7 @@
               [severity]="tenant.is_active ? 'success' : 'danger'"
             />
           </td>
-          <td>{{ tenant.created_at | date:'mediumDate' }}</td>
+          <td>{{ tenant.created_at | date : "mediumDate" }}</td>
           <td>
             <div class="action-buttons">
               <p-button
@@ -64,14 +68,14 @@
                 tooltipPosition="left"
               />
               @if (isSuperAdmin()) {
-                <p-button
-                  icon="pi pi-trash"
-                  [text]="true"
-                  severity="danger"
-                  (onClick)="confirmDelete(tenant)"
-                  pTooltip="Delete"
-                  tooltipPosition="left"
-                />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                (onClick)="confirmDelete(tenant)"
+                pTooltip="Delete"
+                tooltipPosition="left"
+              />
               }
             </div>
           </td>
@@ -83,7 +87,11 @@
             <div class="empty-state">
               <i class="pi pi-building"></i>
               <p>No tenants found</p>
-              <p-button label="Create First Tenant" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+              <p-button
+                label="Create First Tenant"
+                icon="pi pi-plus"
+                (onClick)="openCreateDialog()"
+              />
             </div>
           </td>
         </tr>
@@ -126,7 +134,11 @@
     </div>
 
     <ng-template pTemplate="footer">
-      <p-button label="Cancel" [text]="true" (onClick)="showCreateDialog.set(false)" />
+      <p-button
+        label="Cancel"
+        [text]="true"
+        (onClick)="showCreateDialog.set(false)"
+      />
       <p-button
         label="Create"
         icon="pi pi-check"

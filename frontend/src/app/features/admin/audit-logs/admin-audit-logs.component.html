@@ -118,10 +118,10 @@
             {{ formatDateTime(log.createdAt) }}
           </td>
           <td>
-            <span class="tenant-name">{{ log.tenantName || '—' }}</span>
+            <span class="tenant-name">{{ log.tenantName || "—" }}</span>
           </td>
           <td>
-            <span class="user-email">{{ log.userEmail || 'System' }}</span>
+            <span class="user-email">{{ log.userEmail || "System" }}</span>
           </td>
           <td>
             <p-tag
@@ -133,13 +133,13 @@
             <div class="entity-info">
               <span class="entity-type">{{ log.entityType }}</span>
               @if (log.entityName) {
-                <span class="entity-name">{{ log.entityName }}</span>
+              <span class="entity-name">{{ log.entityName }}</span>
               }
             </div>
           </td>
           <td>
             <span class="ip-address" [pTooltip]="log.userAgent || 'Unknown'">
-              {{ log.ipAddress || '—' }}
+              {{ log.ipAddress || "—" }}
             </span>
           </td>
           <td>
@@ -175,55 +175,55 @@
     [style]="{ width: '600px' }"
   >
     @if (selectedLog()) {
-      <div class="log-details">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Timestamp</label>
-            <span>{{ formatDateTime(selectedLog()!.createdAt) }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Tenant</label>
-            <span>{{ selectedLog()!.tenantName || '—' }}</span>
-          </div>
-          <div class="detail-item">
-            <label>User</label>
-            <span>{{ selectedLog()!.userEmail || 'System' }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Action</label>
-            <p-tag
-              [value]="getActionLabel(selectedLog()!.action)"
-              [severity]="getActionSeverity(selectedLog()!.action)"
-            />
-          </div>
-          <div class="detail-item">
-            <label>Entity Type</label>
-            <span>{{ selectedLog()!.entityType }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Entity Name</label>
-            <span>{{ selectedLog()!.entityName || '—' }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Entity ID</label>
-            <span class="monospace">{{ selectedLog()!.entityId || '—' }}</span>
-          </div>
-          <div class="detail-item">
-            <label>IP Address</label>
-            <span>{{ selectedLog()!.ipAddress || '—' }}</span>
-          </div>
-          <div class="detail-item full-width">
-            <label>Browser</label>
-            <span>{{ parseUserAgent(selectedLog()!.userAgent) }}</span>
-          </div>
-          @if (selectedLog()!.extraData) {
-            <div class="detail-item full-width">
-              <label>Additional Data</label>
-              <pre class="extra-data">{{ selectedLog()!.extraData | json }}</pre>
-            </div>
-          }
+    <div class="log-details">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Timestamp</label>
+          <span>{{ formatDateTime(selectedLog()!.createdAt) }}</span>
         </div>
+        <div class="detail-item">
+          <label>Tenant</label>
+          <span>{{ selectedLog()!.tenantName || "—" }}</span>
+        </div>
+        <div class="detail-item">
+          <label>User</label>
+          <span>{{ selectedLog()!.userEmail || "System" }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Action</label>
+          <p-tag
+            [value]="getActionLabel(selectedLog()!.action)"
+            [severity]="getActionSeverity(selectedLog()!.action)"
+          />
+        </div>
+        <div class="detail-item">
+          <label>Entity Type</label>
+          <span>{{ selectedLog()!.entityType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity Name</label>
+          <span>{{ selectedLog()!.entityName || "—" }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity ID</label>
+          <span class="monospace">{{ selectedLog()!.entityId || "—" }}</span>
+        </div>
+        <div class="detail-item">
+          <label>IP Address</label>
+          <span>{{ selectedLog()!.ipAddress || "—" }}</span>
+        </div>
+        <div class="detail-item full-width">
+          <label>Browser</label>
+          <span>{{ parseUserAgent(selectedLog()!.userAgent) }}</span>
+        </div>
+        @if (selectedLog()!.extraData) {
+        <div class="detail-item full-width">
+          <label>Additional Data</label>
+          <pre class="extra-data">{{ selectedLog()!.extraData | json }}</pre>
+        </div>
+        }
       </div>
+    </div>
     }
   </p-dialog>
 </div>
