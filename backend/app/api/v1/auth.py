@@ -129,6 +129,7 @@ def login(
             },
             request=http_request,
         )
+        db.commit()  # Commit audit log before raising
         raise auth_error
 
     # Check if user is active
@@ -143,6 +144,7 @@ def login(
             extra_data={"reason": "user_inactive"},
             request=http_request,
         )
+        db.commit()  # Commit audit log before raising
         raise auth_error
 
     # Check if user is locked
@@ -158,6 +160,7 @@ def login(
                 extra_data={"reason": "user_locked"},
                 request=http_request,
             )
+            db.commit()  # Commit audit log before raising
             raise auth_error
 
     # Verify password
@@ -172,6 +175,7 @@ def login(
             extra_data={"reason": "invalid_password"},
             request=http_request,
         )
+        db.commit()  # Commit audit log before raising
         raise auth_error
 
     # Create tokens
@@ -204,6 +208,7 @@ def login(
             user_id=UUID(user_response.id),
             request=http_request,
         )
+        db.commit()  # Commit audit log since login is read-only
     except Exception as e:
         logger.warning(f"Failed to log login audit: {e}")
 
@@ -286,12 +291,16 @@ def logout(
 
     # Log logout before clearing cookies
     if tenant and user:
-        audit_service.log_logout(
-            db=db,
-            tenant_id=tenant.id,
-            user_id=user.id,
-            request=http_request,
-        )
+        try:
+            audit_service.log_logout(
+                db=db,
+                tenant_id=tenant.id,
+                user_id=user.id,
+                request=http_request,
+            )
+            db.commit()  # Commit audit log since logout is read-only
+        except Exception as e:
+            logger.warning(f"Failed to log logout audit: {e}")
 
     delete_auth_cookie(response, "access_token")
     delete_auth_cookie(response, "refresh_token")
