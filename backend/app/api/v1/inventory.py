@@ -90,7 +90,7 @@ def get_inventory_items(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(
-        25, ge=1, le=100, alias="pageSize", description="Items per page"
+        25, ge=1, le=1000, alias="pageSize", description="Items per page"
     ),
     search: Optional[str] = Query(None, description="Search by name or SKU"),
     category_ids: Optional[List[UUID]] = Query(
