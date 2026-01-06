@@ -36,7 +36,6 @@ from app.schemas.bill_of_material import (
 )
 from app.schemas.response import (
     DataResponse,
-    ListResponse,
     ResponseMeta,
     MessageResponse,
 )
@@ -117,7 +116,7 @@ def serialize_where_used_entry(entry: BillOfMaterialModel) -> dict:
 # ============================================================================
 
 
-@router.get("/items/{item_id}/bom", response_model=ListResponse[BillOfMaterial])
+@router.get("/items/{item_id}/bom", response_model=DataResponse[list[BillOfMaterial]])
 def get_item_bom(
     request: Request,
     item_id: UUID,
@@ -130,7 +129,7 @@ def get_item_bom(
     """
     bom_entries = bom_service.get_bom_components(db, item_id)
     
-    return ListResponse(
+    return DataResponse(
         data=[serialize_bom_entry(entry) for entry in bom_entries],
         meta=get_response_meta(request),
     )
@@ -252,7 +251,7 @@ def delete_bom_component(
 # ============================================================================
 
 
-@router.get("/items/{item_id}/where-used", response_model=ListResponse[WhereUsedEntry])
+@router.get("/items/{item_id}/where-used", response_model=DataResponse[list[WhereUsedEntry]])
 def get_where_used(
     request: Request,
     item_id: UUID,
@@ -265,7 +264,7 @@ def get_where_used(
     """
     where_used = bom_service.get_where_used(db, item_id)
     
-    return ListResponse(
+    return DataResponse(
         data=[serialize_where_used_entry(entry) for entry in where_used],
         meta=get_response_meta(request),
     )
