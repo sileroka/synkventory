@@ -922,9 +922,7 @@ def compare_revisions(
     return DataResponse(data=comparison, meta=get_response_meta(request))
 
 
-@router.post(
-    "/{item_id}/revisions/restore", response_model=DataResponse[InventoryItem]
-)
+@router.post("/{item_id}/revisions/restore", response_model=DataResponse[InventoryItem])
 def restore_revision(
     item_id: UUID,
     restore_request: RestoreRevisionRequest,
@@ -992,4 +990,3 @@ def restore_revision(
     )
 
     return DataResponse(data=add_image_url(db_item), meta=get_response_meta(request))
-
