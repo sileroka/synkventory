@@ -184,4 +184,3 @@ class SupplierService:
 
 
 supplier_service = SupplierService()
-*** End Patch
