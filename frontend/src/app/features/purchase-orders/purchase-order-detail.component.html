@@ -311,7 +311,7 @@
             ></p-button>
           } @else {
             <div class="lots-list">
-              @for (lot of receiveItem.lots; track $index; let lotIndex = $index) {
+              @for (lot of receiveItem.lots; track lot; let lotIndex = $index) {
               <div class="lot-entry border-round border border-surface-border p-2 mb-2 surface-ground">
                 <div class="grid gap-2">
                   <div class="col-6 md:col-3">
@@ -347,8 +347,8 @@
                   <div class="col-6 md:col-3">
                     <small class="text-color-secondary">Manufacture</small>
                     <p-calendar
-                      [ngModel]="receiveItem.lots![lotIndex].manufactureDate ? new Date(receiveItem.lots![lotIndex].manufactureDate!) : null"
-                      (ngModelChange)="receiveItem.lots![lotIndex].manufactureDate = $event ? ($event | date:'yyyy-MM-dd') : null"
+                      [ngModel]="getLotManufactureDate(i, lotIndex)"
+                      (ngModelChange)="setLotManufactureDate(i, lotIndex, $event)"
                       dateFormat="yy-mm-dd"
                       placeholder="Date"
                       [showIcon]="true"
@@ -358,8 +358,8 @@
                   <div class="col-6 md:col-3">
                     <small class="text-color-secondary">Expiration</small>
                     <p-calendar
-                      [ngModel]="receiveItem.lots![lotIndex].expirationDate ? new Date(receiveItem.lots![lotIndex].expirationDate!) : null"
-                      (ngModelChange)="receiveItem.lots![lotIndex].expirationDate = $event ? ($event | date:'yyyy-MM-dd') : null"
+                      [ngModel]="getLotExpirationDate(i, lotIndex)"
+                      (ngModelChange)="setLotExpirationDate(i, lotIndex, $event)"
                       dateFormat="yy-mm-dd"
                       placeholder="Date"
                       [showIcon]="true"

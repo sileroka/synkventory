@@ -1,6 +1,7 @@
 """
 Purchase Order model for procurement management.
 """
+
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -24,6 +25,7 @@ from app.db.session import Base
 
 class PurchaseOrderStatus(str, Enum):
     """Status values for purchase orders."""
+
     DRAFT = "draft"
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
@@ -35,6 +37,7 @@ class PurchaseOrderStatus(str, Enum):
 
 class PurchaseOrderPriority(str, Enum):
     """Priority levels for purchase orders."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -44,10 +47,11 @@ class PurchaseOrderPriority(str, Enum):
 class PurchaseOrder(Base):
     """
     Purchase Order model for tracking procurement of inventory items.
-    
+
     A purchase order represents a request to purchase items from a supplier,
     typically triggered by low stock levels or manual reorder requests.
     """
+
     __tablename__ = "purchase_orders"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -57,16 +61,24 @@ class PurchaseOrder(Base):
         nullable=False,
         index=True,
     )
-    
+
     # Purchase order identification
     po_number = Column(String(50), nullable=False, index=True)
-    
-    # Supplier information (stored as text for flexibility)
+
+    # Supplier relationship (optional - legacy POs may have text-only supplier info)
+    supplier_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("suppliers.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # Supplier information (stored as text for flexibility and backward compatibility)
     supplier_name = Column(String(255), nullable=True)
     supplier_contact = Column(String(255), nullable=True)
     supplier_email = Column(String(255), nullable=True)
     supplier_phone = Column(String(50), nullable=True)
-    
+
     # Status and priority
     status = Column(
         SQLEnum(
@@ -87,19 +99,19 @@ class PurchaseOrder(Base):
         nullable=False,
         default=PurchaseOrderPriority.NORMAL,
     )
-    
+
     # Dates
     order_date = Column(DateTime(timezone=True), nullable=True)
     expected_date = Column(DateTime(timezone=True), nullable=True)
     received_date = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Receiving location
     receiving_location_id = Column(
         UUID(as_uuid=True),
         ForeignKey("locations.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
+
     # Assigned/Requested by
     requested_by_id = Column(
         UUID(as_uuid=True),
@@ -111,34 +123,56 @@ class PurchaseOrder(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
+
     # Notes and references
     notes = Column(Text, nullable=True)
     external_reference = Column(String(100), nullable=True)  # External PO number
-    
+
     # Totals (calculated from line items)
     subtotal = Column(Numeric(12, 2), nullable=False, default=0)
     tax_amount = Column(Numeric(12, 2), nullable=False, default=0)
     shipping_cost = Column(Numeric(12, 2), nullable=False, default=0)
     total_amount = Column(Numeric(12, 2), nullable=False, default=0)
-    
+
     # Auto-generated flag
     auto_generated = Column(Boolean, nullable=False, default=False)
-    
+
     # Audit fields
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+    created_by = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    updated_by = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     tenant = relationship("Tenant", backref="purchase_orders")
+    supplier = relationship("Supplier", back_populates="purchase_orders")
     receiving_location = relationship("Location", backref="purchase_orders")
-    requested_by = relationship("User", foreign_keys=[requested_by_id], backref="requested_purchase_orders")
-    approved_by = relationship("User", foreign_keys=[approved_by_id], backref="approved_purchase_orders")
-    created_by_user = relationship("User", foreign_keys=[created_by], backref="created_purchase_orders")
+    requested_by = relationship(
+        "User", foreign_keys=[requested_by_id], backref="requested_purchase_orders"
+    )
+    approved_by = relationship(
+        "User", foreign_keys=[approved_by_id], backref="approved_purchase_orders"
+    )
+    created_by_user = relationship(
+        "User", foreign_keys=[created_by], backref="created_purchase_orders"
+    )
     updated_by_user = relationship("User", foreign_keys=[updated_by])
-    line_items = relationship("PurchaseOrderLineItem", back_populates="purchase_order", cascade="all, delete-orphan")
+    line_items = relationship(
+        "PurchaseOrderLineItem",
+        back_populates="purchase_order",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<PurchaseOrder {self.po_number} - {self.status.value}>"
@@ -163,9 +197,10 @@ class PurchaseOrder(Base):
 class PurchaseOrderLineItem(Base):
     """
     Line item for a purchase order.
-    
+
     Represents a single item being ordered with quantity and pricing.
     """
+
     __tablename__ = "purchase_order_line_items"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -175,7 +210,7 @@ class PurchaseOrderLineItem(Base):
         nullable=False,
         index=True,
     )
-    
+
     # Parent purchase order
     purchase_order_id = Column(
         UUID(as_uuid=True),
@@ -183,7 +218,7 @@ class PurchaseOrderLineItem(Base):
         nullable=False,
         index=True,
     )
-    
+
     # The item being ordered
     item_id = Column(
         UUID(as_uuid=True),
@@ -191,21 +226,28 @@ class PurchaseOrderLineItem(Base):
         nullable=False,
         index=True,
     )
-    
+
     # Quantities
     quantity_ordered = Column(Integer, nullable=False, default=1)
     quantity_received = Column(Integer, nullable=False, default=0)
-    
+
     # Pricing
     unit_price = Column(Numeric(12, 2), nullable=False, default=0)
     line_total = Column(Numeric(12, 2), nullable=False, default=0)
-    
+
     # Notes for this line item
     notes = Column(Text, nullable=True)
-    
+
     # Audit fields
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
 
     # Relationships
     tenant = relationship("Tenant")

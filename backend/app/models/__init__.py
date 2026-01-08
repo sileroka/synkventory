@@ -18,6 +18,7 @@ from app.models.purchase_order import (
     PurchaseOrderPriority,
 )
 from app.models.item_lot import ItemLot
+from app.models.supplier import Supplier
 
 __all__ = [
     "Tenant",
@@ -45,4 +46,5 @@ __all__ = [
     "PurchaseOrderStatus",
     "PurchaseOrderPriority",
     "ItemLot",
+    "Supplier",
 ]

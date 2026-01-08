@@ -394,6 +394,43 @@ export class PurchaseOrderDetailComponent implements OnInit {
     }
   }
 
+  // Helper methods for date handling in template
+  getLotManufactureDate(itemIndex: number, lotIndex: number): Date | null {
+    const lot = this.receiveItems[itemIndex].lots?.[lotIndex];
+    return lot?.manufactureDate ? new Date(lot.manufactureDate) : null;
+  }
+
+  setLotManufactureDate(itemIndex: number, lotIndex: number, date: Date | null): void {
+    const lot = this.receiveItems[itemIndex].lots?.[lotIndex];
+    if (lot) {
+      lot.manufactureDate = date ? this.formatDateToISO(date) : undefined;
+    }
+  }
+
+  getLotExpirationDate(itemIndex: number, lotIndex: number): Date | null {
+    const lot = this.receiveItems[itemIndex].lots?.[lotIndex];
+    return lot?.expirationDate ? new Date(lot.expirationDate) : null;
+  }
+
+  setLotExpirationDate(itemIndex: number, lotIndex: number, date: Date | null): void {
+    const lot = this.receiveItems[itemIndex].lots?.[lotIndex];
+    if (lot) {
+      lot.expirationDate = date ? this.formatDateToISO(date) : undefined;
+    }
+  }
+
+  private formatDateToISO(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Track by function for lots
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   openEditDialog(): void {
     const po = this.purchaseOrder();
     if (!po) return;

@@ -12,13 +12,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { CardModule } from 'primeng/card';
+import { SkeletonModule } from 'primeng/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Table } from 'primeng/table';
-import { ItemLotService } from '../../../services/item-lot.service';
+import { ItemLotService } from '../../services/item-lot.service';
 import { LotDialogComponent } from '../lot-dialog/lot-dialog.component';
-import { IItemLot, ILotFilters } from '../../../models/item-lot.model';
-import { ILocation } from '../../../features/locations/models/location.model';
-import { LocationService } from '../../../features/locations/services/location.service';
+import { IItemLot, ILotFilters } from '../../models/item-lot.model';
+import { ILocation } from '../../features/locations/models/location.model';
+import { LocationService } from '../../features/locations/services/location.service';
 
 @Component({
   selector: 'app-lot-list-table',
@@ -35,6 +37,8 @@ import { LocationService } from '../../../features/locations/services/location.s
     MenuModule,
     TooltipModule,
     InputSwitchModule,
+    CardModule,
+    SkeletonModule,
     FormsModule
   ],
   templateUrl: './lot-list-table.component.html',
@@ -51,6 +55,9 @@ export class LotListTableComponent implements OnInit {
   totalRecords = 0;
   pageSize = 25;
   currentPage = 1;
+  
+  // Expose Math to template
+  Math = Math;
 
   // Filters
   selectedLocationId: string | null = null;
@@ -75,7 +82,7 @@ export class LotListTableComponent implements OnInit {
   private loadLocations(): void {
     this.locationService.getLocations(1, 1000).subscribe({
       next: (response) => {
-        this.locations = response.data || [];
+        this.locations = response.items || [];
       }
     });
   }
@@ -121,8 +128,7 @@ export class LotListTableComponent implements OnInit {
 
   openCreateDialog(): void {
     this.dialogRef = this.dialogService.open(LotDialogComponent, {
-      width: '100%',
-      maxWidth: '600px',
+      width: '600px',
       data: { itemId: this.itemId }
     });
 
@@ -141,8 +147,7 @@ export class LotListTableComponent implements OnInit {
 
   openEditDialog(lot: IItemLot): void {
     this.dialogRef = this.dialogService.open(LotDialogComponent, {
-      width: '100%',
-      maxWidth: '600px',
+      width: '600px',
       data: { lot, itemId: this.itemId }
     });
 
@@ -192,7 +197,7 @@ export class LotListTableComponent implements OnInit {
     });
   }
 
-  getExpirationStatus(lot: IItemLot): { severity: string; label: string } {
+  getExpirationStatus(lot: IItemLot): { severity: 'success' | 'info' | 'warning' | 'danger'; label: string } {
     if (!lot.expirationDate) {
       return { severity: 'info', label: 'No expiration' };
     }

@@ -71,94 +71,96 @@
     [tableStyle]="{ 'min-width': '50rem' }"
     dataKey="id"
   >
-    <!-- Lot Number -->
-    <p-column field="lotNumber" header="Lot Number" [sortable]="false" styleClass="w-2">
-      <ng-template let-lot pTemplate="body">
-        <strong>{{ lot.lotNumber }}</strong>
-        <small
-          *ngIf="lot.serialNumber"
-          class="block text-color-secondary"
-        >
-          SN: {{ lot.serialNumber }}
-        </small>
-      </ng-template>
-    </p-column>
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 20%">Lot Number</th>
+        <th style="width: 10%; text-align: center">Quantity</th>
+        <th style="width: 12%; text-align: center">Manufacture</th>
+        <th style="width: 18%">Expiration</th>
+        <th style="width: 18%">Location</th>
+        <th style="width: 12%; text-align: center">Created</th>
+        <th style="width: 10%; text-align: center">Actions</th>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="body" let-lot>
+      <tr>
+        <!-- Lot Number -->
+        <td>
+          <strong>{{ lot.lotNumber }}</strong>
+          <small
+            *ngIf="lot.serialNumber"
+            class="block text-color-secondary"
+          >
+            SN: {{ lot.serialNumber }}
+          </small>
+        </td>
 
-    <!-- Quantity -->
-    <p-column field="quantity" header="Quantity" [sortable]="false" styleClass="text-center w-1">
-      <ng-template let-lot pTemplate="body">
-        <strong>{{ lot.quantity }}</strong>
-      </ng-template>
-    </p-column>
+        <!-- Quantity -->
+        <td class="text-center">
+          <strong>{{ lot.quantity }}</strong>
+        </td>
 
-    <!-- Manufacture Date -->
-    <p-column field="manufactureDate" header="Manufacture" [sortable]="false" styleClass="text-center w-1">
-      <ng-template let-lot pTemplate="body">
-        <small *ngIf="lot.manufactureDate">
-          {{ lot.manufactureDate | date:'shortDate' }}
-        </small>
-        <small *ngIf="!lot.manufactureDate" class="text-color-secondary">-</small>
-      </ng-template>
-    </p-column>
+        <!-- Manufacture Date -->
+        <td class="text-center">
+          <small *ngIf="lot.manufactureDate">
+            {{ lot.manufactureDate | date:'shortDate' }}
+          </small>
+          <small *ngIf="!lot.manufactureDate" class="text-color-secondary">-</small>
+        </td>
 
-    <!-- Expiration Date & Status -->
-    <p-column field="expirationDate" header="Expiration" [sortable]="false" styleClass="w-2">
-      <ng-template let-lot pTemplate="body">
-        <div *ngIf="lot.expirationDate">
-          <small class="block">{{ lot.expirationDate | date:'shortDate' }}</small>
-          <p-tag
-            [value]="getExpirationStatus(lot).label"
-            [severity]="getExpirationStatus(lot).severity"
-            styleClass="text-xs mt-1"
-          ></p-tag>
-        </div>
-        <small *ngIf="!lot.expirationDate" class="text-color-secondary">No expiration</small>
-      </ng-template>
-    </p-column>
+        <!-- Expiration Date & Status -->
+        <td>
+          <div *ngIf="lot.expirationDate">
+            <small class="block">{{ lot.expirationDate | date:'shortDate' }}</small>
+            <p-tag
+              [value]="getExpirationStatus(lot).label"
+              [severity]="getExpirationStatus(lot).severity"
+              styleClass="text-xs mt-1"
+            ></p-tag>
+          </div>
+          <small *ngIf="!lot.expirationDate" class="text-color-secondary">No expiration</small>
+        </td>
 
-    <!-- Location -->
-    <p-column field="locationId" header="Location" [sortable]="false" styleClass="w-2">
-      <ng-template let-lot pTemplate="body">
-        <small>{{ getLocationName(lot.locationId) }}</small>
-      </ng-template>
-    </p-column>
+        <!-- Location -->
+        <td>
+          <small>{{ getLocationName(lot.locationId) }}</small>
+        </td>
 
-    <!-- Created -->
-    <p-column field="createdAt" header="Created" [sortable]="false" styleClass="text-center w-1">
-      <ng-template let-lot pTemplate="body">
-        <small class="text-color-secondary">
-          {{ lot.createdAt | date:'short' }}
-        </small>
-      </ng-template>
-    </p-column>
+        <!-- Created -->
+        <td class="text-center">
+          <small class="text-color-secondary">
+            {{ lot.createdAt | date:'short' }}
+          </small>
+        </td>
 
-    <!-- Actions -->
-    <p-column header="Actions" [sortable]="false" styleClass="text-center w-1">
-      <ng-template let-lot pTemplate="body">
-        <div class="flex gap-2 justify-content-center">
-          <p-button
-            icon="pi pi-pencil"
-            [rounded]="true"
-            [text]="true"
-            severity="secondary"
-            [disabled]="loading"
-            (onClick)="openEditDialog(lot)"
-            pTooltip="Edit lot"
-            tooltipPosition="top"
-          ></p-button>
-          <p-button
-            icon="pi pi-trash"
-            [rounded]="true"
-            [text]="true"
-            severity="danger"
-            [disabled]="loading"
-            (onClick)="confirmDelete(lot)"
-            pTooltip="Delete lot"
-            tooltipPosition="top"
-          ></p-button>
-        </div>
-      </ng-template>
-    </p-column>
+        <!-- Actions -->
+        <td class="text-center">
+          <div class="flex gap-2 justify-content-center">
+            <p-button
+              icon="pi pi-pencil"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              [disabled]="loading"
+              (onClick)="openEditDialog(lot)"
+              pTooltip="Edit lot"
+              tooltipPosition="top"
+            ></p-button>
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              [disabled]="loading"
+              (onClick)="confirmDelete(lot)"
+              pTooltip="Delete lot"
+              tooltipPosition="top"
+            ></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
 
     <!-- Empty State -->
     <ng-template pTemplate="emptymessage">

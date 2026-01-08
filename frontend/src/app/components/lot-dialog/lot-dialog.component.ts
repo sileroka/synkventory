@@ -10,10 +10,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { ItemLotService } from '../../../services/item-lot.service';
-import { LocationService } from '../../../features/locations/services/location.service';
-import { IItemLot, IItemLotCreate, IItemLotUpdate } from '../../../models/item-lot.model';
-import { ILocation } from '../../../features/locations/models/location.model';
+import { ItemLotService } from '../../services/item-lot.service';
+import { LocationService } from '../../features/locations/services/location.service';
+import { IItemLot, IItemLotCreate, IItemLotUpdate } from '../../models/item-lot.model';
+import { ILocation } from '../../features/locations/models/location.model';
 
 @Component({
   selector: 'app-lot-dialog',
@@ -96,7 +96,7 @@ export class LotDialogComponent implements OnInit {
     this.loading = true;
     this.locationService.getLocations(1, 1000).subscribe({
       next: (response) => {
-        this.locations = response.data || [];
+        this.locations = response.items || [];
         this.loading = false;
       },
       error: () => {
