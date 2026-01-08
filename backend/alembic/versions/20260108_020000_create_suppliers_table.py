@@ -21,7 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Create suppliers table with RLS policies."""
-    
+
     # Create suppliers table
     op.create_table(
         "suppliers",
@@ -32,15 +32,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("tenant_id", postgresql.UUID(as_uuid=True), nullable=False),
-        
         # Supplier identification
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("contact_name", sa.String(255), nullable=True),
-        
         # Contact information
         sa.Column("email", sa.String(255), nullable=True),
         sa.Column("phone", sa.String(50), nullable=True),
-        
         # Address fields
         sa.Column("address_line1", sa.String(255), nullable=True),
         sa.Column("address_line2", sa.String(255), nullable=True),
@@ -48,11 +45,11 @@ def upgrade() -> None:
         sa.Column("state", sa.String(100), nullable=True),
         sa.Column("postal_code", sa.String(20), nullable=True),
         sa.Column("country", sa.String(100), nullable=True),
-        
         # Additional information
         sa.Column("notes", sa.Text, nullable=True),
-        sa.Column("is_active", sa.Boolean, nullable=False, server_default=sa.text("true")),
-        
+        sa.Column(
+            "is_active", sa.Boolean, nullable=False, server_default=sa.text("true")
+        ),
         # Audit timestamps
         sa.Column(
             "created_at",
@@ -68,10 +65,8 @@ def upgrade() -> None:
         ),
         sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("updated_by", postgresql.UUID(as_uuid=True), nullable=True),
-        
         # Primary key
         sa.PrimaryKeyConstraint("id"),
-        
         # Foreign keys
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"], ondelete="SET NULL"),
@@ -86,9 +81,7 @@ def upgrade() -> None:
 
     # Create unique constraint on (tenant_id, name) to prevent duplicate suppliers
     op.create_unique_constraint(
-        "uq_suppliers_tenant_name",
-        "suppliers",
-        ["tenant_id", "name"]
+        "uq_suppliers_tenant_name", "suppliers", ["tenant_id", "name"]
     )
 
     # Enable Row Level Security
@@ -122,10 +115,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop suppliers table and related policies."""
-    
+
     # Drop RLS policies
     op.execute("DROP POLICY IF EXISTS suppliers_admin_bypass ON suppliers")
     op.execute("DROP POLICY IF EXISTS tenant_isolation_policy ON suppliers")
-    
+
     # Drop the table (cascades to indices and constraints)
     op.drop_table("suppliers")

@@ -193,6 +193,13 @@ class PurchaseOrder(Base):
         )
         self.total_amount = self.subtotal + self.tax_amount + self.shipping_cost
 
+    @property
+    def supplier_display_name(self) -> str | None:
+        """Preferred supplier name: linked Supplier.name first, otherwise stored text."""
+        if self.supplier and self.supplier.name:
+            return self.supplier.name
+        return self.supplier_name
+
 
 class PurchaseOrderLineItem(Base):
     """
