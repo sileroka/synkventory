@@ -12,7 +12,12 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, get_db
 from app.core.tenant import get_current_tenant
 from app.models.user import User
-from app.schemas.response import DataResponse, ListResponse, PaginationMeta, MessageResponse
+from app.schemas.response import (
+    DataResponse,
+    ListResponse,
+    PaginationMeta,
+    MessageResponse,
+)
 from app.schemas.supplier import SupplierCreate, SupplierUpdate, SupplierResponse
 from app.services.supplier_service import supplier_service
 
@@ -37,7 +42,9 @@ def list_suppliers(
 ):
     tenant = get_current_tenant()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found"
+        )
 
     suppliers, total = supplier_service.get_suppliers(
         db=db,
@@ -58,7 +65,11 @@ def list_suppliers(
     return ListResponse(data=data, meta=meta)
 
 
-@router.post("/", response_model=DataResponse[SupplierResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=DataResponse[SupplierResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_supplier_endpoint(
     payload: SupplierCreate,
     db: Session = Depends(get_db),
@@ -66,7 +77,9 @@ def create_supplier_endpoint(
 ):
     tenant = get_current_tenant()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found"
+        )
 
     supplier = supplier_service.create_supplier(
         db=db,
@@ -88,11 +101,17 @@ def get_supplier_endpoint(
 ):
     tenant = get_current_tenant()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found"
+        )
 
-    supplier = supplier_service.get_supplier(db=db, tenant_id=tenant.id, supplier_id=supplier_id)
+    supplier = supplier_service.get_supplier(
+        db=db, tenant_id=tenant.id, supplier_id=supplier_id
+    )
     if not supplier:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found"
+        )
 
     return DataResponse(data=_to_response(supplier))
 
@@ -107,7 +126,9 @@ def update_supplier_endpoint(
 ):
     tenant = get_current_tenant()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found"
+        )
 
     supplier = supplier_service.update_supplier(
         db=db,
@@ -117,7 +138,9 @@ def update_supplier_endpoint(
         **payload.model_dump(exclude_unset=True),
     )
     if not supplier:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found"
+        )
 
     db.commit()
     db.refresh(supplier)
@@ -132,11 +155,17 @@ def delete_supplier_endpoint(
 ):
     tenant = get_current_tenant()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant not found"
+        )
 
-    supplier = supplier_service.get_supplier(db=db, tenant_id=tenant.id, supplier_id=supplier_id)
+    supplier = supplier_service.get_supplier(
+        db=db, tenant_id=tenant.id, supplier_id=supplier_id
+    )
     if not supplier:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Supplier not found"
+        )
 
     deleted = supplier_service.delete_supplier(
         db=db,

@@ -63,5 +63,3 @@ class SupplierResponse(SupplierBase):
 
     # Related purchase orders
     purchase_order_ids: List[UUID] = Field(default_factory=list)
-
-*** End Patch
