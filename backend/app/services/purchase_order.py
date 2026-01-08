@@ -1,6 +1,7 @@
 """
 Service layer for Purchase Order operations.
 """
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -31,6 +32,7 @@ from app.schemas.purchase_order import (
     ReceiveItemsRequest,
 )
 from app.services.audit import audit_service
+from app.services.lot import lot_service
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +74,7 @@ class PurchaseOrderService:
         """Generate a unique PO number."""
         today = datetime.utcnow().strftime("%Y%m%d")
         prefix = f"PO-{today}-"
-        
+
         # Find the highest number for today
         latest = (
             db.query(PurchaseOrder)
@@ -80,7 +82,7 @@ class PurchaseOrderService:
             .order_by(PurchaseOrder.po_number.desc())
             .first()
         )
-        
+
         if latest:
             try:
                 last_num = int(latest.po_number.split("-")[-1])
@@ -89,7 +91,7 @@ class PurchaseOrderService:
                 next_num = 1
         else:
             next_num = 1
-        
+
         return f"{prefix}{next_num:04d}"
 
     def get_purchase_orders(
@@ -103,40 +105,38 @@ class PurchaseOrderService:
         supplier_name: Optional[str] = None,
     ) -> Tuple[List[PurchaseOrder], int]:
         """Get paginated list of purchase orders."""
-        query = (
-            db.query(PurchaseOrder)
-            .options(
-                joinedload(PurchaseOrder.requested_by),
-                joinedload(PurchaseOrder.receiving_location),
-            )
+        query = db.query(PurchaseOrder).options(
+            joinedload(PurchaseOrder.requested_by),
+            joinedload(PurchaseOrder.receiving_location),
         )
-        
+
         # Apply filters
         if status:
             query = query.filter(PurchaseOrder.status == status)
         elif not include_received:
             query = query.filter(
-                PurchaseOrder.status.notin_([
-                    PurchaseOrderStatus.RECEIVED.value,
-                    PurchaseOrderStatus.CANCELLED.value,
-                ])
+                PurchaseOrder.status.notin_(
+                    [
+                        PurchaseOrderStatus.RECEIVED.value,
+                        PurchaseOrderStatus.CANCELLED.value,
+                    ]
+                )
             )
-        
+
         if priority:
             query = query.filter(PurchaseOrder.priority == priority)
-        
+
         if supplier_name:
             query = query.filter(
                 PurchaseOrder.supplier_name.ilike(f"%{supplier_name}%")
             )
-        
+
         # Get total count
         total = query.count()
-        
+
         # Apply pagination and ordering
         purchase_orders = (
-            query
-            .order_by(
+            query.order_by(
                 # Priority ordering
                 case(
                     (PurchaseOrder.priority == PurchaseOrderPriority.URGENT.value, 0),
@@ -151,7 +151,7 @@ class PurchaseOrderService:
             .limit(page_size)
             .all()
         )
-        
+
         return purchase_orders, total
 
     def get_purchase_order(
@@ -164,7 +164,9 @@ class PurchaseOrderService:
             db.query(PurchaseOrder)
             .filter(PurchaseOrder.id == po_id)
             .options(
-                joinedload(PurchaseOrder.line_items).joinedload(PurchaseOrderLineItem.item),
+                joinedload(PurchaseOrder.line_items).joinedload(
+                    PurchaseOrderLineItem.item
+                ),
                 joinedload(PurchaseOrder.requested_by),
                 joinedload(PurchaseOrder.approved_by),
                 joinedload(PurchaseOrder.receiving_location),
@@ -183,7 +185,9 @@ class PurchaseOrderService:
             db.query(PurchaseOrder)
             .filter(PurchaseOrder.po_number == po_number)
             .options(
-                joinedload(PurchaseOrder.line_items).joinedload(PurchaseOrderLineItem.item),
+                joinedload(PurchaseOrder.line_items).joinedload(
+                    PurchaseOrderLineItem.item
+                ),
                 joinedload(PurchaseOrder.requested_by),
                 joinedload(PurchaseOrder.approved_by),
                 joinedload(PurchaseOrder.receiving_location),
@@ -201,10 +205,10 @@ class PurchaseOrderService:
     ) -> PurchaseOrder:
         """Create a new purchase order."""
         tenant = get_current_tenant()
-        
+
         # Generate PO number
         po_number = self.generate_po_number(db)
-        
+
         # Create purchase order
         po = PurchaseOrder(
             tenant_id=tenant.id,
@@ -214,7 +218,11 @@ class PurchaseOrderService:
             supplier_email=data.supplier_email,
             supplier_phone=data.supplier_phone,
             status=PurchaseOrderStatus.DRAFT,
-            priority=PurchaseOrderPriority(data.priority) if data.priority else PurchaseOrderPriority.NORMAL,
+            priority=(
+                PurchaseOrderPriority(data.priority)
+                if data.priority
+                else PurchaseOrderPriority.NORMAL
+            ),
             expected_date=data.expected_date,
             receiving_location_id=data.receiving_location_id,
             requested_by_id=data.requested_by_id or user_id,
@@ -224,10 +232,10 @@ class PurchaseOrderService:
             created_by=user_id,
             updated_by=user_id,
         )
-        
+
         db.add(po)
         db.flush()  # Get the ID
-        
+
         # Add line items
         subtotal = Decimal("0")
         for item_data in data.line_items:
@@ -237,19 +245,20 @@ class PurchaseOrderService:
                 item_id=item_data.item_id,
                 quantity_ordered=item_data.quantity_ordered,
                 unit_price=item_data.unit_price,
-                line_total=Decimal(str(item_data.quantity_ordered)) * item_data.unit_price,
+                line_total=Decimal(str(item_data.quantity_ordered))
+                * item_data.unit_price,
                 notes=item_data.notes,
             )
             db.add(line_item)
             subtotal += line_item.line_total
-        
+
         # Update totals
         po.subtotal = subtotal
         po.total_amount = subtotal + po.tax_amount + po.shipping_cost
-        
+
         db.commit()
         db.refresh(po)
-        
+
         # Audit log
         audit_service.log_action(
             db=db,
@@ -261,7 +270,7 @@ class PurchaseOrderService:
             changes={"po_number": po_number, "auto_generated": auto_generated},
             request=request,
         )
-        
+
         logger.info(f"Created purchase order {po_number}")
         return po
 
@@ -277,30 +286,35 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return None
-        
+
         # Only allow updates in certain states
-        if po.status not in [PurchaseOrderStatus.DRAFT, PurchaseOrderStatus.PENDING_APPROVAL]:
-            raise ValueError(f"Cannot update purchase order in {po.status.value} status")
-        
+        if po.status not in [
+            PurchaseOrderStatus.DRAFT,
+            PurchaseOrderStatus.PENDING_APPROVAL,
+        ]:
+            raise ValueError(
+                f"Cannot update purchase order in {po.status.value} status"
+            )
+
         changes = {}
         update_data = data.model_dump(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             old_value = getattr(po, field)
             if old_value != value:
                 changes[field] = {"old": str(old_value), "new": str(value)}
                 setattr(po, field, value)
-        
+
         if changes:
             po.updated_by = user_id
-            
+
             # Recalculate total if costs changed
             if "tax_amount" in changes or "shipping_cost" in changes:
                 po.total_amount = po.subtotal + po.tax_amount + po.shipping_cost
-            
+
             db.commit()
             db.refresh(po)
-            
+
             audit_service.log_action(
                 db=db,
                 entity_type=EntityType.PURCHASE_ORDER,
@@ -311,7 +325,7 @@ class PurchaseOrderService:
                 changes=changes,
                 request=request,
             )
-        
+
         return po
 
     def add_line_item(
@@ -329,12 +343,17 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return None
-        
-        if po.status not in [PurchaseOrderStatus.DRAFT, PurchaseOrderStatus.PENDING_APPROVAL]:
-            raise ValueError(f"Cannot add items to purchase order in {po.status.value} status")
-        
+
+        if po.status not in [
+            PurchaseOrderStatus.DRAFT,
+            PurchaseOrderStatus.PENDING_APPROVAL,
+        ]:
+            raise ValueError(
+                f"Cannot add items to purchase order in {po.status.value} status"
+            )
+
         tenant = get_current_tenant()
-        
+
         line_item = PurchaseOrderLineItem(
             tenant_id=tenant.id,
             purchase_order_id=po_id,
@@ -344,17 +363,17 @@ class PurchaseOrderService:
             line_total=Decimal(str(quantity)) * unit_price,
             notes=notes,
         )
-        
+
         db.add(line_item)
-        
+
         # Update PO totals
         po.subtotal += line_item.line_total
         po.total_amount = po.subtotal + po.tax_amount + po.shipping_cost
         po.updated_by = user_id
-        
+
         db.commit()
         db.refresh(line_item)
-        
+
         audit_service.log_action(
             db=db,
             entity_type=EntityType.PURCHASE_ORDER,
@@ -365,7 +384,7 @@ class PurchaseOrderService:
             changes={"added_line_item": str(item_id)},
             request=request,
         )
-        
+
         return line_item
 
     def remove_line_item(
@@ -380,10 +399,15 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return False
-        
-        if po.status not in [PurchaseOrderStatus.DRAFT, PurchaseOrderStatus.PENDING_APPROVAL]:
-            raise ValueError(f"Cannot remove items from purchase order in {po.status.value} status")
-        
+
+        if po.status not in [
+            PurchaseOrderStatus.DRAFT,
+            PurchaseOrderStatus.PENDING_APPROVAL,
+        ]:
+            raise ValueError(
+                f"Cannot remove items from purchase order in {po.status.value} status"
+            )
+
         line_item = (
             db.query(PurchaseOrderLineItem)
             .filter(
@@ -392,18 +416,18 @@ class PurchaseOrderService:
             )
             .first()
         )
-        
+
         if not line_item:
             return False
-        
+
         # Update PO totals
         po.subtotal -= line_item.line_total
         po.total_amount = po.subtotal + po.tax_amount + po.shipping_cost
         po.updated_by = user_id
-        
+
         db.delete(line_item)
         db.commit()
-        
+
         audit_service.log_action(
             db=db,
             entity_type=EntityType.PURCHASE_ORDER,
@@ -414,7 +438,7 @@ class PurchaseOrderService:
             changes={"removed_line_item": str(line_item_id)},
             request=request,
         )
-        
+
         return True
 
     def update_status(
@@ -430,18 +454,18 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return None
-        
+
         # Validate transition
         valid_transitions = VALID_STATUS_TRANSITIONS.get(po.status, [])
         if new_status not in valid_transitions:
             raise ValueError(
                 f"Cannot transition from {po.status.value} to {new_status.value}"
             )
-        
+
         old_status = po.status
         po.status = new_status
         po.updated_by = user_id
-        
+
         # Set dates based on status
         if new_status == PurchaseOrderStatus.APPROVED:
             po.approved_by_id = user_id
@@ -449,16 +473,18 @@ class PurchaseOrderService:
             po.order_date = datetime.utcnow()
         elif new_status == PurchaseOrderStatus.RECEIVED:
             po.received_date = datetime.utcnow()
-        
+
         # Append notes
         if notes:
             timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-            status_note = f"\n[{timestamp}] Status changed to {new_status.value}: {notes}"
+            status_note = (
+                f"\n[{timestamp}] Status changed to {new_status.value}: {notes}"
+            )
             po.notes = (po.notes or "") + status_note
-        
+
         db.commit()
         db.refresh(po)
-        
+
         audit_service.log_action(
             db=db,
             entity_type=EntityType.PURCHASE_ORDER,
@@ -472,8 +498,10 @@ class PurchaseOrderService:
             },
             request=request,
         )
-        
-        logger.info(f"PO {po.po_number} status changed: {old_status.value} -> {new_status.value}")
+
+        logger.info(
+            f"PO {po.po_number} status changed: {old_status.value} -> {new_status.value}"
+        )
         return po
 
     def receive_items(
@@ -488,16 +516,16 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return None
-        
+
         if po.status not in [
             PurchaseOrderStatus.ORDERED,
             PurchaseOrderStatus.PARTIALLY_RECEIVED,
         ]:
             raise ValueError(f"Cannot receive items on PO in {po.status.value} status")
-        
+
         tenant = get_current_tenant()
         received_date = receive_data.received_date or datetime.utcnow()
-        
+
         for receive_item in receive_data.items:
             line_item = (
                 db.query(PurchaseOrderLineItem)
@@ -507,43 +535,81 @@ class PurchaseOrderService:
                 )
                 .first()
             )
-            
+
             if not line_item:
                 continue
-            
+
             qty_to_receive = receive_item.quantity_received
             max_receivable = line_item.quantity_ordered - line_item.quantity_received
-            
+
             if qty_to_receive > max_receivable:
                 qty_to_receive = max_receivable
-            
+
             if qty_to_receive <= 0:
                 continue
-            
+
             # Update line item
             line_item.quantity_received += qty_to_receive
-            
+
             # Update inventory
-            item = db.query(InventoryItem).filter(InventoryItem.id == line_item.item_id).first()
+            item = (
+                db.query(InventoryItem)
+                .filter(InventoryItem.id == line_item.item_id)
+                .first()
+            )
             if item:
                 old_qty = item.quantity
                 item.quantity += qty_to_receive
                 item.updated_by = user_id
-                
+
+                # Handle lot creation if lots are specified
+                if receive_item.lots:
+                    total_lot_qty = 0
+                    for received_lot in receive_item.lots:
+                        try:
+                            lot = lot_service.create_lot(
+                                db=db,
+                                tenant_id=tenant.id,
+                                user_id=user_id,
+                                item_id=line_item.item_id,
+                                lot_number=received_lot.lot_number,
+                                quantity=received_lot.quantity,
+                                serial_number=received_lot.serial_number,
+                                expiration_date=(
+                                    received_lot.expiration_date.date()
+                                    if received_lot.expiration_date
+                                    else None
+                                ),
+                                manufacture_date=(
+                                    received_lot.manufacture_date.date()
+                                    if received_lot.manufacture_date
+                                    else None
+                                ),
+                                location_id=po.receiving_location_id,
+                                request=request,
+                            )
+                            total_lot_qty += received_lot.quantity
+                        except ValueError as e:
+                            logger.warning(
+                                f"Failed to create lot {received_lot.lot_number}: {e}"
+                            )
+                            # Continue with other lots even if one fails
+                            pass
+
                 # Create stock movement
                 movement = StockMovement(
                     tenant_id=tenant.id,
-                    item_id=item.id,
+                    inventory_item_id=item.id,
                     movement_type=MovementType.RECEIVE,
                     quantity=qty_to_receive,
                     from_location_id=None,
                     to_location_id=po.receiving_location_id,
-                    reference=f"PO: {po.po_number}",
+                    reference_number=f"PO: {po.po_number}",
                     notes=receive_data.notes,
                     created_by=user_id,
                 )
                 db.add(movement)
-                
+
                 # Update item status
                 if item.quantity <= 0:
                     item.status = "out_of_stock"
@@ -551,28 +617,24 @@ class PurchaseOrderService:
                     item.status = "low_stock"
                 else:
                     item.status = "in_stock"
-        
+
         # Determine new PO status
         all_received = all(
-            li.quantity_received >= li.quantity_ordered
-            for li in po.line_items
+            li.quantity_received >= li.quantity_ordered for li in po.line_items
         )
-        any_received = any(
-            li.quantity_received > 0
-            for li in po.line_items
-        )
-        
+        any_received = any(li.quantity_received > 0 for li in po.line_items)
+
         if all_received:
             po.status = PurchaseOrderStatus.RECEIVED
             po.received_date = received_date
         elif any_received:
             po.status = PurchaseOrderStatus.PARTIALLY_RECEIVED
-        
+
         po.updated_by = user_id
-        
+
         db.commit()
         db.refresh(po)
-        
+
         audit_service.log_action(
             db=db,
             entity_type=EntityType.PURCHASE_ORDER,
@@ -583,7 +645,7 @@ class PurchaseOrderService:
             changes={"items_received": len(receive_data.items)},
             request=request,
         )
-        
+
         logger.info(f"Received items on PO {po.po_number}")
         return po
 
@@ -598,12 +660,12 @@ class PurchaseOrderService:
         po = self.get_purchase_order(db, po_id)
         if not po:
             return False
-        
+
         if po.status != PurchaseOrderStatus.DRAFT:
             raise ValueError("Can only delete purchase orders in draft status")
-        
+
         po_number = po.po_number
-        
+
         audit_service.log_action(
             db=db,
             entity_type=EntityType.PURCHASE_ORDER,
@@ -614,24 +676,24 @@ class PurchaseOrderService:
             changes={"po_number": po_number},
             request=request,
         )
-        
+
         db.delete(po)
         db.commit()
-        
+
         logger.info(f"Deleted purchase order {po_number}")
         return True
 
     def get_stats(self, db: Session) -> PurchaseOrderStats:
         """Get purchase order statistics."""
         stats = PurchaseOrderStats()
-        
+
         # Count by status
         status_counts = (
             db.query(PurchaseOrder.status, func.count(PurchaseOrder.id))
             .group_by(PurchaseOrder.status)
             .all()
         )
-        
+
         for status, count in status_counts:
             stats.total += count
             if status == PurchaseOrderStatus.DRAFT:
@@ -648,35 +710,39 @@ class PurchaseOrderService:
                 stats.received = count
             elif status == PurchaseOrderStatus.CANCELLED:
                 stats.cancelled = count
-        
+
         # Count overdue
         now = datetime.utcnow()
         stats.overdue = (
             db.query(PurchaseOrder)
             .filter(
                 PurchaseOrder.expected_date < now,
-                PurchaseOrder.status.notin_([
-                    PurchaseOrderStatus.RECEIVED.value,
-                    PurchaseOrderStatus.CANCELLED.value,
-                ]),
+                PurchaseOrder.status.notin_(
+                    [
+                        PurchaseOrderStatus.RECEIVED.value,
+                        PurchaseOrderStatus.CANCELLED.value,
+                    ]
+                ),
             )
             .count()
         )
-        
+
         # Total value pending (approved + ordered + partially received)
         pending_value = (
             db.query(func.sum(PurchaseOrder.total_amount))
             .filter(
-                PurchaseOrder.status.in_([
-                    PurchaseOrderStatus.APPROVED.value,
-                    PurchaseOrderStatus.ORDERED.value,
-                    PurchaseOrderStatus.PARTIALLY_RECEIVED.value,
-                ])
+                PurchaseOrder.status.in_(
+                    [
+                        PurchaseOrderStatus.APPROVED.value,
+                        PurchaseOrderStatus.ORDERED.value,
+                        PurchaseOrderStatus.PARTIALLY_RECEIVED.value,
+                    ]
+                )
             )
             .scalar()
         )
         stats.total_value_pending = Decimal(str(pending_value or 0))
-        
+
         return stats
 
     def get_low_stock_items(
@@ -696,15 +762,15 @@ class PurchaseOrderService:
             .limit(limit)
             .all()
         )
-        
+
         items = []
         total_estimate = Decimal("0")
-        
+
         for item in low_stock:
             shortage = item.reorder_point - item.quantity
             # Suggest ordering 2x the shortage or at least to reorder point
             suggested_qty = max(shortage * 2, item.reorder_point)
-            
+
             low_item = LowStockItem(
                 id=item.id,
                 name=item.name,
@@ -716,8 +782,10 @@ class PurchaseOrderService:
                 suggested_quantity=suggested_qty,
             )
             items.append(low_item)
-            total_estimate += Decimal(str(item.unit_price)) * Decimal(str(suggested_qty))
-        
+            total_estimate += Decimal(str(item.unit_price)) * Decimal(
+                str(suggested_qty)
+            )
+
         return LowStockSuggestion(
             items=items,
             total_items=len(items),
@@ -734,36 +802,34 @@ class PurchaseOrderService:
     ) -> PurchaseOrder:
         """Create a purchase order from selected low stock items."""
         # Get the items
-        items = (
-            db.query(InventoryItem)
-            .filter(InventoryItem.id.in_(item_ids))
-            .all()
-        )
-        
+        items = db.query(InventoryItem).filter(InventoryItem.id.in_(item_ids)).all()
+
         if not items:
             raise ValueError("No valid items provided")
-        
+
         # Build line items
         from app.schemas.purchase_order import PurchaseOrderLineItemCreate
-        
+
         line_items = []
         for item in items:
             shortage = max(0, item.reorder_point - item.quantity)
             suggested_qty = max(shortage * 2, item.reorder_point, 1)
-            
-            line_items.append(PurchaseOrderLineItemCreate(
-                item_id=item.id,
-                quantity_ordered=suggested_qty,
-                unit_price=Decimal(str(item.unit_price)),
-            ))
-        
+
+            line_items.append(
+                PurchaseOrderLineItemCreate(
+                    item_id=item.id,
+                    quantity_ordered=suggested_qty,
+                    unit_price=Decimal(str(item.unit_price)),
+                )
+            )
+
         # Create the PO
         po_data = PurchaseOrderCreate(
             supplier_name=supplier_name,
             priority="high",  # Low stock is high priority
             line_items=line_items,
         )
-        
+
         return self.create_purchase_order(
             db=db,
             data=po_data,
@@ -785,20 +851,18 @@ class PurchaseOrderService:
             .filter(PurchaseOrderLineItem.item_id == item_id)
             .options(joinedload(PurchaseOrder.requested_by))
         )
-        
+
         if not include_received:
             query = query.filter(
-                PurchaseOrder.status.notin_([
-                    PurchaseOrderStatus.RECEIVED.value,
-                    PurchaseOrderStatus.CANCELLED.value,
-                ])
+                PurchaseOrder.status.notin_(
+                    [
+                        PurchaseOrderStatus.RECEIVED.value,
+                        PurchaseOrderStatus.CANCELLED.value,
+                    ]
+                )
             )
-        
-        return (
-            query
-            .order_by(PurchaseOrder.created_at.desc())
-            .all()
-        )
+
+        return query.order_by(PurchaseOrder.created_at.desc()).all()
 
 
 # Singleton instance

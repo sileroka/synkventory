@@ -36,6 +36,12 @@ class StockMovement(Base):
         nullable=False,
         index=True,
     )
+    lot_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("item_lots.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     movement_type = Column(
         Enum(MovementType, name="movement_type_enum"),
         nullable=False,
@@ -71,6 +77,7 @@ class StockMovement(Base):
     # Relationships
     tenant = relationship("Tenant", backref="stock_movements")
     inventory_item = relationship("InventoryItem", backref="stock_movements")
+    lot = relationship("ItemLot", backref="stock_movements")
     from_location = relationship(
         "Location", foreign_keys=[from_location_id], backref="outbound_movements"
     )

@@ -333,6 +333,7 @@ export class PurchaseOrderDetailComponent implements OnInit {
         lineItemId: item.id,
         quantityReceived: 0,
         notes: '',
+        lots: []
       }));
 
     this.showReceiveDialog.set(true);
@@ -370,6 +371,27 @@ export class PurchaseOrderDetailComponent implements OnInit {
         });
       },
     });
+  }
+
+  addLotToReceiveItem(itemIndex: number): void {
+    const receiveItem = this.receiveItems[itemIndex];
+    if (!receiveItem.lots) {
+      receiveItem.lots = [];
+    }
+    receiveItem.lots.push({
+      lotNumber: '',
+      serialNumber: undefined,
+      quantity: 1,
+      expirationDate: undefined,
+      manufactureDate: undefined,
+    });
+  }
+
+  removeLotFromReceiveItem(itemIndex: number, lotIndex: number): void {
+    const receiveItem = this.receiveItems[itemIndex];
+    if (receiveItem.lots) {
+      receiveItem.lots.splice(lotIndex, 1);
+    }
   }
 
   openEditDialog(): void {

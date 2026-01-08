@@ -72,3 +72,14 @@ class InventoryItem(Base):
     updater = relationship(
         "User", foreign_keys=[updated_by], backref="updated_inventory_items"
     )
+    lots = relationship("ItemLot", back_populates="item", cascade="all, delete-orphan")
+
+    @property
+    def total_quantity(self) -> int:
+        """
+        Calculate total quantity by summing lot quantities if lots exist,
+        otherwise fall back to the quantity field.
+        """
+        if self.lots:
+            return sum(lot.quantity for lot in self.lots)
+        return self.quantity

@@ -1,0 +1,157 @@
+<p-dialog
+  [visible]="true"
+  [modal]="true"
+  [header]="isEditMode ? 'Edit Lot' : 'Create New Lot'"
+  [style]="{ width: '100%', maxWidth: '600px' }"
+  (onHide)="onCancel()"
+  [closeOnEscape]="false"
+  [draggable]="false"
+>
+  <div class="space-y-4">
+    <!-- Error Messages -->
+    <p-message
+      *ngIf="lotNumberError"
+      severity="error"
+      text="{{ lotNumberError }}"
+      styleClass="w-full"
+    ></p-message>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Lot Number -->
+      <div>
+        <label for="lotNumber" class="block text-sm font-medium mb-2">
+          Lot Number <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="lotNumber"
+          type="text"
+          formControlName="lotNumber"
+          placeholder="e.g., LOT-2026-001"
+          class="w-full"
+          [ngClass]="{ 'ng-invalid ng-touched': form.get('lotNumber')?.invalid && form.get('lotNumber')?.touched }"
+        />
+        <small class="text-color-secondary" *ngIf="form.get('lotNumber')?.invalid && form.get('lotNumber')?.touched">
+          Lot number is required and must be at least 3 characters
+        </small>
+      </div>
+
+      <!-- Serial Number -->
+      <div>
+        <label for="serialNumber" class="block text-sm font-medium mb-2">
+          Serial Number <span class="text-xs text-color-secondary">(Optional)</span>
+        </label>
+        <input
+          pInputText
+          id="serialNumber"
+          type="text"
+          formControlName="serialNumber"
+          placeholder="e.g., SN-12345"
+          class="w-full"
+        />
+        <small class="text-color-secondary">
+          Individual serial number for tracking single units
+        </small>
+      </div>
+
+      <!-- Quantity -->
+      <div>
+        <label for="quantity" class="block text-sm font-medium mb-2">
+          Quantity <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          id="quantity"
+          formControlName="quantity"
+          [min]="1"
+          [useGrouping]="false"
+          placeholder="Enter quantity"
+          class="w-full"
+        ></p-inputNumber>
+        <small class="text-color-secondary" *ngIf="form.get('quantity')?.invalid && form.get('quantity')?.touched">
+          Quantity must be greater than 0
+        </small>
+      </div>
+
+      <!-- Manufacture Date -->
+      <div>
+        <label for="manufactureDate" class="block text-sm font-medium mb-2">
+          Manufacture Date <span class="text-xs text-color-secondary">(Optional)</span>
+        </label>
+        <p-calendar
+          id="manufactureDate"
+          formControlName="manufactureDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          placeholder="Select manufacture date"
+          class="w-full"
+        ></p-calendar>
+        <small class="text-color-secondary">
+          Date when the item was manufactured
+        </small>
+      </div>
+
+      <!-- Expiration Date -->
+      <div>
+        <label for="expirationDate" class="block text-sm font-medium mb-2">
+          Expiration Date <span class="text-xs text-color-secondary">(Optional)</span>
+        </label>
+        <p-calendar
+          id="expirationDate"
+          formControlName="expirationDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          placeholder="Select expiration date"
+          class="w-full"
+          [ngClass]="{ 'p-invalid': isExpirationDatePassed() }"
+        ></p-calendar>
+        <small
+          class="text-color-secondary"
+          *ngIf="!isExpirationDatePassed()"
+        >
+          Date when the item expires
+        </small>
+        <small
+          class="text-red-500"
+          *ngIf="isExpirationDatePassed()"
+        >
+          ⚠️ Warning: Selected date is in the past
+        </small>
+      </div>
+
+      <!-- Location -->
+      <div>
+        <label for="locationId" class="block text-sm font-medium mb-2">
+          Storage Location <span class="text-xs text-color-secondary">(Optional)</span>
+        </label>
+        <p-dropdown
+          id="locationId"
+          formControlName="locationId"
+          [options]="locationOptions"
+          placeholder="Select a location"
+          [showClear]="true"
+          class="w-full"
+          [loading]="loading"
+        ></p-dropdown>
+        <small class="text-color-secondary">
+          Where this lot is currently stored
+        </small>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2 justify-content-end pt-4 border-t border-surface-border">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          (onClick)="onCancel()"
+          [disabled]="submitting"
+        ></p-button>
+        <p-button
+          [label]="isEditMode ? 'Update Lot' : 'Create Lot'"
+          type="submit"
+          [loading]="submitting"
+          [disabled]="form.invalid || submitting"
+        ></p-button>
+      </div>
+    </form>
+  </div>
+</p-dialog>

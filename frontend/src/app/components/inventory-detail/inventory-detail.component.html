@@ -332,6 +332,17 @@
 
         <app-where-used *ngIf="item?.id" [itemId]="item!.id!"> </app-where-used>
       </p-tabPanel>
+
+      <!-- Lots Tab -->
+      <p-tabPanel header="Lots">
+        <ng-template pTemplate="header">
+          <i class="pi pi-box mr-2"></i>
+          <span>Lots</span>
+        </ng-template>
+
+        <app-lot-list-table *ngIf="item?.id" [itemId]="item!.id!">
+        </app-lot-list-table>
+      </p-tabPanel>
     </p-tabView>
   </div>
 </div>
@@ -416,6 +427,7 @@
       <p-dropdown
         id="fromLocation"
         [(ngModel)]="transferFromLocationId"
+        (onChange)="onTransferFromLocationChange()"
         [options]="getAvailableFromLocations()"
         optionLabel="label"
         optionValue="value"
@@ -427,6 +439,29 @@
       </p-dropdown>
       <small class="text-color-secondary" *ngIf="transferFromLocationId">
         Available: {{ getMaxTransferQuantity() }}
+      </small>
+    </div>
+
+    <div *ngIf="transferFromLocationId && transferLotOptions.length > 0">
+      <label for="transferLot" class="block mb-2 font-medium"
+        >Lot/Serial (optional)</label
+      >
+      <p-dropdown
+        id="transferLot"
+        [(ngModel)]="transferLotId"
+        [options]="transferLotOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select lot to transfer"
+        class="w-full"
+        styleClass="w-full"
+        appendTo="body"
+        [showClear]="true"
+        [loading]="loadingTransferLots"
+      >
+      </p-dropdown>
+      <small class="text-color-secondary">
+        If selected, only this lot will be transferred
       </small>
     </div>
 

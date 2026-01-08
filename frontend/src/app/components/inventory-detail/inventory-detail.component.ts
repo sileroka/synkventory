@@ -19,6 +19,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TabViewModule } from 'primeng/tabview';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { InventoryService, ILocationQuantityResult, IStockMovementResult } from '../../services/inventory.service';
+import { ItemLotService } from '../../services/item-lot.service';
 import { LocationService } from '../../features/locations/services/location.service';
 import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../../models/inventory-item.model';
 import { IStockMovement, MovementType, IStockMovementCreate } from '../../models/stock-movement.model';
@@ -26,6 +27,7 @@ import { ILocation } from '../../features/locations/models/location.model';
 import { RevisionHistoryComponent } from '../revision-history/revision-history.component';
 import { BillOfMaterialsComponent } from '../bill-of-materials/bill-of-materials.component';
 import { WhereUsedComponent } from '../where-used/where-used.component';
+import { LotListTableComponent } from '../lot-list-table/lot-list-table.component';
 
 interface ILocationOption {
   label: string;
@@ -56,7 +58,8 @@ interface ILocationOption {
     TabViewModule,
     RevisionHistoryComponent,
     BillOfMaterialsComponent,
-    WhereUsedComponent
+    WhereUsedComponent,
+    LotListTableComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './inventory-detail.component.html',
@@ -84,8 +87,11 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
   transferQuantity: number = 1;
   transferFromLocationId: string = '';
   transferToLocationId: string = '';
+  transferLotId: string = '';
   transferNotes: string = '';
   locationOptions: ILocationOption[] = [];
+  transferLotOptions: any[] = [];
+  loadingTransferLots: boolean = false;
 
   // Event listener for BOM operations
   private bomOperationHandler = this.onBomOperation.bind(this);
@@ -94,6 +100,7 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private inventoryService: InventoryService,
+    private itemLotService: ItemLotService,
     private locationService: LocationService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
@@ -351,8 +358,43 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
     this.transferQuantity = 1;
     this.transferFromLocationId = '';
     this.transferToLocationId = '';
+    this.transferLotId = '';
     this.transferNotes = '';
+    this.transferLotOptions = [];
     this.displayTransferDialog = true;
+  }
+
+  onTransferFromLocationChange() {
+    this.transferLotId = '';
+    this.transferLotOptions = [];
+    this.loadTransferLots();
+  }
+
+  private loadTransferLots() {
+    if (!this.item?.id || !this.transferFromLocationId) {
+      this.transferLotOptions = [];
+      return;
+    }
+
+    this.loadingTransferLots = true;
+    const filters = {
+      locationId: this.transferFromLocationId,
+      includeExpired: false
+    };
+
+    this.itemLotService.getLotsForItem(this.item.id, 1, 1000, filters).subscribe({
+      next: (response) => {
+        this.transferLotOptions = (response.data || []).map(lot => ({
+          label: `${lot.lotNumber}${lot.serialNumber ? ` (SN: ${lot.serialNumber})` : ''} - Qty: ${lot.quantity}`,
+          value: lot.id
+        }));
+        this.loadingTransferLots = false;
+      },
+      error: () => {
+        this.transferLotOptions = [];
+        this.loadingTransferLots = false;
+      }
+    });
   }
 
   saveTransfer() {
@@ -364,6 +406,7 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
       quantity: this.transferQuantity,
       fromLocationId: this.transferFromLocationId,
       toLocationId: this.transferToLocationId,
+      lotId: this.transferLotId || undefined,
       notes: this.transferNotes || undefined
     };
 

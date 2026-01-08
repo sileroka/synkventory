@@ -12,11 +12,20 @@ A modern web-based inventory management system built with Python/FastAPI backend
 ## Features
 
 - ✅ Complete CRUD operations for inventory items
+- ✅ **Serial/Lot/Batch tracking** for perishable and regulated items
+- ✅ Expiration date and manufacture date tracking
+- ✅ Multi-location inventory management with location hierarchy
+- ✅ Stock movement tracking with full audit trail
+- ✅ Purchase order management with lot-aware receiving
+- ✅ Bill of Materials (BOM) for assembly tracking
+- ✅ Work order management for production
+- ✅ Row-level security (RLS) for multi-tenant isolation
 - ✅ RESTful API with automatic documentation (Swagger/OpenAPI)
 - ✅ Modern, responsive UI with PrimeNG components
 - ✅ PostgreSQL database for reliable data storage
 - ✅ Dockerized deployment for easy setup
 - ✅ CORS enabled for frontend-backend communication
+- ✅ Comprehensive audit logging for compliance
 
 ## Project Structure
 
@@ -47,28 +56,33 @@ synkventory/
 ## Quick Start with Docker
 
 ### Prerequisites
+
 - Docker
 - Docker Compose
 
 ### Running the Application
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/sileroka/synkventory.git
 cd synkventory
 ```
 
 2. Start all services:
+
 ```bash
 docker-compose up -d
 ```
 
 3. Access the application:
+
    - **Frontend**: http://localhost
    - **Backend API**: http://localhost:8000
    - **API Documentation**: http://localhost:8000/docs
 
 4. Stop the services:
+
 ```bash
 docker-compose down
 ```
@@ -78,27 +92,32 @@ docker-compose down
 ### Backend Setup
 
 1. Navigate to the backend directory:
+
 ```bash
 cd backend
 ```
 
 2. Create a virtual environment:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 3. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 4. Create a `.env` file (copy from `.env.example`):
+
 ```bash
 cp .env.example .env
 ```
 
 5. Start PostgreSQL (or use Docker):
+
 ```bash
 docker run -d \
   --name synkventory-postgres \
@@ -110,6 +129,7 @@ docker run -d \
 ```
 
 6. Run the FastAPI server:
+
 ```bash
 uvicorn app.main:app --reload
 ```
@@ -119,16 +139,19 @@ The backend will be available at http://localhost:8000
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
+
 ```bash
 cd frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 ```
@@ -145,9 +168,192 @@ The frontend will be available at http://localhost:4200
 - `PUT /api/v1/inventory/{id}` - Update an item
 - `DELETE /api/v1/inventory/{id}` - Delete an item
 
+### Lot/Serial Number Tracking
+
+- `GET /api/v1/inventory/items/{item_id}/lots` - List lots for an item with pagination
+- `POST /api/v1/inventory/items/{item_id}/lots` - Create a new lot
+- `PUT /api/v1/inventory/lots/{lot_id}` - Update a lot
+- `DELETE /api/v1/inventory/lots/{lot_id}` - Delete a lot
+
+### Stock Movements
+
+- `GET /api/v1/stock-movements` - List all stock movements
+- `POST /api/v1/stock-movements` - Record a stock movement
+- `GET /api/v1/stock-movements/{id}` - Get a specific movement
+
+### Purchase Orders
+
+- `GET /api/v1/purchase-orders` - List purchase orders
+- `POST /api/v1/purchase-orders` - Create a purchase order
+- `POST /api/v1/purchase-orders/{po_id}/receive` - Receive items with optional lots
+
 ### Health Check
 
 - `GET /health` - Health check endpoint
+
+## Lot/Serial Number Tracking
+
+Synkventory supports advanced lot and serial number tracking for items that require traceability, such as perishable goods, regulated products, or high-value items.
+
+### Overview
+
+The lot tracking system allows you to:
+
+- Track items by lot number, serial number, or batch identifier
+- Record expiration and manufacture dates
+- Track lot quantity and location
+- Link stock movements to specific lots
+- Receive purchase orders with multiple lots
+- Maintain complete audit trail for compliance
+
+### Creating a Lot
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/inventory/items/{item_id}/lots" \
+  -H "Content-Type: application/json" \
+  -d {
+    "lotNumber": "LOT-2026-001",
+    "serialNumber": "SN-12345",
+    "quantity": 100,
+    "expirationDate": "2027-01-15",
+    "manufactureDate": "2025-12-01",
+    "locationId": "{warehouse_location_id}"
+  }
+```
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "itemId": "item-uuid-here",
+    "lotNumber": "LOT-2026-001",
+    "serialNumber": "SN-12345",
+    "quantity": 100,
+    "expirationDate": "2027-01-15",
+    "manufactureDate": "2025-12-01",
+    "locationId": "warehouse-uuid",
+    "createdAt": "2026-01-08T10:30:00Z",
+    "createdBy": "user-uuid"
+  },
+  "meta": {
+    "timestamp": "2026-01-08T10:30:00Z",
+    "requestId": "req-id-here"
+  }
+}
+```
+
+### Listing Lots for an Item
+
+```bash
+curl "http://localhost:8000/api/v1/inventory/items/{item_id}/lots?page=1&pageSize=25&includeExpired=false"
+```
+
+### Querying Parameters
+
+- `page` - Page number (default: 1)
+- `pageSize` - Items per page (default: 25, max: 1000)
+- `locationId` - Filter by storage location
+- `includeExpired` - Include expired lots (default: false)
+- `orderBy` - Sort by: `created_at`, `expiration_date`, or `lot_number` (default: `created_at`)
+
+### Updating a Lot
+
+```bash
+curl -X PUT "http://localhost:8000/api/v1/inventory/lots/{lot_id}" \
+  -H "Content-Type: application/json" \
+  -d {
+    "quantity": 85,
+    "expirationDate": "2027-02-15"
+  }
+```
+
+All fields are optional for updates. Only provided fields will be modified.
+
+### Stock Movements with Lot Tracking
+
+When recording stock movements, you can optionally link them to a specific lot:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/stock-movements" \
+  -H "Content-Type: application/json" \
+  -d {
+    "inventoryItemId": "{item_id}",
+    "movementType": "ship",
+    "quantity": 10,
+    "fromLocationId": "{source_location}",
+    "lotId": "{lot_id}",
+    "referenceNumber": "ORDER-12345"
+  }
+```
+
+### Receiving with Lots (Purchase Orders)
+
+When receiving purchase order items, you can create multiple lots in a single request:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/purchase-orders/{po_id}/receive" \
+  -H "Content-Type: application/json" \
+  -d {
+    "items": [
+      {
+        "lineItemId": "{line_item_id}",
+        "quantityReceived": 50,
+        "lots": [
+          {
+            "lotNumber": "LOT-2026-001",
+            "serialNumber": null,
+            "quantity": 30,
+            "expirationDate": "2027-01-15",
+            "manufactureDate": "2025-12-01"
+          },
+          {
+            "lotNumber": "LOT-2026-002",
+            "serialNumber": null,
+            "quantity": 20,
+            "expirationDate": "2027-02-28",
+            "manufactureDate": "2026-01-01"
+          }
+        ]
+      }
+    ],
+    "notes": "Received from supplier ABC Corp",
+    "receivedDate": "2026-01-08"
+  }
+```
+
+### Lot Properties
+
+| Property          | Type    | Required | Description                                       |
+| ----------------- | ------- | -------- | ------------------------------------------------- |
+| `lotNumber`       | String  | Yes      | Unique identifier for the lot (unique per tenant) |
+| `serialNumber`    | String  | No       | Serial number for single-unit items               |
+| `quantity`        | Integer | Yes      | Quantity of items in lot (must be > 0)            |
+| `expirationDate`  | Date    | No       | Expiration date for perishable items              |
+| `manufactureDate` | Date    | No       | Date item was manufactured                        |
+| `locationId`      | UUID    | No       | Where the lot is physically stored                |
+
+### Example: Complete Lot Tracking Workflow
+
+1. **Receive items with lots:**
+
+   - Purchase order received with 2 lots of Widget A
+   - Lots created with expiration dates and locations
+
+2. **Query available lots:**
+
+   - Check inventory for non-expired lots of Widget A
+   - Filter by location or expiration date
+
+3. **Ship with lot traceability:**
+
+   - Record stock movement linked to specific lot
+   - Audit trail shows which lot was shipped
+
+4. **Monitor expiration:**
+   - Query approaching expiration dates
+   - Schedule promotions or disposal for expiring inventory
 
 ## API Documentation
 
@@ -157,18 +363,18 @@ Once the backend is running, visit http://localhost:8000/docs for interactive AP
 
 ### Inventory Items Table
 
-| Column      | Type      | Description                    |
-|-------------|-----------|--------------------------------|
-| id          | Integer   | Primary key                    |
-| name        | String    | Item name                      |
-| sku         | String    | Stock Keeping Unit (unique)    |
-| description | Text      | Item description               |
-| quantity    | Integer   | Available quantity             |
-| unit_price  | Float     | Price per unit                 |
-| category    | String    | Item category                  |
-| location    | String    | Storage location               |
-| created_at  | DateTime  | Creation timestamp             |
-| updated_at  | DateTime  | Last update timestamp          |
+| Column      | Type     | Description                 |
+| ----------- | -------- | --------------------------- |
+| id          | Integer  | Primary key                 |
+| name        | String   | Item name                   |
+| sku         | String   | Stock Keeping Unit (unique) |
+| description | Text     | Item description            |
+| quantity    | Integer  | Available quantity          |
+| unit_price  | Float    | Price per unit              |
+| category    | String   | Item category               |
+| location    | String   | Storage location            |
+| created_at  | DateTime | Creation timestamp          |
+| updated_at  | DateTime | Last update timestamp       |
 
 ## Environment Variables
 

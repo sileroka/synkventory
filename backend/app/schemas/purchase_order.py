@@ -1,6 +1,7 @@
 """
 Pydantic schemas for Purchase Orders.
 """
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
@@ -13,8 +14,10 @@ from pydantic import BaseModel, Field, ConfigDict
 # LINE ITEM SCHEMAS
 # =============================================================================
 
+
 class PurchaseOrderLineItemBase(BaseModel):
     """Base schema for PO line items."""
+
     item_id: UUID
     quantity_ordered: int = Field(ge=1, default=1)
     unit_price: Decimal = Field(ge=0, default=Decimal("0"))
@@ -23,11 +26,13 @@ class PurchaseOrderLineItemBase(BaseModel):
 
 class PurchaseOrderLineItemCreate(PurchaseOrderLineItemBase):
     """Schema for creating a PO line item."""
+
     pass
 
 
 class PurchaseOrderLineItemUpdate(BaseModel):
     """Schema for updating a PO line item."""
+
     quantity_ordered: Optional[int] = Field(None, ge=1)
     unit_price: Optional[Decimal] = Field(None, ge=0)
     notes: Optional[str] = None
@@ -35,27 +40,30 @@ class PurchaseOrderLineItemUpdate(BaseModel):
 
 class PurchaseOrderLineItemReceive(BaseModel):
     """Schema for receiving items on a line."""
+
     quantity_received: int = Field(ge=0)
     notes: Optional[str] = None
 
 
 class PurchaseOrderLineItemResponse(PurchaseOrderLineItemBase):
     """Response schema for PO line item."""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     purchase_order_id: UUID
     quantity_received: int
     line_total: Decimal
     created_at: datetime
     updated_at: datetime
-    
+
     # Computed
     quantity_remaining: int = 0
 
 
 class PurchaseOrderLineItemWithItem(PurchaseOrderLineItemResponse):
     """Line item with nested item details."""
+
     item_name: Optional[str] = None
     item_sku: Optional[str] = None
     current_quantity: Optional[int] = None
@@ -66,8 +74,10 @@ class PurchaseOrderLineItemWithItem(PurchaseOrderLineItemResponse):
 # PURCHASE ORDER SCHEMAS
 # =============================================================================
 
+
 class PurchaseOrderBase(BaseModel):
     """Base schema for purchase orders."""
+
     supplier_name: Optional[str] = None
     supplier_contact: Optional[str] = None
     supplier_email: Optional[str] = None
@@ -81,12 +91,14 @@ class PurchaseOrderBase(BaseModel):
 
 class PurchaseOrderCreate(PurchaseOrderBase):
     """Schema for creating a purchase order."""
+
     line_items: List[PurchaseOrderLineItemCreate] = Field(default_factory=list)
     requested_by_id: Optional[UUID] = None
 
 
 class PurchaseOrderUpdate(BaseModel):
     """Schema for updating a purchase order."""
+
     supplier_name: Optional[str] = None
     supplier_contact: Optional[str] = None
     supplier_email: Optional[str] = None
@@ -102,14 +114,16 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrderStatusUpdate(BaseModel):
     """Schema for updating PO status."""
+
     status: str
     notes: Optional[str] = None
 
 
 class PurchaseOrderResponse(PurchaseOrderBase):
     """Response schema for purchase order."""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     tenant_id: UUID
     po_number: str
@@ -130,8 +144,9 @@ class PurchaseOrderResponse(PurchaseOrderBase):
 
 class PurchaseOrderListItem(BaseModel):
     """Simplified schema for list views."""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     po_number: str
     supplier_name: Optional[str]
@@ -143,20 +158,21 @@ class PurchaseOrderListItem(BaseModel):
     received_date: Optional[datetime]
     auto_generated: bool
     created_at: datetime
-    
+
     # Counts
     item_count: int = 0
     items_received: int = 0
-    
+
     # User info
     requested_by_name: Optional[str] = None
-    
+
     # Computed
     is_overdue: bool = False
 
 
 class PurchaseOrderDetail(PurchaseOrderResponse):
     """Detailed schema with nested data."""
+
     line_items: List[PurchaseOrderLineItemWithItem] = []
     requested_by_name: Optional[str] = None
     approved_by_name: Optional[str] = None
@@ -168,10 +184,12 @@ class PurchaseOrderDetail(PurchaseOrderResponse):
 # LOW STOCK SCHEMAS
 # =============================================================================
 
+
 class LowStockItem(BaseModel):
     """Schema for low stock item suggestions."""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     name: str
     sku: str
@@ -184,6 +202,7 @@ class LowStockItem(BaseModel):
 
 class LowStockSuggestion(BaseModel):
     """Schema for auto-generated PO suggestion."""
+
     items: List[LowStockItem]
     total_items: int
     estimated_total: Decimal
@@ -193,8 +212,10 @@ class LowStockSuggestion(BaseModel):
 # STATS SCHEMAS
 # =============================================================================
 
+
 class PurchaseOrderStats(BaseModel):
     """Statistics for purchase orders."""
+
     total: int = 0
     draft: int = 0
     pending_approval: int = 0
@@ -211,14 +232,28 @@ class PurchaseOrderStats(BaseModel):
 # RECEIVE SCHEMAS
 # =============================================================================
 
+
+class ReceivedLot(BaseModel):
+    """Schema for receiving items as a lot/batch."""
+
+    lot_number: str
+    serial_number: Optional[str] = None
+    quantity: int = Field(ge=1)
+    expiration_date: Optional[datetime] = None
+    manufacture_date: Optional[datetime] = None
+
+
 class ReceiveLineItem(BaseModel):
     """Schema for receiving a specific line item."""
+
     line_item_id: UUID
     quantity_received: int = Field(ge=0)
+    lots: Optional[List[ReceivedLot]] = None
 
 
 class ReceiveItemsRequest(BaseModel):
     """Schema for receiving multiple items at once."""
+
     items: List[ReceiveLineItem]
     notes: Optional[str] = None
     received_date: Optional[datetime] = None

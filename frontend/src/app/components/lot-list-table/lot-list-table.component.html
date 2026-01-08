@@ -1,0 +1,189 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-card styleClass="mb-4">
+  <ng-template pTemplate="header">
+    <div class="flex justify-content-between align-items-center p-4 pb-0 w-full">
+      <h2 class="text-xl font-bold m-0">Lot Management</h2>
+      <p-button
+        icon="pi pi-plus"
+        label="Add Lot"
+        (onClick)="openCreateDialog()"
+        [disabled]="loading"
+        severity="success"
+      ></p-button>
+    </div>
+  </ng-template>
+
+  <!-- Filters -->
+  <div class="grid mb-4 gap-3">
+    <div class="col-12 md:col-4">
+      <label class="block text-sm font-medium mb-2">Location</label>
+      <p-dropdown
+        [(ngModel)]="selectedLocationId"
+        [options]="locationOptions"
+        (onChange)="onFilterChange()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filter by location"
+        [showClear]="true"
+        class="w-full"
+      ></p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-4">
+      <label class="block text-sm font-medium mb-2">Sort By</label>
+      <p-dropdown
+        [(ngModel)]="orderBy"
+        [options]="orderByOptions"
+        (onChange)="onFilterChange()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sort by..."
+        class="w-full"
+      ></p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-4 flex align-items-end">
+      <div class="flex align-items-center gap-2 w-full">
+        <label class="text-sm font-medium">Include Expired</label>
+        <p-inputSwitch
+          [(ngModel)]="includeExpired"
+          (onChange)="onFilterChange()"
+        ></p-inputSwitch>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lots Table -->
+  <p-table
+    #dt
+    [value]="lots"
+    [loading]="loading"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    (onLazyLoad)="onPageChange($event)"
+    [paginator]="true"
+    [first]="(currentPage - 1) * pageSize"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-striped"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    dataKey="id"
+  >
+    <!-- Lot Number -->
+    <p-column field="lotNumber" header="Lot Number" [sortable]="false" styleClass="w-2">
+      <ng-template let-lot pTemplate="body">
+        <strong>{{ lot.lotNumber }}</strong>
+        <small
+          *ngIf="lot.serialNumber"
+          class="block text-color-secondary"
+        >
+          SN: {{ lot.serialNumber }}
+        </small>
+      </ng-template>
+    </p-column>
+
+    <!-- Quantity -->
+    <p-column field="quantity" header="Quantity" [sortable]="false" styleClass="text-center w-1">
+      <ng-template let-lot pTemplate="body">
+        <strong>{{ lot.quantity }}</strong>
+      </ng-template>
+    </p-column>
+
+    <!-- Manufacture Date -->
+    <p-column field="manufactureDate" header="Manufacture" [sortable]="false" styleClass="text-center w-1">
+      <ng-template let-lot pTemplate="body">
+        <small *ngIf="lot.manufactureDate">
+          {{ lot.manufactureDate | date:'shortDate' }}
+        </small>
+        <small *ngIf="!lot.manufactureDate" class="text-color-secondary">-</small>
+      </ng-template>
+    </p-column>
+
+    <!-- Expiration Date & Status -->
+    <p-column field="expirationDate" header="Expiration" [sortable]="false" styleClass="w-2">
+      <ng-template let-lot pTemplate="body">
+        <div *ngIf="lot.expirationDate">
+          <small class="block">{{ lot.expirationDate | date:'shortDate' }}</small>
+          <p-tag
+            [value]="getExpirationStatus(lot).label"
+            [severity]="getExpirationStatus(lot).severity"
+            styleClass="text-xs mt-1"
+          ></p-tag>
+        </div>
+        <small *ngIf="!lot.expirationDate" class="text-color-secondary">No expiration</small>
+      </ng-template>
+    </p-column>
+
+    <!-- Location -->
+    <p-column field="locationId" header="Location" [sortable]="false" styleClass="w-2">
+      <ng-template let-lot pTemplate="body">
+        <small>{{ getLocationName(lot.locationId) }}</small>
+      </ng-template>
+    </p-column>
+
+    <!-- Created -->
+    <p-column field="createdAt" header="Created" [sortable]="false" styleClass="text-center w-1">
+      <ng-template let-lot pTemplate="body">
+        <small class="text-color-secondary">
+          {{ lot.createdAt | date:'short' }}
+        </small>
+      </ng-template>
+    </p-column>
+
+    <!-- Actions -->
+    <p-column header="Actions" [sortable]="false" styleClass="text-center w-1">
+      <ng-template let-lot pTemplate="body">
+        <div class="flex gap-2 justify-content-center">
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            [disabled]="loading"
+            (onClick)="openEditDialog(lot)"
+            pTooltip="Edit lot"
+            tooltipPosition="top"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            [rounded]="true"
+            [text]="true"
+            severity="danger"
+            [disabled]="loading"
+            (onClick)="confirmDelete(lot)"
+            pTooltip="Delete lot"
+            tooltipPosition="top"
+          ></p-button>
+        </div>
+      </ng-template>
+    </p-column>
+
+    <!-- Empty State -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center p-4">
+          <small class="text-color-secondary">No lots found for this item</small>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Loading State -->
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td colspan="7">
+          <p-skeleton height="2rem"></p-skeleton>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Summary -->
+  <div class="mt-4 pt-4 border-t border-surface-border">
+    <small class="text-color-secondary">
+      Showing {{ lots.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }} -
+      {{ Math.min(currentPage * pageSize, totalRecords) }} of {{ totalRecords }} lots
+    </small>
+  </div>
+</p-card>

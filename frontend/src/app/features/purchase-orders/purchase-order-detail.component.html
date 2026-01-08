@@ -244,11 +244,11 @@
   header="Receive Items"
   [(visible)]="showReceiveDialog"
   [modal]="true"
-  [style]="{ width: '700px' }"
+  [style]="{ width: '800px', maxHeight: '90vh' }"
 >
   <div class="receive-dialog">
     <p class="receive-instructions">
-      Enter the quantities received for each item.
+      Enter the quantities received for each item. Optionally add lot/serial number information.
     </p>
 
     <table class="receive-table">
@@ -282,6 +282,118 @@
         }
       </tbody>
     </table>
+
+    <!-- Lot Information Section -->
+    <div class="lot-section mt-4">
+      <h4 class="font-semibold mb-3">
+        <i class="pi pi-box mr-2"></i>Lot/Serial Number Tracking (Optional)
+      </h4>
+      <small class="text-color-secondary block mb-3">
+        Add lot numbers, serial numbers, expiration dates, and manufacture dates for received items.
+      </small>
+
+      @for (receiveItem of receiveItems; track receiveItem.lineItemId; let i = $index) {
+        @if (receiveItem.quantityReceived > 0) {
+        <div class="lot-item-section border-round border border-surface-border p-3 mb-3 surface-section">
+          <div class="flex justify-content-between align-items-center mb-3">
+            <strong>{{ getLineItem(receiveItem.lineItemId)?.itemName }}</strong>
+            <small class="text-color-secondary">Qty: {{ receiveItem.quantityReceived }}</small>
+          </div>
+
+          @if (!receiveItem.lots || receiveItem.lots.length === 0) {
+            <p-button
+              label="Add Lot"
+              icon="pi pi-plus"
+              severity="secondary"
+              size="small"
+              (onClick)="addLotToReceiveItem(i)"
+              styleClass="w-full"
+            ></p-button>
+          } @else {
+            <div class="lots-list">
+              @for (lot of receiveItem.lots; track $index; let lotIndex = $index) {
+              <div class="lot-entry border-round border border-surface-border p-2 mb-2 surface-ground">
+                <div class="grid gap-2">
+                  <div class="col-6 md:col-3">
+                    <small class="text-color-secondary">Lot Number</small>
+                    <input
+                      pInputText
+                      [(ngModel)]="receiveItem.lots![lotIndex].lotNumber"
+                      placeholder="e.g., LOT-2026-001"
+                      class="w-full text-sm"
+                    />
+                  </div>
+                  <div class="col-6 md:col-3">
+                    <small class="text-color-secondary">Serial Number</small>
+                    <input
+                      pInputText
+                      [(ngModel)]="receiveItem.lots![lotIndex].serialNumber"
+                      placeholder="SN-12345"
+                      class="w-full text-sm"
+                    />
+                  </div>
+                  <div class="col-6 md:col-3">
+                    <small class="text-color-secondary">Quantity</small>
+                    <p-inputNumber
+                      [(ngModel)]="receiveItem.lots![lotIndex].quantity"
+                      [min]="1"
+                      [max]="receiveItem.quantityReceived"
+                      [showButtons]="true"
+                      [useGrouping]="false"
+                      class="w-full"
+                      styleClass="w-full"
+                    ></p-inputNumber>
+                  </div>
+                  <div class="col-6 md:col-3">
+                    <small class="text-color-secondary">Manufacture</small>
+                    <p-calendar
+                      [ngModel]="receiveItem.lots![lotIndex].manufactureDate ? new Date(receiveItem.lots![lotIndex].manufactureDate!) : null"
+                      (ngModelChange)="receiveItem.lots![lotIndex].manufactureDate = $event ? ($event | date:'yyyy-MM-dd') : null"
+                      dateFormat="yy-mm-dd"
+                      placeholder="Date"
+                      [showIcon]="true"
+                      styleClass="w-full text-sm"
+                    ></p-calendar>
+                  </div>
+                  <div class="col-6 md:col-3">
+                    <small class="text-color-secondary">Expiration</small>
+                    <p-calendar
+                      [ngModel]="receiveItem.lots![lotIndex].expirationDate ? new Date(receiveItem.lots![lotIndex].expirationDate!) : null"
+                      (ngModelChange)="receiveItem.lots![lotIndex].expirationDate = $event ? ($event | date:'yyyy-MM-dd') : null"
+                      dateFormat="yy-mm-dd"
+                      placeholder="Date"
+                      [showIcon]="true"
+                      styleClass="w-full text-sm"
+                    ></p-calendar>
+                  </div>
+                  <div class="col-6 md:col-3 flex align-items-end">
+                    <p-button
+                      icon="pi pi-trash"
+                      severity="danger"
+                      [text]="true"
+                      [rounded]="true"
+                      (onClick)="removeLotFromReceiveItem(i, lotIndex)"
+                      class="w-full"
+                    ></p-button>
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+
+            <p-button
+              label="Add Another Lot"
+              icon="pi pi-plus"
+              severity="secondary"
+              size="small"
+              (onClick)="addLotToReceiveItem(i)"
+              styleClass="w-full mt-2"
+            ></p-button>
+          }
+        </div>
+        }
+      }
+    </div>
   </div>
 
   <ng-template pTemplate="footer">

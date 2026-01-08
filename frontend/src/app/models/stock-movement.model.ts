@@ -25,6 +25,7 @@ export interface IStockMovement {
   quantity: number;
   fromLocationId?: string | null;
   toLocationId?: string | null;
+  lotId?: string | null;
   referenceNumber?: string | null;
   notes?: string | null;
   createdAt?: string;
@@ -40,6 +41,7 @@ export interface IStockMovementCreate {
   quantity: number;
   fromLocationId?: string | null;
   toLocationId?: string | null;
+  lotId?: string | null;
   referenceNumber?: string | null;
   notes?: string | null;
 }

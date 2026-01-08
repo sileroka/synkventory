@@ -54,6 +54,7 @@ class StockMovementBase(BaseModel):
     quantity: int
     from_location_id: Optional[str] = None
     to_location_id: Optional[str] = None
+    lot_id: Optional[str] = None
     reference_number: Optional[str] = None
     notes: Optional[str] = None
 
@@ -80,6 +81,7 @@ class StockMovement(BaseModel):
     quantity: int
     from_location_id: Optional[str] = None
     to_location_id: Optional[str] = None
+    lot_id: Optional[str] = None
     reference_number: Optional[str] = None
     notes: Optional[str] = None
     created_at: Optional[datetime] = None

@@ -1,0 +1,124 @@
+::ng-deep .p-datatable-striped tbody > tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+::ng-deep .p-datatable-striped tbody > tr:nth-child(even) {
+  background-color: #f1f5f9;
+}
+
+::ng-deep .p-datatable tbody > tr > td {
+  border-color: #e2e8f0;
+  padding: 1rem 1rem;
+}
+
+::ng-deep .p-datatable tbody > tr:hover {
+  background-color: rgba(13, 148, 136, 0.05);
+}
+
+.w-1 {
+  width: 8.333%;
+}
+
+.w-2 {
+  width: 16.667%;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.pb-0 {
+  padding-bottom: 0;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-color-secondary {
+  color: #64748b;
+}
+
+.block {
+  display: block;
+}
+
+.flex {
+  display: flex;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.align-items-end {
+  align-items: flex-end;
+}
+
+.border-t {
+  border-top: 1px solid;
+}
+
+.border-surface-border {
+  border-color: #e2e8f0;
+}
+
+.m-0 {
+  margin: 0;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}

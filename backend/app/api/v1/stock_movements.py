@@ -27,6 +27,7 @@ from app.schemas.response import (
     ResponseMeta,
 )
 from app.services.audit import audit_service
+from app.services.lot import lot_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -206,12 +207,69 @@ def create_stock_movement(
         to_loc_qty.updated_at = datetime.utcnow()
 
     # Create the movement record with tenant_id
+    lot_id = None
+
+    # Handle lot operations based on movement type
+    if movement.lot_id:
+        lot_id = (
+            UUID(movement.lot_id)
+            if isinstance(movement.lot_id, str)
+            else movement.lot_id
+        )
+
+    # For RECEIVE: create/update lot if needed
+    if movement.movement_type == MovementTypeSchema.RECEIVE and movement.lot_id:
+        lot = lot_service.get_lot_by_id(db, lot_id)
+        if lot:
+            # Update existing lot quantity
+            lot.quantity += movement.quantity
+            lot.updated_by = user.id
+            db.flush()
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="Specified lot not found",
+            )
+    # For SHIP/TRANSFER: decrement lot quantity
+    elif movement.lot_id and movement.movement_type in [
+        MovementTypeSchema.SHIP,
+        MovementTypeSchema.TRANSFER,
+    ]:
+        lot = lot_service.get_lot_by_id(db, lot_id)
+        if not lot:
+            raise HTTPException(
+                status_code=404,
+                detail="Specified lot not found",
+            )
+        decrement_qty = abs(movement.quantity)
+        if lot.quantity < decrement_qty:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient quantity in lot. Available: {lot.quantity}",
+            )
+        lot.quantity -= decrement_qty
+        lot.updated_by = user.id
+
+        # Update lot location for transfers
+        if (
+            movement.movement_type == MovementTypeSchema.TRANSFER
+            and movement.to_location_id
+        ):
+            lot.location_id = (
+                UUID(movement.to_location_id)
+                if isinstance(movement.to_location_id, str)
+                else movement.to_location_id
+            )
+
+        db.flush()
+
     db_movement = StockMovementModel(
         inventory_item_id=movement.inventory_item_id,
         movement_type=MovementType(movement.movement_type.value),
         quantity=movement.quantity,
         from_location_id=movement.from_location_id,
         to_location_id=movement.to_location_id,
+        lot_id=lot_id,
         reference_number=movement.reference_number,
         notes=movement.notes,
         tenant_id=tenant.id,

@@ -180,9 +180,19 @@ export interface IPurchaseOrderStats {
 // RECEIVE INTERFACES
 // =============================================================================
 
+export interface IReceivedLot {
+  lotNumber: string;
+  serialNumber?: string | null;
+  quantity: number;
+  expirationDate?: string | null;
+  manufactureDate?: string | null;
+}
+
 export interface IReceiveLineItem {
   lineItemId: string;
   quantityReceived: number;
+  notes?: string;
+  lots?: IReceivedLot[];
 }
 
 export interface IReceiveItemsRequest {
