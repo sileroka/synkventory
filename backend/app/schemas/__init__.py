@@ -8,7 +8,7 @@ from app.schemas.purchase_order import (
 from app.schemas.stock_movement import (
     StockMovementBase,
     StockMovementCreate,
-    StockMovementResponse,
+    StockMovement,
 )
 from app.schemas.supplier import (
     SupplierBase,

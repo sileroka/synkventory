@@ -20,6 +20,7 @@ from app.api.v1 import (
     work_orders,
     purchase_orders,
     item_lots,
+    suppliers,
 )
 
 api_router = APIRouter()
@@ -29,6 +30,7 @@ api_router.include_router(users.router, tags=["users"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(bom.router, prefix="/inventory", tags=["bill-of-materials"])
 api_router.include_router(item_lots.router, prefix="/inventory", tags=["item-lots"])
+api_router.include_router(suppliers.router, tags=["suppliers"])
 api_router.include_router(work_orders.router, tags=["work-orders"])
 api_router.include_router(
     purchase_orders.router, prefix="/purchase-orders", tags=["purchase-orders"]
