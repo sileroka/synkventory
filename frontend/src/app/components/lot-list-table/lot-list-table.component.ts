@@ -55,7 +55,7 @@ export class LotListTableComponent implements OnInit {
   totalRecords = 0;
   pageSize = 25;
   currentPage = 1;
-  
+
   // Expose Math to template
   Math = Math;
 
