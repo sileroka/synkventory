@@ -24,6 +24,11 @@ from app.models.sales_order import (
     SalesOrderPriority,
 )
 from app.services.audit import audit_service
+from app.services.stock_movement_service import stock_movement_service
+from app.schemas.stock_movement import (
+    StockMovementCreate,
+    MovementType as MovementTypeSchema,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +46,23 @@ class SalesOrderService:
     """Service for managing sales orders."""
 
     def generate_so_number(self, db: Session) -> str:
-        """Generate a unique sales order number."""
+        """Generate a unique sales order number scoped per tenant.
+
+        Format: SO-{TENANT_SLUG}-{YYYYMMDD}-{sequence}
+        Example: SO-ACME-20260109-0001
+        """
+        tenant = get_current_tenant()
         today = datetime.utcnow().strftime("%Y%m%d")
-        prefix = f"SO-{today}-"
+        slug = (
+            tenant.slug.upper()
+            if tenant and getattr(tenant, "slug", None)
+            else "TENANT"
+        )
+        prefix = f"SO-{slug}-{today}-"
 
         latest = (
             db.query(SalesOrder)
+            .filter(SalesOrder.tenant_id == str(tenant.id))
             .filter(SalesOrder.order_number.like(f"{prefix}%"))
             .order_by(SalesOrder.order_number.desc())
             .first()
@@ -202,7 +218,11 @@ class SalesOrderService:
 
         audit_service.log_create(
             db=db,
-            tenant_id=uuid.UUID(str(tenant.id)) if isinstance(tenant.id, uuid.UUID) else tenant.id,  # safe tenant
+            tenant_id=(
+                uuid.UUID(str(tenant.id))
+                if isinstance(tenant.id, uuid.UUID)
+                else tenant.id
+            ),  # safe tenant
             user_id=user_id,
             entity_type=EntityType.SALES_ORDER,
             entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
@@ -258,7 +278,11 @@ class SalesOrderService:
 
             audit_service.log_update(
                 db=db,
-                tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+                tenant_id=(
+                    uuid.UUID(str(so.tenant_id))
+                    if not isinstance(so.tenant_id, UUID)
+                    else so.tenant_id
+                ),
                 user_id=user_id,
                 entity_type=EntityType.SALES_ORDER,
                 entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
@@ -295,7 +319,9 @@ class SalesOrderService:
         # Validate transition
         allowed = VALID_STATUS_TRANSITIONS.get(so.status, [])
         if new_status not in allowed:
-            raise ValueError(f"Invalid status transition from {so.status.value} to {new_status.value}")
+            raise ValueError(
+                f"Invalid status transition from {so.status.value} to {new_status.value}"
+            )
 
         old_status = so.status
         so.status = new_status
@@ -317,7 +343,11 @@ class SalesOrderService:
             changes["notes"] = {"old": None, "new": notes}
         audit_service.log_update(
             db=db,
-            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            tenant_id=(
+                uuid.UUID(str(so.tenant_id))
+                if not isinstance(so.tenant_id, UUID)
+                else so.tenant_id
+            ),
             user_id=user_id,
             entity_type=EntityType.SALES_ORDER,
             entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
@@ -359,7 +389,9 @@ class SalesOrderService:
         db.flush()
 
         # Recompute totals
-        so.subtotal = sum((li.line_total or Decimal("0")) for li in (so.line_items or []))
+        so.subtotal = sum(
+            (li.line_total or Decimal("0")) for li in (so.line_items or [])
+        )
         so.total_amount = so.subtotal + (so.tax_amount or 0) + (so.shipping_cost or 0)
         so.updated_by = str(user_id)
         db.commit()
@@ -368,7 +400,11 @@ class SalesOrderService:
         # Audit
         audit_service.log_update(
             db=db,
-            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            tenant_id=(
+                uuid.UUID(str(so.tenant_id))
+                if not isinstance(so.tenant_id, UUID)
+                else so.tenant_id
+            ),
             user_id=user_id,
             entity_type=EntityType.SALES_ORDER,
             entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
@@ -400,7 +436,9 @@ class SalesOrderService:
         if so.status not in [SalesOrderStatus.DRAFT, SalesOrderStatus.CONFIRMED]:
             raise ValueError(f"Cannot remove line items in {so.status.value} status")
 
-        li = next((x for x in (so.line_items or []) if str(x.id) == str(line_item_id)), None)
+        li = next(
+            (x for x in (so.line_items or []) if str(x.id) == str(line_item_id)), None
+        )
         if not li:
             return None
 
@@ -417,7 +455,11 @@ class SalesOrderService:
         # Audit
         audit_service.log_update(
             db=db,
-            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            tenant_id=(
+                uuid.UUID(str(so.tenant_id))
+                if not isinstance(so.tenant_id, UUID)
+                else so.tenant_id
+            ),
             user_id=user_id,
             entity_type=EntityType.SALES_ORDER,
             entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
@@ -464,52 +506,28 @@ class SalesOrderService:
             if not li or qty <= 0:
                 continue
 
-            remaining = max(0, li.quantity_ordered - li.quantity_shipped)
+            remaining = max(0, li.quantity_ordered - (li.quantity_shipped or 0))
             ship_qty = min(remaining, qty)
             if ship_qty <= 0:
                 continue
 
-            # Decrement inventory
-            item = db.query(InventoryItem).filter(InventoryItem.id == str(li.item_id)).first()
-            if item:
-                item.quantity = max(0, (item.quantity or 0) - ship_qty)
-
-            # Update line item shipped quantity
-            li.quantity_shipped = (li.quantity_shipped or 0) + ship_qty
-
-            # Create stock movement
-            sm = StockMovement(
-                id=str(uuid.uuid4()),
-                tenant_id=str(so.tenant_id),
+            # Use stock movement service to perform shipment (negative quantity)
+            movement = StockMovementCreate(
                 inventory_item_id=str(li.item_id),
-                movement_type=MovementType.SHIP,
+                movement_type=MovementTypeSchema.SHIP,
                 quantity=-ship_qty,
                 from_location_id=str(from_loc) if from_loc else None,
                 to_location_id=None,
                 lot_id=str(lot_id) if lot_id else None,
                 reference_number=so.order_number,
                 notes=f"SO {so.order_number} shipment",
-                created_by=str(user_id),
             )
-            db.add(sm)
+            stock_movement_service.create_movement(
+                db=db, movement=movement, user_id=user_id, request=request
+            )
 
-            # Audit stock movement
-            audit_service.log_stock_movement(
-                db=db,
-                tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-                user_id=user_id,
-                movement_type="STOCK_SHIP",
-                item_id=UUID(str(li.item_id)),
-                item_name=item.name if item else None,
-                quantity_change=-ship_qty,
-                old_quantity=(item.quantity + ship_qty) if item else 0,
-                new_quantity=item.quantity if item else 0,
-                from_location_id=UUID(str(from_loc)) if from_loc else None,
-                to_location_id=None,
-                reference_number=so.order_number,
-                reason="Sales order shipment",
-                request=request,
-            )
+            # Update line item shipped quantity
+            li.quantity_shipped = (li.quantity_shipped or 0) + ship_qty
 
             shipped_any = True
 
@@ -528,12 +546,21 @@ class SalesOrderService:
 
             audit_service.log_update(
                 db=db,
-                tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+                tenant_id=(
+                    uuid.UUID(str(so.tenant_id))
+                    if not isinstance(so.tenant_id, UUID)
+                    else so.tenant_id
+                ),
                 user_id=user_id,
                 entity_type=EntityType.SALES_ORDER,
                 entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
                 entity_name=so.order_number,
-                changes={"shipment": {"line_items": len(shipments), "status": so.status.value}},
+                changes={
+                    "shipment": {
+                        "line_items": len(shipments),
+                        "status": so.status.value,
+                    }
+                },
                 request=request,
             )
 
