@@ -1,8 +1,8 @@
 """
 Create sales_order_counters table for tenant-scoped sales order numbering.
 
-Revision ID: 20260109_120000_create_sales_order_counters
-Revises: 20260106_010000_fix_bom_permissions
+Revision ID: 20260109_120000
+Revises: 20260108_030000
 Create Date: 2026-01-09 12:00:00
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "20260109_120000_create_sales_order_counters"
-down_revision = "20260106_010000_fix_bom_permissions"
+revision = "20260109_120000"
+down_revision = "20260108_030000"
 branch_labels = None
 depends_on = None
 
