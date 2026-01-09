@@ -38,6 +38,7 @@ export interface IPurchaseOrderFilters {
   priority?: string;
   includeReceived?: boolean;
   supplierName?: string;
+  supplierId?: string;
 }
 
 @Injectable({
@@ -62,6 +63,7 @@ export class PurchaseOrderService {
     if (filters.priority) params = params.set('priority', filters.priority);
     if (filters.includeReceived) params = params.set('include_received', 'true');
     if (filters.supplierName) params = params.set('supplier_name', filters.supplierName);
+    if (filters.supplierId) params = params.set('supplier_id', filters.supplierId);
 
     return this.http
       .get<PaginatedResponse<IPurchaseOrderListItem>>(this.apiUrl, { params })

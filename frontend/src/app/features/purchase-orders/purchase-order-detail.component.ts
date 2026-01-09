@@ -189,6 +189,18 @@ export class PurchaseOrderDetailComponent implements OnInit {
       },
     });
   }
+  
+  getSupplierTooltip(po: IPurchaseOrder): string {
+    const parts: string[] = [];
+    const supplier = po.supplier;
+    const contact = supplier?.contactName || po.supplierContact;
+    const email = supplier?.email || po.supplierEmail;
+    const phone = supplier?.phone || po.supplierPhone;
+    if (contact) parts.push(`Contact: ${contact}`);
+    if (email) parts.push(`Email: ${email}`);
+    if (phone) parts.push(`Phone: ${phone}`);
+    return parts.join('\n');
+  }
 
   loadLocations(): void {
     this.locationService.getLocations().subscribe({

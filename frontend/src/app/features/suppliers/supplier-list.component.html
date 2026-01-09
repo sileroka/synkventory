@@ -1,0 +1,146 @@
+<div class="suppliers-container">
+  <div class="header">
+    <h1>Suppliers</h1>
+    <div class="actions">
+      <input
+        pInputText
+        [(ngModel)]="search"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Search suppliers..."
+      />
+      <button
+        pButton
+        label="New Supplier"
+        icon="pi pi-plus"
+        (click)="openCreate()"
+      ></button>
+    </div>
+  </div>
+
+  <p-table
+    [value]="suppliers()"
+    [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="total"
+    [rowsPerPageOptions]="[10, 25, 50, 100]"
+    (onPage)="page = $event.page + 1; pageSize = $event.rows; loadSuppliers()"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-s>
+      <tr>
+        <td>
+          <a
+            [routerLink]="['/suppliers', s.id]"
+            [pTooltip]="getSupplierTooltip(s)"
+            tooltipPosition="right"
+          >
+            {{ s.name }}
+          </a>
+        </td>
+        <td>{{ s.contactName || "—" }}</td>
+        <td>{{ s.email || "—" }}</td>
+        <td>{{ s.phone || "—" }}</td>
+        <td>
+          <span class="status" [class.inactive]="!s.isActive">{{
+            s.isActive ? "Active" : "Inactive"
+          }}</span>
+        </td>
+        <td>
+          <a
+            pButton
+            class="p-button-text"
+            [routerLink]="['/suppliers', s.id]"
+            [pTooltip]="getSupplierTooltip(s) || 'View Supplier'"
+            tooltipPosition="right"
+            label="View"
+          ></a>
+          <button
+            pButton
+            icon="pi pi-pencil"
+            class="p-button-text"
+            (click)="openEdit(s)"
+          ></button>
+          <button
+            pButton
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger"
+            (click)="deactivateOrDelete(s)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  header="Supplier"
+  [(visible)]="showDialog"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+>
+  <div class="form-grid">
+    <div class="form-field">
+      <label>Name</label>
+      <input pInputText [(ngModel)]="form.name" />
+    </div>
+    <div class="form-field">
+      <label>Contact</label>
+      <input pInputText [(ngModel)]="form.contactName" />
+    </div>
+    <div class="form-field">
+      <label>Email</label>
+      <input pInputText [(ngModel)]="form.email" type="email" />
+    </div>
+    <div class="form-field">
+      <label>Phone</label>
+      <input pInputText [(ngModel)]="form.phone" />
+    </div>
+    <div class="form-field">
+      <label>Address Line 1</label>
+      <input pInputText [(ngModel)]="form.addressLine1" />
+    </div>
+    <div class="form-field">
+      <label>Address Line 2</label>
+      <input pInputText [(ngModel)]="form.addressLine2" />
+    </div>
+    <div class="form-field">
+      <label>City</label>
+      <input pInputText [(ngModel)]="form.city" />
+    </div>
+    <div class="form-field">
+      <label>State</label>
+      <input pInputText [(ngModel)]="form.state" />
+    </div>
+    <div class="form-field">
+      <label>Postal Code</label>
+      <input pInputText [(ngModel)]="form.postalCode" />
+    </div>
+    <div class="form-field">
+      <label>Country</label>
+      <input pInputText [(ngModel)]="form.country" />
+    </div>
+    <div class="form-field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea [(ngModel)]="form.notes" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      label="Cancel"
+      class="p-button-text"
+      (click)="showDialog.set(false)"
+    ></button>
+    <button pButton label="Save" icon="pi pi-check" (click)="save()"></button>
+  </div>
+</p-dialog>

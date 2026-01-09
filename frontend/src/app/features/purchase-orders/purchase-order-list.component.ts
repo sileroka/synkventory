@@ -20,11 +20,14 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ChipModule } from 'primeng/chip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { PurchaseOrderService, IPurchaseOrderFilters } from '../../services/purchase-order.service';
 import { InventoryService } from '../../services/inventory.service';
 import { LocationService } from '../locations/services/location.service';
+import { SupplierService } from '../../services/supplier.service';
+import { ISupplier } from '../../models/supplier.model';
 import {
   IPurchaseOrderListItem,
   IPurchaseOrderCreate,
@@ -62,6 +65,7 @@ import { ILocation } from '../locations/models/location.model';
     AutoCompleteModule,
     CheckboxModule,
     ConfirmDialogModule,
+    ChipModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './purchase-order-list.component.html',
@@ -82,6 +86,9 @@ export class PurchaseOrderListComponent implements OnInit {
   statusFilter: PurchaseOrderStatus | null = null;
   priorityFilter: PurchaseOrderPriority | null = null;
   includeReceived = false;
+  supplierFilterId: string | null = null;
+  showCreateSupplierDialog = signal(false);
+  supplierForm: { name: string; contactName?: string; email?: string; phone?: string } = { name: '' };
   
   statusOptions = [
     { label: 'All Active', value: null },
@@ -124,6 +131,9 @@ export class PurchaseOrderListComponent implements OnInit {
   // Locations
   locations = signal<ILocation[]>([]);
 
+  // Suppliers
+  suppliers = signal<ISupplier[]>([]);
+
   // Helpers
   helpers = PurchaseOrderHelpers;
 
@@ -131,6 +141,7 @@ export class PurchaseOrderListComponent implements OnInit {
     private purchaseOrderService: PurchaseOrderService,
     private inventoryService: InventoryService,
     private locationService: LocationService,
+    private supplierService: SupplierService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router
@@ -140,6 +151,7 @@ export class PurchaseOrderListComponent implements OnInit {
     this.loadPurchaseOrders();
     this.loadStats();
     this.loadLocations();
+    this.loadSuppliers();
   }
 
   loadPurchaseOrders(): void {
@@ -151,6 +163,7 @@ export class PurchaseOrderListComponent implements OnInit {
       status: this.statusFilter || undefined,
       priority: this.priorityFilter || undefined,
       includeReceived: this.includeReceived,
+      supplierId: this.supplierFilterId || undefined,
     };
     
     this.purchaseOrderService.getPurchaseOrders(filters).subscribe({
@@ -180,6 +193,13 @@ export class PurchaseOrderListComponent implements OnInit {
   loadLocations(): void {
     this.locationService.getLocations().subscribe({
       next: (response) => this.locations.set(response.items || response),
+      error: () => {},
+    });
+  }
+
+  loadSuppliers(): void {
+    this.supplierService.getSuppliers(1, 200).subscribe({
+      next: (resp) => this.suppliers.set(resp.items),
       error: () => {},
     });
   }
@@ -214,6 +234,7 @@ export class PurchaseOrderListComponent implements OnInit {
 
   getEmptyPO(): IPurchaseOrderCreate {
     return {
+      supplierId: undefined,
       supplierName: '',
       supplierContact: '',
       supplierEmail: '',
@@ -223,6 +244,75 @@ export class PurchaseOrderListComponent implements OnInit {
       receivingLocationId: undefined,
       notes: '',
     };
+  }
+
+  onSupplierSelected(supplierId: string | null): void {
+    const supplier = this.suppliers().find(s => s.id === supplierId);
+    if (supplier) {
+      this.newPO.supplierId = supplier.id;
+      this.newPO.supplierName = supplier.name;
+      this.newPO.supplierContact = supplier.contactName || '';
+      this.newPO.supplierEmail = supplier.email || '';
+      this.newPO.supplierPhone = supplier.phone || '';
+    } else {
+      this.newPO.supplierId = undefined;
+    }
+  }
+
+  openCreateSupplier(): void {
+    this.supplierForm = { name: '', contactName: '', email: '', phone: '' };
+    this.showCreateSupplierDialog.set(true);
+  }
+
+  saveSupplierInline(): void {
+    const { name, contactName, email, phone } = this.supplierForm;
+    if (!name || name.trim().length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Validation', detail: 'Supplier name is required' });
+      return;
+    }
+    // Basic validations
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+      this.messageService.add({ severity: 'warn', summary: 'Validation', detail: 'Please enter a valid email address' });
+      return;
+    }
+    if (phone && !/^[+()\-\s0-9]{7,20}$/.test(phone)) {
+      this.messageService.add({ severity: 'warn', summary: 'Validation', detail: 'Please enter a valid phone number' });
+      return;
+    }
+    this.supplierService.create({ name, contactName, email, phone }).subscribe({
+      next: (supplier) => {
+        this.messageService.add({ severity: 'success', summary: 'Created', detail: 'Supplier created' });
+        this.showCreateSupplierDialog.set(false);
+        // Refresh suppliers and select the newly created one
+        this.loadSuppliers();
+        this.onSupplierSelected(supplier.id);
+        this.newPO.supplierId = supplier.id;
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.detail || 'Failed to create supplier' });
+      },
+    });
+  }
+
+  clearFilters(): void {
+    this.statusFilter = null;
+    this.priorityFilter = null;
+    this.includeReceived = false;
+    this.supplierFilterId = null;
+    this.page = 1;
+    this.loadPurchaseOrders();
+  }
+
+  onSupplierFilterChange(supplierId: string | null): void {
+    this.supplierFilterId = supplierId;
+    this.page = 1;
+    this.loadPurchaseOrders();
+    const supplier = this.suppliers().find(s => s.id === supplierId);
+    if (supplierId && supplier) {
+      this.messageService.add({ severity: 'info', summary: 'Filtered', detail: `Filtered by supplier: ${supplier.name}` });
+    } else {
+      this.messageService.add({ severity: 'info', summary: 'Filter cleared', detail: 'Supplier filter removed' });
+    }
   }
 
   searchItems(event: AutoCompleteCompleteEvent): void {
@@ -403,5 +493,15 @@ export class PurchaseOrderListComponent implements OnInit {
   getPrioritySeverity(priority: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
     const severity = PurchaseOrderHelpers.getPrioritySeverity(priority);
     return severity === 'warn' ? 'warning' : severity;
+  }
+
+  getSupplierTooltip(po: IPurchaseOrderListItem): string {
+    const s = (po as any).supplier as ISupplier | undefined;
+    if (!s) return '';
+    const parts: string[] = [];
+    if (s.contactName) parts.push(`Contact: ${s.contactName}`);
+    if (s.email) parts.push(`Email: ${s.email}`);
+    if (s.phone) parts.push(`Phone: ${s.phone}`);
+    return parts.join(' | ');
   }
 }

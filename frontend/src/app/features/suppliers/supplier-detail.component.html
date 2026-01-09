@@ -1,0 +1,60 @@
+<div class="supplier-detail-container" *ngIf="supplier() as s">
+  <div class="header">
+    <h2>{{ s.name }}</h2>
+    <span class="status" [class.inactive]="!s.isActive">{{
+      s.isActive ? "Active" : "Inactive"
+    }}</span>
+  </div>
+
+  <p-card header="Contact Information">
+    <div class="grid">
+      <div><strong>Contact:</strong> {{ s.contactName || "—" }}</div>
+      <div><strong>Email:</strong> {{ s.email || "—" }}</div>
+      <div><strong>Phone:</strong> {{ s.phone || "—" }}</div>
+      <div>
+        <strong>Address:</strong> {{ s.addressLine1 || "" }}
+        {{ s.addressLine2 || "" }}
+      </div>
+      <div><strong>City:</strong> {{ s.city || "—" }}</div>
+      <div><strong>State:</strong> {{ s.state || "—" }}</div>
+      <div><strong>Postal Code:</strong> {{ s.postalCode || "—" }}</div>
+      <div><strong>Country:</strong> {{ s.country || "—" }}</div>
+    </div>
+  </p-card>
+
+  <p-card header="Linked Purchase Orders" styleClass="mt-3">
+    <p-table
+      [value]="purchaseOrders()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>PO Number</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Order Date</th>
+          <th>Total</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-po>
+        <tr>
+          <td>
+            <a
+              [routerLink]="['/purchase-orders', po.id]"
+              [pTooltip]="getSupplierTooltip()"
+              tooltipPosition="top"
+            >
+              {{ po.poNumber }}
+            </a>
+          </td>
+          <td>{{ po.status }}</td>
+          <td>{{ po.priority }}</td>
+          <td>{{ po.orderDate || "—" }}</td>
+          <td>{{ po.totalAmount | currency }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

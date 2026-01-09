@@ -83,6 +83,12 @@ export class NavigationService {
           route: '/purchase-orders'
         },
         {
+          id: 'suppliers',
+          label: 'Suppliers',
+          icon: 'pi-id-card',
+          route: '/suppliers'
+        },
+        {
           id: 'locations',
           label: 'Locations',
           icon: 'pi-map-marker',

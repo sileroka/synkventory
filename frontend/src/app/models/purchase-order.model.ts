@@ -1,6 +1,7 @@
 /**
  * Purchase Order models and types for Synkventory.
  */
+import type { ISupplier } from './supplier.model';
 
 // =============================================================================
 // ENUMS
@@ -62,7 +63,9 @@ export interface IPurchaseOrderLineItemCreate {
 export interface IPurchaseOrderListItem {
   id: string;
   poNumber: string;
+  supplierId?: string;
   supplierName?: string;
+  supplier?: ISupplier;
   status: string;
   priority: string;
   totalAmount: number;
@@ -81,10 +84,12 @@ export interface IPurchaseOrder {
   id: string;
   tenantId: string;
   poNumber: string;
+  supplierId?: string;
   supplierName?: string;
   supplierContact?: string;
   supplierEmail?: string;
   supplierPhone?: string;
+  supplier?: ISupplier;
   status: string;
   priority: string;
   orderDate?: string;
@@ -111,6 +116,7 @@ export interface IPurchaseOrder {
 }
 
 export interface IPurchaseOrderCreate {
+  supplierId?: string;
   supplierName?: string;
   supplierContact?: string;
   supplierEmail?: string;

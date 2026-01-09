@@ -15,6 +15,8 @@ import { WorkOrderListComponent } from './features/work-orders/work-order-list.c
 import { WorkOrderDetailComponent } from './features/work-orders/work-order-detail.component';
 import { PurchaseOrderListComponent } from './features/purchase-orders/purchase-order-list.component';
 import { PurchaseOrderDetailComponent } from './features/purchase-orders/purchase-order-detail.component';
+import { SupplierListComponent } from './features/suppliers/supplier-list.component';
+import { SupplierDetailComponent } from './features/suppliers/supplier-detail.component';
 import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
@@ -64,6 +66,8 @@ export const routes: Routes = [
   { path: 'work-orders/:id', component: WorkOrderDetailComponent, canActivate: [authGuard] },
   { path: 'purchase-orders', component: PurchaseOrderListComponent, canActivate: [authGuard] },
   { path: 'purchase-orders/:id', component: PurchaseOrderDetailComponent, canActivate: [authGuard] },
+  { path: 'suppliers', component: SupplierListComponent, canActivate: [authGuard] },
+  { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationListComponent, canActivate: [authGuard] },
   { path: 'locations/new', redirectTo: 'locations', pathMatch: 'full' },
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },

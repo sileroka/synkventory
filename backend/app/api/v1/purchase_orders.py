@@ -139,6 +139,7 @@ def list_purchase_orders(
     priority: Optional[str] = None,
     include_received: bool = False,
     supplier_name: Optional[str] = None,
+    supplier_id: Optional[UUID] = None,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -171,6 +172,7 @@ def list_purchase_orders(
         priority=priority_enum,
         include_received=include_received,
         supplier_name=supplier_name,
+        supplier_id=supplier_id,
     )
     
     items = [_po_to_list_item(po) for po in purchase_orders]

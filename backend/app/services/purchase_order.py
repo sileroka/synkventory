@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 
 from fastapi import Request
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.tenant import get_current_tenant
@@ -104,6 +104,7 @@ class PurchaseOrderService:
         priority: Optional[PurchaseOrderPriority] = None,
         include_received: bool = False,
         supplier_name: Optional[str] = None,
+        supplier_id: Optional[UUID] = None,
     ) -> Tuple[List[PurchaseOrder], int]:
         """Get paginated list of purchase orders."""
         query = db.query(PurchaseOrder).options(
@@ -129,9 +130,19 @@ class PurchaseOrderService:
             query = query.filter(PurchaseOrder.priority == priority)
 
         if supplier_name:
-            query = query.filter(
-                PurchaseOrder.supplier_name.ilike(f"%{supplier_name}%")
+            # Match either text-only supplier_name on PO or linked Supplier.name
+            query = (
+                query.outerjoin(Supplier, PurchaseOrder.supplier_id == Supplier.id)
+                .filter(
+                    or_(
+                        PurchaseOrder.supplier_name.ilike(f"%{supplier_name}%"),
+                        Supplier.name.ilike(f"%{supplier_name}%"),
+                    )
+                )
             )
+
+        if supplier_id:
+            query = query.filter(PurchaseOrder.supplier_id == supplier_id)
 
         # Get total count
         total = query.count()
