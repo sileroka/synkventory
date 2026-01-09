@@ -51,6 +51,10 @@ class InventoryItem(Base):
     # Image storage - stores the S3/Spaces object key (not full URL)
     image_key = Column(String(512), nullable=True)
 
+    # Barcode metadata
+    barcode = Column(String(128), nullable=True, index=True)
+    barcode_image_key = Column(String(512), nullable=True)
+
     # Custom attributes - stores key-value pairs defined by category attributes
     custom_attributes = Column(JSONB, nullable=True, default=dict)
 
@@ -60,6 +64,7 @@ class InventoryItem(Base):
         Index("ix_inventory_items_tenant_status", "tenant_id", "status"),
         Index("ix_inventory_items_tenant_category", "tenant_id", "category_id"),
         Index("ix_inventory_items_tenant_location", "tenant_id", "location_id"),
+        Index("uq_inventory_items_tenant_barcode", "tenant_id", "barcode", unique=True),
     )
 
     # Relationships
@@ -83,3 +88,9 @@ class InventoryItem(Base):
         if self.lots:
             return sum(lot.quantity for lot in self.lots)
         return self.quantity
+
+    def __repr__(self) -> str:
+        base = f"<InventoryItem {self.sku} qty={self.quantity}>"
+        if getattr(self, "barcode", None):
+            return f"<InventoryItem {self.sku} qty={self.quantity} barcode={self.barcode}>"
+        return base
