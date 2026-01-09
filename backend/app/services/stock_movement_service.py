@@ -5,6 +5,7 @@ Centralizes inventory quantity updates, lot quantity handling, and audit logging
 """
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
@@ -19,6 +20,7 @@ from app.models.inventory_location_quantity import (
     InventoryLocationQuantity as InventoryLocationQuantityModel,
 )
 from app.models.stock_movement import StockMovement as StockMovementModel, MovementType
+from app.models.item_consumption import ItemConsumption, ConsumptionSource
 from app.schemas.stock_movement import (
     StockMovementCreate,
     MovementType as MovementTypeSchema,
@@ -226,6 +228,50 @@ class StockMovementService:
             created_by=user_id,
         )
         db.add(db_movement)
+
+        # Record consumption for negative, non-transfer movements
+        if movement.quantity < 0 and movement.movement_type in [
+            MovementTypeSchema.SHIP,
+            MovementTypeSchema.ADJUST,
+            MovementTypeSchema.COUNT,
+        ]:
+            source_map = {
+                MovementTypeSchema.SHIP: ConsumptionSource.SALES_ORDER,
+                MovementTypeSchema.ADJUST: ConsumptionSource.ADJUSTMENT,
+                MovementTypeSchema.COUNT: ConsumptionSource.ADJUSTMENT,
+            }
+            today = datetime.utcnow().date()
+            # Aggregate multiple movements on same date to a single record per item
+            existing = (
+                db.query(ItemConsumption)
+                .filter(
+                    ItemConsumption.tenant_id == tenant.id,
+                    ItemConsumption.item_id == movement.inventory_item_id,
+                    ItemConsumption.date == today,
+                )
+                .first()
+            )
+            add_qty = Decimal(abs(movement.quantity))
+            if existing:
+                existing.quantity = (existing.quantity or Decimal(0)) + add_qty
+                existing.source = source_map.get(
+                    movement.movement_type, existing.source or ConsumptionSource.OTHER
+                )
+                existing.updated_by = user_id
+                existing.updated_at = datetime.utcnow()
+            else:
+                consumption = ItemConsumption(
+                    tenant_id=tenant.id,
+                    item_id=movement.inventory_item_id,
+                    date=today,
+                    quantity=add_qty,
+                    source=source_map.get(
+                        movement.movement_type, ConsumptionSource.OTHER
+                    ),
+                    created_by=user_id,
+                    updated_by=user_id,
+                )
+                db.add(consumption)
 
         # Recalculate item total and update status
         item.quantity = _recalculate_total_quantity(db, movement.inventory_item_id)

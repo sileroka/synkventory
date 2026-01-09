@@ -174,3 +174,26 @@ class StockMovementReport(BaseModel):
 
     # Movement entries with running balance
     movements: List[StockMovementReportEntry]
+
+
+# =====================
+# Consumption Summary
+# =====================
+
+
+class ConsumptionSummaryEntry(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    date: datetime
+    item_id: str
+    sku: Optional[str] = None
+    name: Optional[str] = None
+    total_consumed: float
+
+
+class ConsumptionSummary(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    start_date: datetime
+    end_date: datetime
+    entries: List[ConsumptionSummaryEntry]

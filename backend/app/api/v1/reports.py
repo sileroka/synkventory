@@ -4,7 +4,7 @@ Report endpoints for inventory analytics.
 
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_
@@ -23,7 +23,10 @@ from app.schemas.report import (
     StockMovementReportSummary,
     MovementReportItem,
     MovementReportLocation,
+    ConsumptionSummary,
+    ConsumptionSummaryEntry,
 )
+from app.models.item_consumption import ItemConsumption
 from app.schemas.response import DataResponse, ResponseMeta
 
 # All routes in this router require authentication
@@ -313,3 +316,70 @@ def get_stock_movement_report(
     )
 
     return DataResponse(data=report, meta=get_response_meta(request))
+
+
+@router.get("/consumption-summary", response_model=DataResponse[ConsumptionSummary])
+def get_consumption_summary(
+    request: Request,
+    start_date: date = Query(..., alias="startDate"),
+    end_date: date = Query(..., alias="endDate"),
+    item_ids: Optional[List[UUID]] = Query(None, alias="itemIds"),
+    granularity: str = Query("day", alias="granularity", description="Grouping granularity: day|week|month"),
+    db: Session = Depends(get_db),
+):
+    """Aggregate ItemConsumption totals within a date range, grouped by granularity and item."""
+    # Fetch raw rows within range (filter items if provided)
+    query = db.query(ItemConsumption).filter(
+        ItemConsumption.date >= start_date, ItemConsumption.date <= end_date
+    )
+    if item_ids:
+        query = query.filter(ItemConsumption.item_id.in_(item_ids))
+    rows = query.all()
+
+    # Helper to get period start
+    def period_start(d: date) -> date:
+        if granularity == "week":
+            # ISO week starts Monday; find Monday of the week
+            return (d - timedelta(days=d.weekday()))
+        elif granularity == "month":
+            return date(d.year, d.month, 1)
+        else:
+            return d
+
+    # Group rows by (period_start, item_id)
+    grouped: dict[tuple[date, str], float] = {}
+    item_ids_set: set[str] = set()
+    for r in rows:
+        key = (period_start(r.date), str(r.item_id))
+        grouped[key] = grouped.get(key, 0.0) + float(r.quantity)
+        item_ids_set.add(str(r.item_id))
+
+    # Enrich with item details
+    items = (
+        db.query(InventoryItemModel)
+        .filter(InventoryItemModel.id.in_(item_ids_set))
+        .all()
+    )
+    item_map = {str(i.id): (i.sku, i.name) for i in items}
+
+    # Build entries
+    entries: List[ConsumptionSummaryEntry] = []
+    for (pstart, item_id_str), total in grouped.items():
+        sku, name = item_map.get(item_id_str, (None, None))
+        entries.append(
+            ConsumptionSummaryEntry(
+                date=datetime.combine(pstart, datetime.min.time()),
+                item_id=item_id_str,
+                sku=sku,
+                name=name,
+                total_consumed=total,
+            )
+        )
+
+    summary = ConsumptionSummary(
+        start_date=datetime.combine(start_date, datetime.min.time()),
+        end_date=datetime.combine(end_date, datetime.max.time()),
+        entries=entries,
+    )
+
+    return DataResponse(data=summary, meta=get_response_meta(request))
