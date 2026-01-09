@@ -162,7 +162,7 @@ class CustomerService:
             )
 
         logger.debug("Deactivated customer %s", customer.id)
-        return False
+        return True
 
 
 customer_service = CustomerService()
