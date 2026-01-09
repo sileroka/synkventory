@@ -17,6 +17,9 @@ import { PurchaseOrderListComponent } from './features/purchase-orders/purchase-
 import { PurchaseOrderDetailComponent } from './features/purchase-orders/purchase-order-detail.component';
 import { SupplierListComponent } from './features/suppliers/supplier-list.component';
 import { SupplierDetailComponent } from './features/suppliers/supplier-detail.component';
+import { CustomerListComponent } from './features/customers/customer-list.component';
+import { SalesOrderListComponent } from './features/sales-orders/sales-order-list.component';
+import { SalesOrderDetailComponent } from './features/sales-orders/sales-order-detail.component';
 import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
@@ -68,6 +71,9 @@ export const routes: Routes = [
   { path: 'purchase-orders/:id', component: PurchaseOrderDetailComponent, canActivate: [authGuard] },
   { path: 'suppliers', component: SupplierListComponent, canActivate: [authGuard] },
   { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [authGuard] },
+  { path: 'customers', component: CustomerListComponent, canActivate: [authGuard] },
+  { path: 'sales-orders', component: SalesOrderListComponent, canActivate: [authGuard] },
+  { path: 'sales-orders/:id', component: SalesOrderDetailComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationListComponent, canActivate: [authGuard] },
   { path: 'locations/new', redirectTo: 'locations', pathMatch: 'full' },
   { path: 'categories', component: CategoryListComponent, canActivate: [authGuard] },

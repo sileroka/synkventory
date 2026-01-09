@@ -1,0 +1,68 @@
+<div class="customers-container">
+  <div class="header">
+    <h1>Customers</h1>
+    <div class="actions">
+      <input pInputText [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Search customers..." />
+      <button pButton label="New Customer" icon="pi pi-plus" (click)="openCreate()"></button>
+    </div>
+  </div>
+
+  <p-table
+    [value]="customers()"
+    [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="total"
+    [rowsPerPageOptions]="[10, 25, 50, 100]"
+    (onPage)="page = $event.first / $event.rows + 1; pageSize = $event.rows; loadCustomers()"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.email || '—' }}</td>
+        <td>{{ c.phone || '—' }}</td>
+        <td>
+          <span class="status" [class.inactive]="!c.isActive">{{ c.isActive ? 'Active' : 'Inactive' }}</span>
+        </td>
+        <td>
+          <button pButton icon="pi pi-pencil" class="p-button-text" (click)="openEdit(c)"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-danger" (click)="deactivateOrDelete(c)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="Customer" [(visible)]="showDialog" [modal]="true" [style]="{ width: '600px' }">
+  <div class="form-grid">
+    <div class="form-field full-width">
+      <label>Name</label>
+      <input pInputText [(ngModel)]="form.name" />
+    </div>
+    <div class="form-field">
+      <label>Email</label>
+      <input pInputText [(ngModel)]="form.email" type="email" />
+    </div>
+    <div class="form-field">
+      <label>Phone</label>
+      <input pInputText [(ngModel)]="form.phone" />
+    </div>
+    <div class="form-field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea [(ngModel)]="form.notes" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button pButton label="Cancel" class="p-button-text" (click)="showDialog.set(false)"></button>
+    <button pButton label="Save" icon="pi pi-check" (click)="save()"></button>
+  </div>
+</p-dialog>

@@ -1,0 +1,65 @@
+<div class="sales-orders-container">
+  <div class="header">
+    <h1>Sales Orders</h1>
+    <div class="actions">
+      <input pInputText [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Search orders..." />
+      <button pButton label="New Order" icon="pi pi-plus" (click)="openCreate()"></button>
+    </div>
+  </div>
+
+  <p-table
+    [value]="orders()"
+    [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="total"
+    [rowsPerPageOptions]="[10, 25, 50, 100]"
+    (onPage)="page = $event.first / $event.rows + 1; pageSize = $event.rows; loadOrders()"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Order #</th>
+        <th>Customer</th>
+        <th>Status</th>
+        <th>Priority</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-o>
+      <tr>
+        <td><a [routerLink]="['/sales-orders', o.id]">{{ o.orderNumber }}</a></td>
+        <td>{{ o.customerName }}</td>
+        <td>{{ o.status }}</td>
+        <td>{{ o.priority || '—' }}</td>
+        <td>{{ o.createdAt | date: 'short' }}</td>
+        <td>
+          <a pButton icon="pi pi-eye" class="p-button-text" [routerLink]="['/sales-orders', o.id]"></a>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="Create Sales Order" [(visible)]="showDialog" [modal]="true" [style]="{ width: '600px' }">
+  <div class="form-grid">
+    <div class="form-field full-width">
+      <label>Customer</label>
+      <p-dropdown
+        [options]="customers()"
+        optionLabel="name"
+        optionValue="id"
+        [(ngModel)]="selectedCustomerId"
+        placeholder="Select a customer"
+      ></p-dropdown>
+    </div>
+    <div class="form-field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea [(ngModel)]="notes" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button pButton label="Cancel" class="p-button-text" (click)="showDialog.set(false)"></button>
+    <button pButton label="Create" icon="pi pi-check" (click)="createOrder()"></button>
+  </div>
+</p-dialog>

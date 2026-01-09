@@ -1,0 +1,38 @@
+<div class="sales-order-detail" *ngIf="order() as o">
+  <div class="header">
+    <h1>Order {{ o.orderNumber }}</h1>
+    <div class="meta">
+      <span>Customer: {{ o.customerName }}</span>
+      <span>Status: {{ o.status }}</span>
+      <span>Priority: {{ o.priority || '—' }}</span>
+    </div>
+    <div class="actions">
+      <button pButton label="Confirm" icon="pi pi-check" [disabled]="!canConfirm()" (click)="confirm()"></button>
+      <button pButton label="Cancel" icon="pi pi-times" class="p-button-danger" [disabled]="!canCancel()" (click)="cancel()"></button>
+      <button pButton label="Ship Remaining" icon="pi pi-truck" class="p-button-secondary" [disabled]="!canShip()" (click)="shipRemaining()"></button>
+    </div>
+  </div>
+
+  <p-table [value]="o.lineItems">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>SKU</th>
+        <th>Item</th>
+        <th>Ordered</th>
+        <th>Shipped</th>
+        <th>Remaining</th>
+        <th>Unit Price</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-li>
+      <tr>
+        <td>{{ li.sku }}</td>
+        <td>{{ li.name }}</td>
+        <td>{{ li.quantityOrdered }}</td>
+        <td>{{ li.quantityShipped }}</td>
+        <td>{{ (li.quantityOrdered - li.quantityShipped) }}</td>
+        <td>{{ li.unitPrice | currency }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
