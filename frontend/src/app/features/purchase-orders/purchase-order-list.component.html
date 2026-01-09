@@ -3,16 +3,15 @@
   <p-confirmDialog></p-confirmDialog>
 
   <!-- Header -->
-            <a
-              pButton
-              class="p-button-text"
-              [rounded]="true"
-              [routerLink]="['/suppliers', po.supplierId]"
-              [pTooltip]="getSupplierTooltip(po) || 'View Supplier'"
-              tooltipPosition="right"
-              (click)="$event.stopPropagation()"
-              >Supplier</a
-            >
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Purchase Orders</h1>
+      <p class="subtitle">Manage procurement and reorder inventory</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Low Stock Items"
+        icon="pi pi-exclamation-triangle"
         severity="warning"
         [outlined]="true"
         (click)="openLowStockDialog()"
@@ -27,44 +26,38 @@
 
   <!-- Stats Cards -->
   @if (stats()) {
-  <div class="stats-grid">
-    <p-card styleClass="stat-card">
-      <div class="stat-content">
-        <span class="stat-value">{{ stats()!.total }}</span>
-        <span class="stat-label">Total Orders</span>
-      </div>
-    </p-card>
-    <p-card styleClass="stat-card draft">
-      <div class="stat-content">
-        <span class="stat-value">{{
-          stats()!.draft + stats()!.pendingApproval
-        }}</span>
-        <span class="stat-label">Pending</span>
-      </div>
-    </p-card>
-    <p-card styleClass="stat-card ordered">
-      <div class="stat-content">
-        <span class="stat-value">{{
-          stats()!.ordered + stats()!.partiallyReceived
-        }}</span>
-        <span class="stat-label">In Progress</span>
-      </div>
-    </p-card>
-    <p-card styleClass="stat-card overdue">
-      <div class="stat-content">
-        <span class="stat-value">{{ stats()!.overdue }}</span>
-        <span class="stat-label">Overdue</span>
-      </div>
-    </p-card>
-    <p-card styleClass="stat-card value">
-      <div class="stat-content">
-        <span class="stat-value">{{
-          stats()!.totalValuePending | currency
-        }}</span>
-        <span class="stat-label">Pending Value</span>
-      </div>
-    </p-card>
-  </div>
+    <div class="stats-grid">
+      <p-card styleClass="stat-card">
+        <div class="stat-content">
+          <span class="stat-value">{{ stats()!.total }}</span>
+          <span class="stat-label">Total Orders</span>
+        </div>
+      </p-card>
+      <p-card styleClass="stat-card draft">
+        <div class="stat-content">
+          <span class="stat-value">{{ stats()!.draft + stats()!.pendingApproval }}</span>
+          <span class="stat-label">Pending</span>
+        </div>
+      </p-card>
+      <p-card styleClass="stat-card ordered">
+        <div class="stat-content">
+          <span class="stat-value">{{ stats()!.ordered + stats()!.partiallyReceived }}</span>
+          <span class="stat-label">In Progress</span>
+        </div>
+      </p-card>
+      <p-card styleClass="stat-card overdue">
+        <div class="stat-content">
+          <span class="stat-value">{{ stats()!.overdue }}</span>
+          <span class="stat-label">Overdue</span>
+        </div>
+      </p-card>
+      <p-card styleClass="stat-card value">
+        <div class="stat-content">
+          <span class="stat-value">{{ stats()!.totalValuePending | currency }}</span>
+          <span class="stat-label">Pending Value</span>
+        </div>
+      </p-card>
+    </div>
   }
 
   <!-- Filters -->
@@ -83,16 +76,6 @@
       (onChange)="onFilterChange()"
       [style]="{ width: '150px' }"
     ></p-dropdown>
-    <p-dropdown
-      [options]="suppliers()"
-      optionLabel="name"
-      optionValue="id"
-      placeholder="All Suppliers"
-      [showClear]="true"
-      [(ngModel)]="supplierFilterId"
-      (onChange)="onSupplierFilterChange($event.value)"
-      [style]="{ width: '200px' }"
-    ></p-dropdown>
     <div class="include-received">
       <p-checkbox
         [(ngModel)]="includeReceived"
@@ -102,158 +85,95 @@
       ></p-checkbox>
       <label for="includeReceived">Include Received</label>
     </div>
-    <div
-      class="filter-actions"
-      style="margin-left: auto; display: flex; gap: 8px; align-items: center"
-    >
-      @if (supplierFilterId) {
-      <p-chip
-        label="Supplier"
-        [removable]="true"
-        (remove)="supplierFilterId = null; onFilterChange()"
-      ></p-chip>
-      }
-      <p-button
-        label="Clear Filters"
-        class="p-button-text"
-        icon="pi pi-filter-slash"
-        (click)="clearFilters()"
-      ></p-button>
-    </div>
   </div>
 
   <!-- Table -->
   <p-card>
     @if (isLoading()) {
-    <div class="loading-container">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
+      <div class="loading-container">
+        <p-progressSpinner></p-progressSpinner>
+      </div>
     } @else {
-    <p-table
-      [value]="purchaseOrders()"
-      [paginator]="true"
-      [rows]="pageSize"
-      [totalRecords]="totalRecords"
-      [lazy]="true"
-      (onLazyLoad)="onPageChange($event)"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-striped"
-      [rowHover]="true"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>PO Number</th>
-          <th>Supplier</th>
-          <th>Status</th>
-          <th>Priority</th>
-          <th>Items</th>
-          <th>Total</th>
-          <th>Expected Date</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-              <a [routerLink]="['/suppliers', po.supplierId]" [pTooltip]="getSupplierTooltip(po)" tooltipPosition="right">{{ po.supplierName || 'View Supplier' }}</a>
-        <tr
-              <span [pTooltip]="getSupplierTooltip(po)" tooltipPosition="right">{{ po.supplierName || "—" }}</span>
-          (click)="viewPurchaseOrder(po)"
-          style="cursor: pointer"
-        >
-          <td>
-            <a
-              class="po-number"
-              [routerLink]="['/purchase-orders', po.id]"
-              [pTooltip]="getSupplierTooltip(po) || ''"
-              tooltipPosition="top"
-              (click)="$event.stopPropagation()"
-            >
-              {{ po.poNumber }}
-            </a>
-            @if (po.autoGenerated) {
-            <p-tag
-              value="Auto"
-              severity="secondary"
-              [style]="{ marginLeft: '0.5rem', fontSize: '0.7rem' }"
-            ></p-tag>
-            }
-          </td>
-          <td>
-            @if (po.supplierId) {
-            <a
-              [routerLink]="['/suppliers', po.supplierId]"
-              [pTooltip]="getSupplierTooltip(po) || 'View Supplier'"
-              tooltipPosition="right"
-            >
-              {{ po.supplierName || "View Supplier" }}
-            </a>
-            } @else {
-            <span [pTooltip]="getSupplierTooltip(po) || ''" tooltipPosition="right">
-              {{ po.supplierName || "—" }}
-            </span>
-            }
-          </td>
-          <td>
-            <p-tag
-              [value]="getStatusLabel(po.status)"
-              [severity]="getStatusSeverity(po.status)"
-            ></p-tag>
-          </td>
-          <td>
-            <p-tag
-              [value]="getPriorityLabel(po.priority)"
-              [severity]="getPrioritySeverity(po.priority)"
-            ></p-tag>
-          </td>
-          <td>
-            <span>{{ po.itemsReceived }}/{{ po.itemCount }}</span>
-          </td>
-          <td>{{ po.totalAmount | currency }}</td>
-          <td>
-            @if (po.expectedDate) {
-            <span [class.text-danger]="po.isOverdue">
-              {{ po.expectedDate | date : "shortDate" }}
-            </span>
-            } @else {
-            <span class="text-muted">—</span>
-            }
-          </td>
-          <td>
-            <p-button
-              icon="pi pi-eye"
-              [rounded]="true"
-              [text]="true"
-              pTooltip="View Details"
-              (click)="viewPurchaseOrder(po); $event.stopPropagation()"
-            ></p-button>
-            @if (po.supplierId) {
-            <a
-              pButton
-              class="p-button-text"
-              [rounded]="true"
-              [routerLink]="['/suppliers', po.supplierId]"
-              pTooltip="View Supplier"
-              (click)="$event.stopPropagation()"
-              >Supplier</a
-            >
-            }
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="8" class="text-center">
-            <div class="empty-state">
-              <i class="pi pi-shopping-cart"></i>
-              <p>No purchase orders found</p>
+      <p-table
+        [value]="purchaseOrders()"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-striped"
+        [rowHover]="true"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>PO Number</th>
+            <th>Supplier</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Expected Date</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-po>
+          <tr [class.overdue]="po.isOverdue" (click)="viewPurchaseOrder(po)" style="cursor: pointer">
+            <td>
+              <span class="po-number">{{ po.poNumber }}</span>
+              @if (po.autoGenerated) {
+                <p-tag value="Auto" severity="secondary" [style]="{ marginLeft: '0.5rem', fontSize: '0.7rem' }"></p-tag>
+              }
+            </td>
+            <td>{{ po.supplierName || '—' }}</td>
+            <td>
+              <p-tag
+                [value]="getStatusLabel(po.status)"
+                [severity]="getStatusSeverity(po.status)"
+              ></p-tag>
+            </td>
+            <td>
+              <p-tag
+                [value]="getPriorityLabel(po.priority)"
+                [severity]="getPrioritySeverity(po.priority)"
+              ></p-tag>
+            </td>
+            <td>
+              <span>{{ po.itemsReceived }}/{{ po.itemCount }}</span>
+            </td>
+            <td>{{ po.totalAmount | currency }}</td>
+            <td>
+              @if (po.expectedDate) {
+                <span [class.text-danger]="po.isOverdue">
+                  {{ po.expectedDate | date: 'shortDate' }}
+                </span>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </td>
+            <td>
               <p-button
-                label="Create First Order"
-                icon="pi pi-plus"
-                (click)="openCreateDialog()"
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                pTooltip="View Details"
+                (click)="viewPurchaseOrder(po); $event.stopPropagation()"
               ></p-button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="text-center">
+              <div class="empty-state">
+                <i class="pi pi-shopping-cart"></i>
+                <p>No purchase orders found</p>
+                <p-button label="Create First Order" icon="pi pi-plus" (click)="openCreateDialog()"></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     }
   </p-card>
 </div>
@@ -271,59 +191,20 @@
       <h3>Supplier Information</h3>
       <div class="form-grid">
         <div class="form-field">
-          <label for="supplierSelect">Supplier</label>
-          <p-dropdown
-            id="supplierSelect"
-            [options]="suppliers()"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Select supplier"
-            [showClear]="true"
-            [style]="{ width: '100%' }"
-            [(ngModel)]="newPO.supplierId"
-            (onChange)="onSupplierSelected($event.value)"
-          ></p-dropdown>
-          <div style="margin-top: 8px">
-            <p-button
-              label="Add Supplier"
-              class="p-button-text"
-              icon="pi pi-plus"
-              (click)="openCreateSupplier()"
-            ></p-button>
-          </div>
-        </div>
-        <div class="form-field">
           <label for="supplierName">Supplier Name</label>
-          <input
-            id="supplierName"
-            pInputText
-            [(ngModel)]="newPO.supplierName"
-          />
+          <input id="supplierName" pInputText [(ngModel)]="newPO.supplierName" />
         </div>
         <div class="form-field">
           <label for="supplierContact">Contact Person</label>
-          <input
-            id="supplierContact"
-            pInputText
-            [(ngModel)]="newPO.supplierContact"
-          />
+          <input id="supplierContact" pInputText [(ngModel)]="newPO.supplierContact" />
         </div>
         <div class="form-field">
           <label for="supplierEmail">Email</label>
-          <input
-            id="supplierEmail"
-            pInputText
-            [(ngModel)]="newPO.supplierEmail"
-            type="email"
-          />
+          <input id="supplierEmail" pInputText [(ngModel)]="newPO.supplierEmail" type="email" />
         </div>
         <div class="form-field">
           <label for="supplierPhone">Phone</label>
-          <input
-            id="supplierPhone"
-            pInputText
-            [(ngModel)]="newPO.supplierPhone"
-          />
+          <input id="supplierPhone" pInputText [(ngModel)]="newPO.supplierPhone" />
         </div>
       </div>
     </div>
@@ -366,12 +247,7 @@
       </div>
       <div class="form-field full-width">
         <label for="notes">Notes</label>
-        <textarea
-          id="notes"
-          pInputTextarea
-          [(ngModel)]="newPO.notes"
-          rows="2"
-        ></textarea>
+        <textarea id="notes" pInputTextarea [(ngModel)]="newPO.notes" rows="2"></textarea>
       </div>
     </div>
 
@@ -411,102 +287,52 @@
       </div>
 
       @if (newLineItems.length > 0) {
-      <table class="line-items-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Line Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of newLineItems; track item.itemId; let i = $index) {
-          <tr>
-            <td>{{ getItemName(item.itemId) }}</td>
-            <td>{{ item.quantityOrdered }}</td>
-            <td>{{ item.unitPrice | currency }}</td>
-            <td>{{ item.quantityOrdered * item.unitPrice | currency }}</td>
-            <td>
-              <p-button
-                icon="pi pi-trash"
-                severity="danger"
-                [text]="true"
-                (click)="removeLineItem(i)"
-              ></p-button>
-            </td>
-          </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3" class="text-right"><strong>Total:</strong></td>
-            <td>
-              <strong>{{ getLineItemTotal() | currency }}</strong>
-            </td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
+        <table class="line-items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Line Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of newLineItems; track item.itemId; let i = $index) {
+              <tr>
+                <td>{{ getItemName(item.itemId) }}</td>
+                <td>{{ item.quantityOrdered }}</td>
+                <td>{{ item.unitPrice | currency }}</td>
+                <td>{{ item.quantityOrdered * item.unitPrice | currency }}</td>
+                <td>
+                  <p-button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (click)="removeLineItem(i)"
+                  ></p-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-right"><strong>Total:</strong></td>
+              <td><strong>{{ getLineItemTotal() | currency }}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
       } @else {
-      <p class="text-muted">No items added yet. Search and add items above.</p>
+        <p class="text-muted">No items added yet. Search and add items above.</p>
       }
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cancel"
-      severity="secondary"
-      [text]="true"
-      (click)="showCreateDialog.set(false)"
-    ></p-button>
-    <p-button
-      label="Create Order"
-      icon="pi pi-check"
-      (click)="createPurchaseOrder()"
-    ></p-button>
+    <p-button label="Cancel" severity="secondary" [text]="true" (click)="showCreateDialog.set(false)"></p-button>
+    <p-button label="Create Order" icon="pi pi-check" (click)="createPurchaseOrder()"></p-button>
   </ng-template>
-</p-dialog>
-
-<!-- Inline Create Supplier Dialog -->
-<p-dialog
-  header="New Supplier"
-  [(visible)]="showCreateSupplierDialog"
-  [modal]="true"
-  [style]="{ width: '500px' }"
->
-  <div class="form-grid">
-    <div class="form-field">
-      <label>Name</label>
-      <input pInputText [(ngModel)]="supplierForm.name" />
-    </div>
-    <div class="form-field">
-      <label>Contact</label>
-      <input pInputText [(ngModel)]="supplierForm.contactName" />
-    </div>
-    <div class="form-field">
-      <label>Email</label>
-      <input pInputText type="email" [(ngModel)]="supplierForm.email" />
-    </div>
-    <div class="form-field">
-      <label>Phone</label>
-      <input pInputText [(ngModel)]="supplierForm.phone" />
-    </div>
-  </div>
-  <div class="dialog-actions">
-    <p-button
-      label="Cancel"
-      class="p-button-text"
-      (click)="showCreateSupplierDialog.set(false)"
-    ></p-button>
-    <p-button
-      label="Save"
-      icon="pi pi-check"
-      (click)="saveSupplierInline()"
-    ></p-button>
-  </div>
 </p-dialog>
 
 <!-- Low Stock Dialog -->
@@ -519,100 +345,79 @@
 >
   <div class="low-stock-dialog">
     @if (lowStockSuggestion()) {
-    <div class="low-stock-header">
-      <p>
-        <strong>{{ lowStockSuggestion()!.totalItems }}</strong> items are below
-        reorder point. Select items to create a purchase order.
-      </p>
-      <div class="bulk-actions">
-        <p-button
-          label="Select All"
-          [text]="true"
-          (click)="selectAllLowStock()"
-        ></p-button>
-        <p-button
-          label="Deselect All"
-          [text]="true"
-          (click)="deselectAllLowStock()"
-        ></p-button>
+      <div class="low-stock-header">
+        <p>
+          <strong>{{ lowStockSuggestion()!.totalItems }}</strong> items are below reorder point.
+          Select items to create a purchase order.
+        </p>
+        <div class="bulk-actions">
+          <p-button label="Select All" [text]="true" (click)="selectAllLowStock()"></p-button>
+          <p-button label="Deselect All" [text]="true" (click)="deselectAllLowStock()"></p-button>
+        </div>
       </div>
-    </div>
 
-    <div class="form-field supplier-field">
-      <label for="lowStockSupplier">Supplier Name (Optional)</label>
-      <input
-        id="lowStockSupplier"
-        pInputText
-        [(ngModel)]="lowStockSupplierName"
-        placeholder="Enter supplier name"
-      />
-    </div>
+      <div class="form-field supplier-field">
+        <label for="lowStockSupplier">Supplier Name (Optional)</label>
+        <input id="lowStockSupplier" pInputText [(ngModel)]="lowStockSupplierName" placeholder="Enter supplier name" />
+      </div>
 
-    <p-table
-      [value]="lowStockSuggestion()!.items"
-      [(selection)]="selectedLowStockItems"
-      dataKey="id"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 3rem">
-            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-          </th>
-          <th>SKU</th>
-          <th>Name</th>
-          <th>Current</th>
-          <th>Reorder Point</th>
-          <th>Shortage</th>
-          <th>Suggested Qty</th>
-          <th>Est. Cost</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td>
-            <p-tableCheckbox [value]="item"></p-tableCheckbox>
-          </td>
-          <td>{{ item.sku }}</td>
-          <td>{{ item.name }}</td>
-          <td>
-            <span [class.text-danger]="item.currentQuantity === 0">{{
-              item.currentQuantity
-            }}</span>
-          </td>
-          <td>{{ item.reorderPoint }}</td>
-          <td>
-            <span class="shortage">-{{ item.shortage }}</span>
-          </td>
-          <td>{{ item.suggestedQuantity }}</td>
-          <td>{{ item.suggestedQuantity * item.unitPrice | currency }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
+      <p-table
+        [value]="lowStockSuggestion()!.items"
+        [(selection)]="selectedLowStockItems"
+        dataKey="id"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem">
+              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Current</th>
+            <th>Reorder Point</th>
+            <th>Shortage</th>
+            <th>Suggested Qty</th>
+            <th>Est. Cost</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>
+              <p-tableCheckbox [value]="item"></p-tableCheckbox>
+            </td>
+            <td>{{ item.sku }}</td>
+            <td>{{ item.name }}</td>
+            <td>
+              <span [class.text-danger]="item.currentQuantity === 0">{{ item.currentQuantity }}</span>
+            </td>
+            <td>{{ item.reorderPoint }}</td>
+            <td>
+              <span class="shortage">-{{ item.shortage }}</span>
+            </td>
+            <td>{{ item.suggestedQuantity }}</td>
+            <td>{{ item.suggestedQuantity * item.unitPrice | currency }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
 
-    <div class="low-stock-summary">
-      <span>
-        <strong>{{ selectedLowStockItems.length }}</strong> items selected
-      </span>
-      <span class="total">
-        Estimated Total:
-        <strong>{{ getSelectedLowStockTotal() | currency }}</strong>
-      </span>
-    </div>
+      <div class="low-stock-summary">
+        <span>
+          <strong>{{ selectedLowStockItems.length }}</strong> items selected
+        </span>
+        <span class="total">
+          Estimated Total: <strong>{{ getSelectedLowStockTotal() | currency }}</strong>
+        </span>
+      </div>
     } @else {
-    <div class="loading-container">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
+      <div class="loading-container">
+        <p-progressSpinner></p-progressSpinner>
+      </div>
     }
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cancel"
-      severity="secondary"
-      [text]="true"
-      (click)="showLowStockDialog.set(false)"
-    ></p-button>
+    <p-button label="Cancel" severity="secondary" [text]="true" (click)="showLowStockDialog.set(false)"></p-button>
     <p-button
       label="Create Purchase Order"
       icon="pi pi-check"
