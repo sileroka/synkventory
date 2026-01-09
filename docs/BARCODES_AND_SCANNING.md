@@ -31,3 +31,12 @@ curl -X POST "http://localhost:8000/api/v1/inventory/{id}/barcode" \
 - Mobile scanner integrations (USB HID, Bluetooth, Android/iOS app)
 - Frontend barcode rendering and print labels
 - Scanning workflows for receiving, picking, and cycle counting
+
+## Pending
+
+Optional camera/scanner integration (e.g., @zxing/ngx-scanner) isn’t wired yet; current quick-scan uses a text input. If you want live scanning, we can add the dependency and a minimal camera scanner component to enable in-browser camera capture.
+
+Full integration to resolve barcodes into item IDs and perform actual stock movement creation within PO receiving or SO picking workflows is pending. Planned updates include:
+- Resolve barcode → item ID
+- Create corresponding stock_movements entries with correct types and quantities
+- Update PO/SO line allocations accordingly

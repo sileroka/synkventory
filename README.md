@@ -445,6 +445,13 @@ Future work:
 - EAN-13 support and QR codes for complex payloads
 - Mobile scanner integration and scanning UI flows (receive, pick, count)
 
+Pending:
+- Optional camera/scanner integration (e.g., @zxing/ngx-scanner) isn’t wired yet; current quick-scan uses a text input. If you want live scanning, we can add the dependency and a minimal camera scanner component for in-browser camera capture.
+ - Full integration to resolve barcodes into item IDs and perform actual stock movement creation within PO receiving or SO picking workflows is pending. Planned updates include:
+   - Resolve barcode → item ID
+   - Create corresponding stock_movements entries with correct types and quantities
+   - Update PO/SO line allocations accordingly
+
 ### Lookup by Barcode
 
 `GET /api/v1/inventory/by-barcode/{value}` returns item by barcode or SKU (fallback).
