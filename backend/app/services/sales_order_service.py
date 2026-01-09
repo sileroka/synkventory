@@ -23,6 +23,7 @@ from app.models.sales_order import (
     SalesOrderStatus,
     SalesOrderPriority,
 )
+from app.models.sales_order_counter import SalesOrderCounter
 from app.services.audit import audit_service
 from app.services.stock_movement_service import stock_movement_service
 from app.schemas.stock_movement import (
@@ -60,22 +61,36 @@ class SalesOrderService:
         )
         prefix = f"SO-{slug}-{today}-"
 
-        latest = (
-            db.query(SalesOrder)
-            .filter(SalesOrder.tenant_id == str(tenant.id))
-            .filter(SalesOrder.order_number.like(f"{prefix}%"))
-            .order_by(SalesOrder.order_number.desc())
+        # Use counter table with row-level lock for concurrency safety
+        counter = (
+            db.query(SalesOrderCounter)
+            .filter(
+                SalesOrderCounter.tenant_id == str(tenant.id),
+                SalesOrderCounter.date_key == today,
+            )
+            .with_for_update()
             .first()
         )
+        if not counter:
+            # Create then lock
+            counter = SalesOrderCounter(
+                tenant_id=str(tenant.id), date_key=today, last_seq=0
+            )
+            db.add(counter)
+            db.flush()
+            counter = (
+                db.query(SalesOrderCounter)
+                .filter(
+                    SalesOrderCounter.tenant_id == str(tenant.id),
+                    SalesOrderCounter.date_key == today,
+                )
+                .with_for_update()
+                .first()
+            )
 
-        if latest:
-            try:
-                last_num = int(latest.order_number.split("-")[-1])
-                next_num = last_num + 1
-            except (ValueError, IndexError):
-                next_num = 1
-        else:
-            next_num = 1
+        counter.last_seq = (counter.last_seq or 0) + 1
+        db.flush()
+        next_num = counter.last_seq
 
         return f"{prefix}{next_num:04d}"
 

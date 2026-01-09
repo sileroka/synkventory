@@ -26,6 +26,7 @@ from app.models.sales_order import (
     SalesOrderStatus,
     SalesOrderPriority,
 )
+from app.models.sales_order_counter import SalesOrderCounter
 
 __all__ = [
     "Tenant",
@@ -59,4 +60,5 @@ __all__ = [
     "SalesOrderLineItem",
     "SalesOrderStatus",
     "SalesOrderPriority",
+    "SalesOrderCounter",
 ]
