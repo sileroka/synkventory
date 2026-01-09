@@ -13,6 +13,7 @@ http://localhost:8000/api/v1
 ## Authentication
 
 All endpoints require:
+
 - Valid tenant context via `X-Tenant-Slug` header
 - Authentication token (for authenticated routes)
 
@@ -26,12 +27,12 @@ Get a paginated list of suppliers with optional filtering.
 
 **Query Parameters:**
 
-| Parameter   | Type    | Required | Default | Description                                    |
-| ----------- | ------- | -------- | ------- | ---------------------------------------------- |
-| `page`      | integer | No       | 1       | Page number                                    |
-| `page_size` | integer | No       | 25      | Items per page (max 100)                       |
-| `search`    | string  | No       | -       | Search by supplier name, email, or contact     |
-| `is_active` | boolean | No       | -       | Filter by active status                        |
+| Parameter   | Type    | Required | Default | Description                                |
+| ----------- | ------- | -------- | ------- | ------------------------------------------ |
+| `page`      | integer | No       | 1       | Page number                                |
+| `page_size` | integer | No       | 25      | Items per page (max 100)                   |
+| `search`    | string  | No       | -       | Search by supplier name, email, or contact |
+| `is_active` | boolean | No       | -       | Filter by active status                    |
 
 **Example Request:**
 
@@ -85,9 +86,9 @@ Get details for a specific supplier by ID.
 
 **Path Parameters:**
 
-| Parameter | Type | Required | Description          |
-| --------- | ---- | -------- | -------------------- |
-| `id`      | UUID | Yes      | The supplier ID      |
+| Parameter | Type | Required | Description     |
+| --------- | ---- | -------- | --------------- |
+| `id`      | UUID | Yes      | The supplier ID |
 
 **Example Request:**
 
@@ -138,18 +139,18 @@ Create a new supplier.
 
 **Request Body:**
 
-| Field          | Type    | Required | Description                   |
-| -------------- | ------- | -------- | ----------------------------- |
-| `name`         | string  | Yes      | Supplier company name         |
-| `contactName`  | string  | No       | Primary contact person        |
-| `email`        | string  | No       | Contact email address         |
-| `phone`        | string  | No       | Contact phone number          |
-| `addressLine1` | string  | No       | Street address line 1         |
-| `addressLine2` | string  | No       | Street address line 2         |
-| `city`         | string  | No       | City                          |
-| `state`        | string  | No       | State/Province                |
-| `postalCode`   | string  | No       | ZIP/Postal code               |
-| `country`      | string  | No       | Country                       |
+| Field          | Type   | Required | Description            |
+| -------------- | ------ | -------- | ---------------------- |
+| `name`         | string | Yes      | Supplier company name  |
+| `contactName`  | string | No       | Primary contact person |
+| `email`        | string | No       | Contact email address  |
+| `phone`        | string | No       | Contact phone number   |
+| `addressLine1` | string | No       | Street address line 1  |
+| `addressLine2` | string | No       | Street address line 2  |
+| `city`         | string | No       | City                   |
+| `state`        | string | No       | State/Province         |
+| `postalCode`   | string | No       | ZIP/Postal code        |
+| `country`      | string | No       | Country                |
 
 **Example Request:**
 
@@ -219,18 +220,18 @@ Update an existing supplier. Only provided fields will be updated.
 
 **Request Body:** (all fields optional)
 
-| Field          | Type    | Description               |
-| -------------- | ------- | ------------------------- |
-| `name`         | string  | Supplier company name     |
-| `contactName`  | string  | Primary contact person    |
-| `email`        | string  | Contact email address     |
-| `phone`        | string  | Contact phone number      |
-| `addressLine1` | string  | Street address line 1     |
-| `addressLine2` | string  | Street address line 2     |
-| `city`         | string  | City                      |
-| `state`        | string  | State/Province            |
-| `postalCode`   | string  | ZIP/Postal code           |
-| `country`      | string  | Country                   |
+| Field          | Type   | Description            |
+| -------------- | ------ | ---------------------- |
+| `name`         | string | Supplier company name  |
+| `contactName`  | string | Primary contact person |
+| `email`        | string | Contact email address  |
+| `phone`        | string | Contact phone number   |
+| `addressLine1` | string | Street address line 1  |
+| `addressLine2` | string | Street address line 2  |
+| `city`         | string | City                   |
+| `state`        | string | State/Province         |
+| `postalCode`   | string | ZIP/Postal code        |
+| `country`      | string | Country                |
 
 **Example Request:**
 
@@ -396,15 +397,15 @@ All supplier endpoints enforce multi-tenant isolation via PostgreSQL Row-Level S
 
 ## Error Codes
 
-| Code | Description                                              |
-| ---- | -------------------------------------------------------- |
-| 200  | Success                                                  |
-| 201  | Created                                                  |
-| 204  | No Content (successful deletion)                         |
-| 400  | Bad Request (invalid parameters)                         |
-| 404  | Not Found (supplier doesn't exist or wrong tenant)       |
-| 422  | Unprocessable Entity (validation error)                  |
-| 500  | Internal Server Error                                    |
+| Code | Description                                        |
+| ---- | -------------------------------------------------- |
+| 200  | Success                                            |
+| 201  | Created                                            |
+| 204  | No Content (successful deletion)                   |
+| 400  | Bad Request (invalid parameters)                   |
+| 404  | Not Found (supplier doesn't exist or wrong tenant) |
+| 422  | Unprocessable Entity (validation error)            |
+| 500  | Internal Server Error                              |
 
 ---
 
@@ -415,6 +416,7 @@ All supplier endpoints enforce multi-tenant isolation via PostgreSQL Row-Level S
 2. **Active Filtering**: When listing suppliers for selection (e.g., in a dropdown), filter by `is_active=true` to show only active suppliers.
 
 3. **Supplier Linking**: Link purchase orders to suppliers using `supplierId` rather than storing supplier information as text. This enables:
+
    - Centralized supplier updates
    - Better reporting and analytics
    - Supplier performance tracking

@@ -232,19 +232,19 @@ Synkventory includes comprehensive supplier management to streamline procurement
 
 ### Supplier Properties
 
-| Property       | Type    | Required | Description                    |
-| -------------- | ------- | -------- | ------------------------------ |
-| `name`         | String  | Yes      | Supplier company name          |
-| `contactName`  | String  | No       | Primary contact person         |
-| `email`        | String  | No       | Contact email address          |
-| `phone`        | String  | No       | Contact phone number           |
-| `addressLine1` | String  | No       | Street address line 1          |
-| `addressLine2` | String  | No       | Street address line 2          |
-| `city`         | String  | No       | City                           |
-| `state`        | String  | No       | State/Province                 |
-| `postalCode`   | String  | No       | ZIP/Postal code                |
-| `country`      | String  | No       | Country                        |
-| `isActive`     | Boolean | No       | Active status (default: true)  |
+| Property       | Type    | Required | Description                   |
+| -------------- | ------- | -------- | ----------------------------- |
+| `name`         | String  | Yes      | Supplier company name         |
+| `contactName`  | String  | No       | Primary contact person        |
+| `email`        | String  | No       | Contact email address         |
+| `phone`        | String  | No       | Contact phone number          |
+| `addressLine1` | String  | No       | Street address line 1         |
+| `addressLine2` | String  | No       | Street address line 2         |
+| `city`         | String  | No       | City                          |
+| `state`        | String  | No       | State/Province                |
+| `postalCode`   | String  | No       | ZIP/Postal code               |
+| `country`      | String  | No       | Country                       |
+| `isActive`     | Boolean | No       | Active status (default: true) |
 
 ### Creating a Supplier
 
@@ -280,6 +280,7 @@ curl "http://localhost:8000/api/v1/suppliers?search=ACME&page=1&page_size=25" \
 ### Creating Purchase Orders with Suppliers
 
 Purchase orders can reference a supplier by ID, allowing you to:
+
 - Auto-fill supplier contact information
 - Filter purchase orders by supplier
 - Track spending per supplier

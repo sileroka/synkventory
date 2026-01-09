@@ -16,5 +16,24 @@ from app.schemas.supplier import (
     SupplierUpdate,
     SupplierResponse,
 )
+from app.schemas.customer import (
+    CustomerBase,
+    CustomerCreate,
+    CustomerUpdate,
+    CustomerResponse,
+)
+from app.schemas.sales_order import (
+    SalesOrderBase,
+    SalesOrderCreate,
+    SalesOrderUpdate,
+    SalesOrderStatusUpdate,
+    SalesOrderResponse,
+    SalesOrderListItem,
+    SalesOrderDetail,
+    SalesOrderLineItemBase,
+    SalesOrderLineItemCreate,
+    SalesOrderLineItemUpdate,
+    SalesOrderLineItemResponse,
+)
 
 # Empty __init__.py files for Python package structure
