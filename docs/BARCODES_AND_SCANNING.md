@@ -40,3 +40,7 @@ Full integration to resolve barcodes into item IDs and perform actual stock move
 - Resolve barcode → item ID
 - Create corresponding stock_movements entries with correct types and quantities
 - Update PO/SO line allocations accordingly
+
+Testing coverage pending:
+- Explicit DB-level tests for the unique constraint (tenant_id, barcode) to ensure conflicts raise expected errors.
+- End-to-end tests that assert stock movements created via scan workflows once integrated.
