@@ -1,6 +1,7 @@
 """
 API endpoints for Purchase Orders.
 """
+
 from typing import List, Optional
 from uuid import UUID
 
@@ -34,23 +35,35 @@ router = APIRouter()
 # HELPER FUNCTIONS
 # =============================================================================
 
+
 def _po_to_list_item(po) -> PurchaseOrderListItem:
     """Convert a PurchaseOrder to a list item schema."""
-    item_count = len(po.line_items) if hasattr(po, 'line_items') and po.line_items else 0
-    items_received = sum(
-        1 for li in (po.line_items or [])
-        if li.quantity_received >= li.quantity_ordered
-    ) if hasattr(po, 'line_items') and po.line_items else 0
-    supplier_details = po.supplier if hasattr(po, 'supplier') else None
-    supplier_name = po.supplier_display_name if hasattr(po, 'supplier_display_name') else po.supplier_name
-    
+    item_count = (
+        len(po.line_items) if hasattr(po, "line_items") and po.line_items else 0
+    )
+    items_received = (
+        sum(
+            1
+            for li in (po.line_items or [])
+            if li.quantity_received >= li.quantity_ordered
+        )
+        if hasattr(po, "line_items") and po.line_items
+        else 0
+    )
+    supplier_details = po.supplier if hasattr(po, "supplier") else None
+    supplier_name = (
+        po.supplier_display_name
+        if hasattr(po, "supplier_display_name")
+        else po.supplier_name
+    )
+
     return PurchaseOrderListItem(
         id=po.id,
         po_number=po.po_number,
         supplier_id=po.supplier_id,
         supplier_name=supplier_name,
-        status=po.status.value if hasattr(po.status, 'value') else po.status,
-        priority=po.priority.value if hasattr(po.priority, 'value') else po.priority,
+        status=po.status.value if hasattr(po.status, "value") else po.status,
+        priority=po.priority.value if hasattr(po.priority, "value") else po.priority,
         total_amount=po.total_amount,
         order_date=po.order_date,
         expected_date=po.expected_date,
@@ -68,27 +81,33 @@ def _po_to_list_item(po) -> PurchaseOrderListItem:
 def _po_to_detail(po) -> PurchaseOrderDetail:
     """Convert a PurchaseOrder to a detail schema."""
     line_items = []
-    for li in (po.line_items or []):
-        line_items.append(PurchaseOrderLineItemWithItem(
-            id=li.id,
-            purchase_order_id=li.purchase_order_id,
-            item_id=li.item_id,
-            quantity_ordered=li.quantity_ordered,
-            quantity_received=li.quantity_received,
-            unit_price=li.unit_price,
-            line_total=li.line_total,
-            notes=li.notes,
-            created_at=li.created_at,
-            updated_at=li.updated_at,
-            quantity_remaining=li.quantity_remaining,
-            item_name=li.item.name if li.item else None,
-            item_sku=li.item.sku if li.item else None,
-            current_quantity=li.item.quantity if li.item else None,
-            reorder_point=li.item.reorder_point if li.item else None,
-        ))
-    
-    supplier_details = po.supplier if hasattr(po, 'supplier') else None
-    supplier_name = po.supplier_display_name if hasattr(po, 'supplier_display_name') else po.supplier_name
+    for li in po.line_items or []:
+        line_items.append(
+            PurchaseOrderLineItemWithItem(
+                id=li.id,
+                purchase_order_id=li.purchase_order_id,
+                item_id=li.item_id,
+                quantity_ordered=li.quantity_ordered,
+                quantity_received=li.quantity_received,
+                unit_price=li.unit_price,
+                line_total=li.line_total,
+                notes=li.notes,
+                created_at=li.created_at,
+                updated_at=li.updated_at,
+                quantity_remaining=li.quantity_remaining,
+                item_name=li.item.name if li.item else None,
+                item_sku=li.item.sku if li.item else None,
+                current_quantity=li.item.quantity if li.item else None,
+                reorder_point=li.item.reorder_point if li.item else None,
+            )
+        )
+
+    supplier_details = po.supplier if hasattr(po, "supplier") else None
+    supplier_name = (
+        po.supplier_display_name
+        if hasattr(po, "supplier_display_name")
+        else po.supplier_name
+    )
 
     return PurchaseOrderDetail(
         id=po.id,
@@ -99,8 +118,8 @@ def _po_to_detail(po) -> PurchaseOrderDetail:
         supplier_contact=po.supplier_contact,
         supplier_email=po.supplier_email,
         supplier_phone=po.supplier_phone,
-        status=po.status.value if hasattr(po.status, 'value') else po.status,
-        priority=po.priority.value if hasattr(po.priority, 'value') else po.priority,
+        status=po.status.value if hasattr(po.status, "value") else po.status,
+        priority=po.priority.value if hasattr(po.priority, "value") else po.priority,
         order_date=po.order_date,
         expected_date=po.expected_date,
         received_date=po.received_date,
@@ -120,7 +139,9 @@ def _po_to_detail(po) -> PurchaseOrderDetail:
         line_items=line_items,
         requested_by_name=po.requested_by.name if po.requested_by else None,
         approved_by_name=po.approved_by.name if po.approved_by else None,
-        receiving_location_name=po.receiving_location.name if po.receiving_location else None,
+        receiving_location_name=(
+            po.receiving_location.name if po.receiving_location else None
+        ),
         is_overdue=po.is_overdue,
         supplier=supplier_details,
     )
@@ -129,6 +150,7 @@ def _po_to_detail(po) -> PurchaseOrderDetail:
 # =============================================================================
 # LIST / CREATE
 # =============================================================================
+
 
 @router.get("", response_model=PaginatedResponse[PurchaseOrderListItem])
 def list_purchase_orders(
@@ -153,7 +175,7 @@ def list_purchase_orders(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status: {status}",
             )
-    
+
     priority_enum = None
     if priority:
         try:
@@ -163,7 +185,7 @@ def list_purchase_orders(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid priority: {priority}",
             )
-    
+
     purchase_orders, total = purchase_order_service.get_purchase_orders(
         db=db,
         page=page,
@@ -174,9 +196,9 @@ def list_purchase_orders(
         supplier_name=supplier_name,
         supplier_id=supplier_id,
     )
-    
+
     items = [_po_to_list_item(po) for po in purchase_orders]
-    
+
     return PaginatedResponse(
         data=items,
         meta={
@@ -188,7 +210,11 @@ def list_purchase_orders(
     )
 
 
-@router.post("", response_model=APIResponse[PurchaseOrderDetail], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=APIResponse[PurchaseOrderDetail],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_purchase_order(
     request: Request,
     data: PurchaseOrderCreate,
@@ -203,10 +229,10 @@ def create_purchase_order(
             user_id=user.id,
             request=request,
         )
-        
+
         # Re-fetch with all relationships
         po = purchase_order_service.get_purchase_order(db, po.id)
-        
+
         return APIResponse(data=_po_to_detail(po))
     except ValueError as e:
         raise HTTPException(
@@ -218,6 +244,7 @@ def create_purchase_order(
 # =============================================================================
 # STATS
 # =============================================================================
+
 
 @router.get("/stats", response_model=APIResponse[PurchaseOrderStats])
 def get_purchase_order_stats(
@@ -233,6 +260,7 @@ def get_purchase_order_stats(
 # LOW STOCK
 # =============================================================================
 
+
 @router.get("/low-stock", response_model=APIResponse[LowStockSuggestion])
 def get_low_stock_suggestions(
     limit: int = Query(50, ge=1, le=200),
@@ -244,7 +272,11 @@ def get_low_stock_suggestions(
     return APIResponse(data=suggestion)
 
 
-@router.post("/from-low-stock", response_model=APIResponse[PurchaseOrderDetail], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/from-low-stock",
+    response_model=APIResponse[PurchaseOrderDetail],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_po_from_low_stock(
     request: Request,
     item_ids: List[UUID],
@@ -261,10 +293,10 @@ def create_po_from_low_stock(
             supplier_name=supplier_name,
             request=request,
         )
-        
+
         # Re-fetch with relationships
         po = purchase_order_service.get_purchase_order(db, po.id)
-        
+
         return APIResponse(data=_po_to_detail(po))
     except ValueError as e:
         raise HTTPException(
@@ -277,6 +309,7 @@ def create_po_from_low_stock(
 # SINGLE PO OPERATIONS
 # =============================================================================
 
+
 @router.get("/{po_id}", response_model=APIResponse[PurchaseOrderDetail])
 def get_purchase_order(
     po_id: UUID,
@@ -285,13 +318,13 @@ def get_purchase_order(
 ):
     """Get a single purchase order by ID."""
     po = purchase_order_service.get_purchase_order(db, po_id)
-    
+
     if not po:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Purchase order not found",
         )
-    
+
     return APIResponse(data=_po_to_detail(po))
 
 
@@ -312,16 +345,16 @@ def update_purchase_order(
             user_id=user.id,
             request=request,
         )
-        
+
         if not po:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Purchase order not found",
             )
-        
+
         # Re-fetch with relationships
         po = purchase_order_service.get_purchase_order(db, po.id)
-        
+
         return APIResponse(data=_po_to_detail(po))
     except ValueError as e:
         raise HTTPException(
@@ -345,7 +378,7 @@ def delete_purchase_order(
             user_id=user.id,
             request=request,
         )
-        
+
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -361,6 +394,7 @@ def delete_purchase_order(
 # =============================================================================
 # STATUS OPERATIONS
 # =============================================================================
+
 
 @router.put("/{po_id}/status", response_model=APIResponse[PurchaseOrderDetail])
 def update_purchase_order_status(
@@ -378,7 +412,7 @@ def update_purchase_order_status(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid status: {data.status}",
         )
-    
+
     try:
         po = purchase_order_service.update_status(
             db=db,
@@ -388,16 +422,16 @@ def update_purchase_order_status(
             notes=data.notes,
             request=request,
         )
-        
+
         if not po:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Purchase order not found",
             )
-        
+
         # Re-fetch with relationships
         po = purchase_order_service.get_purchase_order(db, po.id)
-        
+
         return APIResponse(data=_po_to_detail(po))
     except ValueError as e:
         raise HTTPException(
@@ -409,6 +443,7 @@ def update_purchase_order_status(
 # =============================================================================
 # RECEIVE OPERATIONS
 # =============================================================================
+
 
 @router.post("/{po_id}/receive", response_model=APIResponse[PurchaseOrderDetail])
 def receive_items(
@@ -427,16 +462,16 @@ def receive_items(
             user_id=user.id,
             request=request,
         )
-        
+
         if not po:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Purchase order not found",
             )
-        
+
         # Re-fetch with relationships
         po = purchase_order_service.get_purchase_order(db, po.id)
-        
+
         return APIResponse(data=_po_to_detail(po))
     except ValueError as e:
         raise HTTPException(
@@ -449,7 +484,12 @@ def receive_items(
 # LINE ITEM OPERATIONS
 # =============================================================================
 
-@router.post("/{po_id}/line-items", response_model=APIResponse[PurchaseOrderLineItemResponse], status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{po_id}/line-items",
+    response_model=APIResponse[PurchaseOrderLineItemResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def add_line_item(
     request: Request,
     po_id: UUID,
@@ -469,13 +509,13 @@ def add_line_item(
             notes=data.notes,
             request=request,
         )
-        
+
         if not line_item:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Purchase order not found",
             )
-        
+
         return APIResponse(
             data=PurchaseOrderLineItemResponse(
                 id=line_item.id,
@@ -498,7 +538,9 @@ def add_line_item(
         )
 
 
-@router.delete("/{po_id}/line-items/{line_item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{po_id}/line-items/{line_item_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 def remove_line_item(
     request: Request,
     po_id: UUID,
@@ -515,7 +557,7 @@ def remove_line_item(
             user_id=user.id,
             request=request,
         )
-        
+
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -532,7 +574,10 @@ def remove_line_item(
 # ITEM-SPECIFIC QUERIES
 # =============================================================================
 
-@router.get("/for-item/{item_id}", response_model=APIResponse[List[PurchaseOrderListItem]])
+
+@router.get(
+    "/for-item/{item_id}", response_model=APIResponse[List[PurchaseOrderListItem]]
+)
 def get_purchase_orders_for_item(
     item_id: UUID,
     include_received: bool = False,
@@ -545,7 +590,7 @@ def get_purchase_orders_for_item(
         item_id=item_id,
         include_received=include_received,
     )
-    
+
     items = [_po_to_list_item(po) for po in purchase_orders]
-    
+
     return APIResponse(data=items)
