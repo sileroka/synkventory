@@ -19,6 +19,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TabViewModule } from 'primeng/tabview';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { InventoryService, ILocationQuantityResult, IStockMovementResult } from '../../services/inventory.service';
+import { InventoryApiService } from '../../services/inventory-api.service';
 import { ItemLotService } from '../../services/item-lot.service';
 import { LocationService } from '../../features/locations/services/location.service';
 import { IInventoryItem, IInventoryLocationQuantity, InventoryStatus } from '../../models/inventory-item.model';
@@ -103,8 +104,9 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
     private itemLotService: ItemLotService,
     private locationService: LocationService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
-  ) {}
+    private confirmationService: ConfirmationService,
+    private inventoryApi: InventoryApiService
+  ) { }
 
   ngOnInit() {
     const itemId = this.route.snapshot.paramMap.get('id');
@@ -313,6 +315,19 @@ export class InventoryDetailComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  async generateBarcode(kind: 'code128' | 'ean13' | 'qr' = 'code128') {
+    if (!this.item?.id) return;
+    try {
+      const updated = await this.inventoryApi.generateBarcode(this.item.id, kind);
+      // Reload item to get fresh barcode image URL
+      this.loadItem(this.item.id);
+      // Navigate to barcode view route
+      this.router.navigate(['/inventory', this.item.id, 'barcode']);
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: 'Barcode', detail: 'Failed to generate barcode' });
+    }
   }
 
   // Quick Adjust

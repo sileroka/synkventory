@@ -444,6 +444,37 @@ This will:
 Future work:
 - EAN-13 support and QR codes for complex payloads
 - Mobile scanner integration and scanning UI flows (receive, pick, count)
+
+### Lookup by Barcode
+
+`GET /api/v1/inventory/by-barcode/{value}` returns item by barcode or SKU (fallback).
+
+### Scan Endpoints (simple workflows)
+
+- `POST /api/v1/inventory/scan/receive?barcode=VALUE&quantity=QTY&location_id=UUID`
+- `POST /api/v1/inventory/scan/pick?barcode=VALUE&quantity=QTY&location_id=UUID`
+- `POST /api/v1/inventory/scan/count?barcode=VALUE&quantity=QTY`
+
+Note: For lot-aware operations, use purchase order receiving and sales order shipping endpoints.
+
+### Frontend Component
+
+`app-barcode-view` is a standalone Angular component that takes `barcodeImageUrl` and provides a print button.
+
+### QR Conventions
+
+QR values may encode JSON payloads for richer workflows, e.g.:
+
+```
+{"type":"item","id":"<uuid>"}
+```
+
+The lookup endpoint `GET /api/v1/inventory/by-barcode/{value}` detects this pattern and resolves the item by id.
+
+### Frontend Routing
+
+- Add a route to `QuickScanComponent` (e.g., `/scan`) for rapid receiving/picking/counting.
+- Include `app-barcode-view` in item detail pages and expose buttons to generate Code128/EAN‑13/QR and print labels.
 ```
 
 ### Creating a Lot

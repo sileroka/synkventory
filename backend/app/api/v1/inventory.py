@@ -45,6 +45,8 @@ from app.services.audit import audit_service
 from app.services.storage import storage_service
 from app.services.revision import revision_service
 from app.services.barcode import barcode_service
+from app.services.stock_movement_service import stock_movement_service
+from app.schemas.stock_movement import StockMovementCreate, MovementType as MovementTypeSchema
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -80,6 +82,13 @@ def add_image_url(item: InventoryItemModel) -> dict:
         "image_key": item.image_key,
         "image_url": (
             storage_service.get_signed_url(item.image_key) if item.image_key else None
+        ),
+        "barcode": getattr(item, "barcode", None),
+        "barcode_image_key": getattr(item, "barcode_image_key", None),
+        "barcode_image_url": (
+            storage_service.get_signed_url(item.barcode_image_key)
+            if getattr(item, "barcode_image_key", None)
+            else None
         ),
         "custom_attributes": item.custom_attributes,
     }
@@ -277,12 +286,49 @@ def get_inventory_item(item_id: UUID, request: Request, db: Session = Depends(ge
     return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
 
 
+@router.get("/by-barcode/{value}", response_model=DataResponse[InventoryItem])
+def get_inventory_item_by_barcode(value: str, request: Request, db: Session = Depends(get_db)):
+    """Lookup an inventory item by barcode value quickly for scanning workflows."""
+    # Support QR JSON convention: {"type":"item","id":"<uuid>"}
+    item = None
+    if value and value.strip().startswith("{"):
+        try:
+            import json
+            payload = json.loads(value)
+            if isinstance(payload, dict) and payload.get("type") == "item" and payload.get("id"):
+                item = (
+                    db.query(InventoryItemModel)
+                    .filter(InventoryItemModel.id == str(payload["id"]))
+                    .first()
+                )
+        except Exception:
+            item = None
+
+    if not item:
+        item = (
+            db.query(InventoryItemModel)
+            .filter(InventoryItemModel.barcode == value)
+            .first()
+        )
+    if not item:
+        # Fallback: allow scanning of SKU if barcodes not yet assigned
+        item = (
+            db.query(InventoryItemModel)
+            .filter(InventoryItemModel.sku == value)
+            .first()
+        )
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
+
+
 @router.post("/{item_id}/barcode", response_model=DataResponse[InventoryItem])
 def generate_item_barcode(
     item_id: UUID,
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    kind: str = Query("code128", description="Barcode type: code128 | ean13 | qr"),
 ):
     """Generate a barcode image for the item and store its metadata."""
     item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
@@ -291,8 +337,13 @@ def generate_item_barcode(
 
     # If the item already has a barcode, reuse it; otherwise use SKU as default value
     value = item.barcode or item.sku
-    img_bytes = barcode_service.generate_code128_image_bytes(value)
-    key = barcode_service.store_image_and_get_key(str(item.id), img_bytes)
+    if kind == "ean13":
+        img_bytes = barcode_service.generate_ean13_image_bytes(value)
+    elif kind == "qr":
+        img_bytes = barcode_service.generate_qr_image_bytes(value)
+    else:
+        img_bytes = barcode_service.generate_code128_image_bytes(value)
+    key = barcode_service.store_image_and_get_key(str(item.id), img_bytes, kind=kind)
 
     # Persist barcode value and image key
     item.barcode = value
@@ -301,6 +352,108 @@ def generate_item_barcode(
     db.refresh(item)
 
     return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
+
+
+@router.post("/scan/receive", response_model=MessageResponse)
+def scan_receive(
+    request: Request,
+    barcode: str = Query(..., description="Scanned barcode or SKU"),
+    quantity: int = Query(1, ge=1),
+    location_id: Optional[UUID] = Query(None),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Quick receive workflow: increases quantity based on scanned barcode.
+
+    Note: This simplified endpoint adjusts main quantity. Lot-aware receiving should use PO endpoints.
+    """
+    item = (
+        db.query(InventoryItemModel)
+        .filter((InventoryItemModel.barcode == barcode) | (InventoryItemModel.sku == barcode))
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    item.quantity = (item.quantity or 0) + quantity
+    db.commit()
+    # Record stock movement
+    stock_movement_service.create_movement(
+        db=db,
+        data=StockMovementCreate(
+            item_id=item.id,
+            quantity=quantity,
+            movement_type=MovementTypeSchema.RECEIVE,
+            from_location_id=None,
+            to_location_id=str(location_id) if location_id else None,
+            notes=f"Scan receive: {barcode}",
+        ),
+        user_id=user.id,
+    )
+    return MessageResponse(message=f"Received {quantity} of {item.sku}. For lot-aware receiving, use purchase order receive endpoints.")
+
+
+@router.post("/scan/pick", response_model=MessageResponse)
+def scan_pick(
+    request: Request,
+    barcode: str = Query(..., description="Scanned barcode or SKU"),
+    quantity: int = Query(1, ge=1),
+    location_id: Optional[UUID] = Query(None),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Quick pick workflow: decreases quantity based on scanned barcode.
+
+    Note: For sales orders, use sales order ship endpoints to link movements to orders.
+    """
+    item = (
+        db.query(InventoryItemModel)
+        .filter((InventoryItemModel.barcode == barcode) | (InventoryItemModel.sku == barcode))
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if (item.quantity or 0) < quantity:
+        raise HTTPException(status_code=400, detail="Insufficient quantity")
+    item.quantity = (item.quantity or 0) - quantity
+    db.commit()
+    # Record stock movement
+    stock_movement_service.create_movement(
+        db=db,
+        data=StockMovementCreate(
+            item_id=item.id,
+            quantity=quantity,
+            movement_type=MovementTypeSchema.PICK,
+            from_location_id=str(location_id) if location_id else None,
+            to_location_id=None,
+            notes=f"Scan pick: {barcode}",
+        ),
+        user_id=user.id,
+    )
+    return MessageResponse(message=f"Picked {quantity} of {item.sku}. For sales order traceability, use sales order ship endpoints.")
+
+
+@router.post("/scan/count", response_model=MessageResponse)
+def scan_count(
+    request: Request,
+    barcode: str = Query(..., description="Scanned barcode or SKU"),
+    quantity: int = Query(..., ge=0, description="Counted quantity"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Cycle counting: set item quantity based on scanned barcode.
+
+    Note: Lot-aware counting should use lot-specific endpoints.
+    """
+    item = (
+        db.query(InventoryItemModel)
+        .filter((InventoryItemModel.barcode == barcode) | (InventoryItemModel.sku == barcode))
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    item.quantity = quantity
+    db.commit()
+    return MessageResponse(message=f"Counted {quantity} of {item.sku}. For lot-specific counts, use lot tracking endpoints.")
 
 
 @router.post("", response_model=DataResponse[InventoryItem], status_code=201)

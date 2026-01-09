@@ -20,6 +20,8 @@ import { SupplierDetailComponent } from './features/suppliers/supplier-detail.co
 import { CustomerListComponent } from './features/customers/customer-list.component';
 import { SalesOrderListComponent } from './features/sales-orders/sales-order-list.component';
 import { SalesOrderDetailComponent } from './features/sales-orders/sales-order-detail.component';
+import { QuickScanComponent } from './features/inventory/quick-scan.component';
+import { BarcodeViewComponent } from './features/inventory/barcode-view.component';
 import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
 import { authGuard, noAuthGuard, roleGuard, landingGuard } from './core/guards/auth.guard';
 import { adminAuthGuard, adminNoAuthGuard, adminPortalGuard, superAdminGuard } from './core/guards/admin.guard';
@@ -64,6 +66,10 @@ export const routes: Routes = [
   { path: 'inventory/new', redirectTo: 'inventory', pathMatch: 'full' },
   { path: 'inventory/import', redirectTo: 'inventory', pathMatch: 'full' },
   { path: 'inventory/:id', component: InventoryDetailComponent, canActivate: [authGuard] },
+  // Quick scan utility page
+  { path: 'scan', component: QuickScanComponent, canActivate: [authGuard] },
+  // Optional: expose a simple barcode view route for item images
+  { path: 'inventory/:id/barcode', component: BarcodeViewComponent, canActivate: [authGuard] },
   { path: 'bill-of-materials', component: BomListComponent, canActivate: [authGuard] },
   { path: 'work-orders', component: WorkOrderListComponent, canActivate: [authGuard] },
   { path: 'work-orders/:id', component: WorkOrderDetailComponent, canActivate: [authGuard] },
