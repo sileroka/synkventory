@@ -44,6 +44,7 @@ from app.schemas.response import (
 from app.services.audit import audit_service
 from app.services.storage import storage_service
 from app.services.revision import revision_service
+from app.services.barcode import barcode_service
 
 # All routes in this router require authentication
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -273,6 +274,32 @@ def get_inventory_item(item_id: UUID, request: Request, db: Session = Depends(ge
     )
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+    return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
+
+
+@router.post("/{item_id}/barcode", response_model=DataResponse[InventoryItem])
+def generate_item_barcode(
+    item_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Generate a barcode image for the item and store its metadata."""
+    item = db.query(InventoryItemModel).filter(InventoryItemModel.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # If the item already has a barcode, reuse it; otherwise use SKU as default value
+    value = item.barcode or item.sku
+    img_bytes = barcode_service.generate_code128_image_bytes(value)
+    key = barcode_service.store_image_and_get_key(str(item.id), img_bytes)
+
+    # Persist barcode value and image key
+    item.barcode = value
+    item.barcode_image_key = key
+    db.commit()
+    db.refresh(item)
+
     return DataResponse(data=add_image_url(item), meta=get_response_meta(request))
 
 

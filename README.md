@@ -165,6 +165,7 @@ The frontend will be available at http://localhost:4200
 - `GET /api/v1/inventory` - List all inventory items
 - `GET /api/v1/inventory/{id}` - Get a specific item
 - `POST /api/v1/inventory` - Create a new item
+- `POST /api/v1/inventory/{id}/barcode` - Generate and store a barcode image for an item
 - `PUT /api/v1/inventory/{id}` - Update an item
 - `DELETE /api/v1/inventory/{id}` - Delete an item
 
@@ -420,6 +421,29 @@ This will:
 - Update `quantityShipped` on line items
 - Set order status to `shipped` when all lines are fully shipped
 - Write audit logs for traceability
+
+## Barcodes & Scanning
+
+Synkventory supports generating Code128 barcodes for inventory items. Each item can store:
+- `barcode`: the encoded value (defaults to SKU if not set)
+- `barcodeImageKey`: storage key for the generated PNG image
+
+### Generating an Item Barcode
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/inventory/{id}/barcode" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant"
+```
+
+This will:
+- Generate a Code128 barcode image
+- Upload the image to storage (Spaces/S3)
+- Persist the `barcode` and `barcodeImageKey` on the item
+
+Future work:
+- EAN-13 support and QR codes for complex payloads
+- Mobile scanner integration and scanning UI flows (receive, pick, count)
 ```
 
 ### Creating a Lot
