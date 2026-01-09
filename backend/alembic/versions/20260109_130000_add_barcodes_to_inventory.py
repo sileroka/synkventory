@@ -2,7 +2,7 @@
 Add barcode fields to inventory_items and unique index on (tenant_id, barcode).
 
 Revision ID: 20260109_130000
-Revises: 20260108_030000
+Revises: 20260109_120000
 Create Date: 2026-01-09 13:00:00
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "20260109_130000"
-down_revision: Union[str, None] = "20260108_030000"
+down_revision: Union[str, None] = "20260109_120000"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
