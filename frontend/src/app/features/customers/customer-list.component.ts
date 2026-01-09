@@ -50,7 +50,7 @@ export class CustomerListComponent implements OnInit {
     private customerService: CustomerService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadCustomers();

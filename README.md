@@ -216,6 +216,7 @@ The frontend will be available at http://localhost:4200
 - `GET /api/v1/sales-orders/{id}` - Get a sales order detail
 - `PUT /api/v1/sales-orders/{id}` - Update a sales order
 - `PUT /api/v1/sales-orders/{id}/status` - Update sales order status (draft→confirmed→picked→shipped)
+ - `POST /api/v1/sales-orders/{id}/ship` - Ship items from a sales order (creates stock movements, audit logs)
 
 ### Health Check
 
@@ -398,6 +399,27 @@ curl -X PUT "http://localhost:8000/api/v1/sales-orders/{id}/status" \
   -H "Content-Type: application/json" \
   -H "X-Tenant-Slug: your-tenant" \
   -d '{"status": "shipped", "notes": "Tracking #123"}'
+
+### Shipping Items
+
+Use the ship endpoint to increment shipped quantities and transition status:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/sales-orders/{id}/ship" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{
+    "shipments": [
+      {"lineItemId": "line-uuid", "quantity": 2, "fromLocationId": "loc-uuid"}
+    ]
+  }'
+```
+
+This will:
+- Create stock movements of type `sale`
+- Update `quantityShipped` on line items
+- Set order status to `shipped` when all lines are fully shipped
+- Write audit logs for traceability
 ```
 
 ### Creating a Lot
