@@ -7,6 +7,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
+from app.schemas.response import to_camel
 
 
 class CustomerBase(BaseModel):
@@ -41,7 +42,7 @@ class CustomerUpdate(BaseModel):
 class CustomerResponse(CustomerBase):
     """Response schema including identifiers and audit metadata."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, alias_generator=to_camel, populate_by_name=True)
 
     id: UUID
     tenant_id: UUID

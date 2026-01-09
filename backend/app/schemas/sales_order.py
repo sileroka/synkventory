@@ -8,6 +8,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.response import to_camel
 
 from app.schemas.customer import CustomerResponse
 
@@ -19,6 +20,8 @@ from app.schemas.customer import CustomerResponse
 
 class SalesOrderLineItemBase(BaseModel):
     """Base schema for sales order line items."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     item_id: Optional[UUID] = None
     quantity_ordered: int = Field(ge=1, default=1)
@@ -44,7 +47,7 @@ class SalesOrderLineItemUpdate(BaseModel):
 class SalesOrderLineItemResponse(SalesOrderLineItemBase):
     """Response schema for sales order line item."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, alias_generator=to_camel, populate_by_name=True)
 
     id: UUID
     sales_order_id: UUID
@@ -74,6 +77,8 @@ class SalesOrderLineItemWithItem(SalesOrderLineItemResponse):
 class SalesOrderBase(BaseModel):
     """Base schema for sales orders."""
 
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     customer_id: Optional[UUID] = None
     priority: str = "normal"
     order_date: Optional[datetime] = None
@@ -90,6 +95,8 @@ class SalesOrderCreate(SalesOrderBase):
 class SalesOrderUpdate(BaseModel):
     """Schema for updating a sales order."""
 
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     customer_id: Optional[UUID] = None
     priority: Optional[str] = None
     order_date: Optional[datetime] = None
@@ -102,6 +109,8 @@ class SalesOrderUpdate(BaseModel):
 class SalesOrderStatusUpdate(BaseModel):
     """Schema for updating sales order status."""
 
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     status: str
     notes: Optional[str] = None
 
@@ -109,7 +118,7 @@ class SalesOrderStatusUpdate(BaseModel):
 class SalesOrderResponse(SalesOrderBase):
     """Response schema for sales order."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, alias_generator=to_camel, populate_by_name=True)
 
     id: UUID
     tenant_id: UUID
@@ -132,7 +141,7 @@ class SalesOrderResponse(SalesOrderBase):
 class SalesOrderListItem(BaseModel):
     """Simplified schema for list views."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, alias_generator=to_camel, populate_by_name=True)
 
     id: UUID
     order_number: str

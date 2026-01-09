@@ -199,6 +199,24 @@ The frontend will be available at http://localhost:4200
 - `PUT /api/v1/suppliers/{id}` - Update a supplier
 - `DELETE /api/v1/suppliers/{id}` - Deactivate a supplier (soft delete)
 
+### Customer Management
+
+- `GET /api/v1/customers` - List customers with pagination and search
+  - Query params: `page`, `page_size`, `search`
+- `GET /api/v1/customers/{id}` - Get a specific customer
+- `POST /api/v1/customers` - Create a customer
+- `PUT /api/v1/customers/{id}` - Update a customer
+- `DELETE /api/v1/customers/{id}` - Deactivate a customer (soft delete)
+
+### Sales Orders
+
+- `GET /api/v1/sales-orders` - List sales orders with filters
+  - Query params: `page`, `page_size`, `status`, `priority`, `customer_id`
+- `POST /api/v1/sales-orders` - Create a sales order with line items
+- `GET /api/v1/sales-orders/{id}` - Get a sales order detail
+- `PUT /api/v1/sales-orders/{id}` - Update a sales order
+- `PUT /api/v1/sales-orders/{id}/status` - Update sales order status (draft→confirmed→picked→shipped)
+
 ### Health Check
 
 - `GET /health` - Health check endpoint
@@ -314,6 +332,72 @@ curl "http://localhost:8000/api/v1/purchase-orders?supplier_id=supplier-uuid" \
 # Search by supplier name (matches both linked suppliers and text-only supplier names)
 curl "http://localhost:8000/api/v1/purchase-orders?supplier_name=ACME" \
   -H "X-Tenant-Slug: your-tenant"
+```
+
+## Customer Management
+
+Manage outbound relationships and shipping destinations.
+
+### Creating a Customer
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/customers" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{
+    "name": "Beta LLC",
+    "email": "orders@beta.com",
+    "shippingAddress": {"line1": "100 Main St", "city": "Austin", "state": "TX", "postalCode": "78701", "country": "USA"}
+  }'
+```
+
+### Listing Customers
+
+```bash
+curl "http://localhost:8000/api/v1/customers?page=1&page_size=25&search=beta" \
+  -H "X-Tenant-Slug: your-tenant"
+```
+
+## Sales Orders
+
+Outbound order management with pick/pack/ship workflows.
+
+### Creating a Sales Order
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/sales-orders" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{
+    "customerId": "customer-uuid",
+    "priority": "normal",
+    "expectedShipDate": "2026-02-10",
+    "lineItems": [
+      {"itemId": "item-uuid", "quantityOrdered": 2, "unitPrice": 12.50}
+    ]
+  }'
+```
+
+### Updating Sales Order Status
+
+```bash
+# Confirm order
+curl -X PUT "http://localhost:8000/api/v1/sales-orders/{id}/status" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{"status": "confirmed"}'
+
+# Pick items
+curl -X PUT "http://localhost:8000/api/v1/sales-orders/{id}/status" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{"status": "picked"}'
+
+# Ship order
+curl -X PUT "http://localhost:8000/api/v1/sales-orders/{id}/status" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{"status": "shipped", "notes": "Tracking #123"}'
 ```
 
 ### Creating a Lot

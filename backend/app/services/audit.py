@@ -20,6 +20,7 @@ Usage:
 
 import logging
 from typing import Optional, Dict, Any
+import uuid
 from uuid import UUID
 
 from fastapi import Request
@@ -99,13 +100,15 @@ class AuditService:
                 user_email = user.email if user else None
 
             # Create audit log entry
+            # Cast UUIDs to strings for cross-dialect compatibility (e.g., SQLite tests)
             audit_log = AuditLog(
-                tenant_id=tenant_id,
-                user_id=user_id,
+                id=str(uuid.uuid4()),
+                tenant_id=str(tenant_id) if tenant_id is not None else None,
+                user_id=str(user_id) if user_id is not None else None,
                 user_email=user_email,
                 action=action,
                 entity_type=entity_type,
-                entity_id=entity_id,
+                entity_id=str(entity_id) if entity_id is not None else None,
                 entity_name=entity_name,
                 changes=changes,
                 extra_data=extra_data,

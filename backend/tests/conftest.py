@@ -15,6 +15,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
+from sqlalchemy import String, Text
+from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB as PG_JSONB
+from sqlalchemy.sql.schema import ColumnDefault
+import uuid
 
 # Add backend to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,6 +73,9 @@ def db() -> Generator[Session, None, None]:
     3. Yields the session
     4. Drops all tables after the test
     """
+    # Adjust PostgreSQL-specific types for SQLite
+    _adjust_types_for_sqlite(Base)
+
     # Create all tables
     Base.metadata.create_all(bind=test_engine)
 
@@ -98,6 +107,14 @@ def client(db: Session) -> Generator[TestClient, None, None]:
 
     app.dependency_overrides[get_db] = override_get_db
 
+    # Override auth to use seeded system user
+    from app.core.deps import get_current_user
+
+    def override_get_current_user():
+        return db.query(User).filter(User.id == str(SYSTEM_USER_ID)).first()
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
     with TestClient(app) as test_client:
         yield test_client
 
@@ -125,7 +142,7 @@ def _seed_test_data(db: Session) -> None:
     """Seed required data for tests."""
     # Create default tenant
     default_tenant = Tenant(
-        id=DEFAULT_TENANT_ID,
+        id=str(DEFAULT_TENANT_ID),
         name="Test Tenant",
         slug="test-tenant",
         is_active=True,
@@ -134,14 +151,46 @@ def _seed_test_data(db: Session) -> None:
 
     # Create system user
     system_user = User(
-        id=SYSTEM_USER_ID,
+        id=str(SYSTEM_USER_ID),
+        tenant_id=str(DEFAULT_TENANT_ID),
         email="system@test.local",
         name="System User",
+        password_hash="test",
         is_active=True,
     )
     db.add(system_user)
 
     db.commit()
+
+
+def _adjust_types_for_sqlite(base) -> None:
+    """Adjust PostgreSQL-specific column types and defaults for SQLite tests."""
+    metadata = base.metadata
+    for table in metadata.tables.values():
+        for col in table.columns:
+            # Map PostgreSQL UUID to SQLite-friendly String(36)
+            if isinstance(col.type, PG_UUID):
+                col.type = String(36)
+                # Remove PostgreSQL-specific server_default gen_random_uuid()
+                if col.server_default is not None:
+                    try:
+                        sd = str(col.server_default.arg)
+                    except Exception:
+                        sd = str(col.server_default)
+                    if "gen_random_uuid" in sd:
+                        col.server_default = None
+                # Ensure Python-side default generates string UUID
+                if col.default is not None:
+                    try:
+                        arg = col.default.arg
+                    except Exception:
+                        arg = None
+                    if arg == uuid.uuid4:
+                        col.default = ColumnDefault(lambda: str(uuid.uuid4()))
+
+            # Map PostgreSQL JSONB to generic JSON type for SQLite
+            if isinstance(col.type, PG_JSONB):
+                col.type = JSON()
 
 
 # =============================================================================
@@ -171,14 +220,15 @@ def create_test_inventory_item(
         sku = f"TEST-{uuid.uuid4().hex[:8].upper()}"
 
     item = InventoryItem(
-        tenant_id=tenant_id,
+        id=str(uuid.uuid4()),
+        tenant_id=str(tenant_id),
         name=name,
         sku=sku,
         quantity=quantity,
         reorder_point=reorder_point,
         unit_price=unit_price,
         status=status,
-        **kwargs,
+        **({"custom_attributes": "{}"} | kwargs),
     )
     db.add(item)
     db.commit()
