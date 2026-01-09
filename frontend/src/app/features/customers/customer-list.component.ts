@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { CustomerService } from '../../services/customer.service';
@@ -25,7 +26,6 @@ import { ICustomer, ICustomerCreate, ICustomerUpdate } from '../../models/custom
     ButtonModule,
     InputTextModule,
     DialogModule,
-    ToastModule,
     ToastModule,
     ConfirmDialogModule,
     TooltipModule,
