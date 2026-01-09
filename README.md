@@ -183,9 +183,21 @@ The frontend will be available at http://localhost:4200
 
 ### Purchase Orders
 
-- `GET /api/v1/purchase-orders` - List purchase orders
+- `GET /api/v1/purchase-orders` - List purchase orders with optional filters
+  - Query params: `page`, `page_size`, `status`, `priority`, `include_received`, `supplier_id`, `supplier_name`
 - `POST /api/v1/purchase-orders` - Create a purchase order
 - `POST /api/v1/purchase-orders/{po_id}/receive` - Receive items with optional lots
+- `GET /api/v1/purchase-orders/stats` - Get purchase order statistics
+- `POST /api/v1/purchase-orders/from-low-stock` - Create PO from low stock items
+
+### Supplier Management
+
+- `GET /api/v1/suppliers` - List all suppliers with pagination and search
+  - Query params: `page`, `page_size`, `search`, `is_active`
+- `GET /api/v1/suppliers/{id}` - Get a specific supplier
+- `POST /api/v1/suppliers` - Create a new supplier
+- `PUT /api/v1/suppliers/{id}` - Update a supplier
+- `DELETE /api/v1/suppliers/{id}` - Deactivate a supplier (soft delete)
 
 ### Health Check
 
@@ -205,6 +217,103 @@ The lot tracking system allows you to:
 - Link stock movements to specific lots
 - Receive purchase orders with multiple lots
 - Maintain complete audit trail for compliance
+
+## Supplier Management
+
+Synkventory includes comprehensive supplier management to streamline procurement and maintain vendor relationships.
+
+### Features
+
+- **Centralized Supplier Database**: Store all supplier contact and address information
+- **Purchase Order Integration**: Link purchase orders to suppliers for better tracking
+- **Supplier Filtering**: Filter purchase orders by supplier to view all orders from a specific vendor
+- **Multi-Tenant Isolation**: Suppliers are isolated by tenant for security
+- **Audit Trail**: All supplier changes are logged for compliance
+
+### Supplier Properties
+
+| Property       | Type    | Required | Description                    |
+| -------------- | ------- | -------- | ------------------------------ |
+| `name`         | String  | Yes      | Supplier company name          |
+| `contactName`  | String  | No       | Primary contact person         |
+| `email`        | String  | No       | Contact email address          |
+| `phone`        | String  | No       | Contact phone number           |
+| `addressLine1` | String  | No       | Street address line 1          |
+| `addressLine2` | String  | No       | Street address line 2          |
+| `city`         | String  | No       | City                           |
+| `state`        | String  | No       | State/Province                 |
+| `postalCode`   | String  | No       | ZIP/Postal code                |
+| `country`      | String  | No       | Country                        |
+| `isActive`     | Boolean | No       | Active status (default: true)  |
+
+### Creating a Supplier
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/suppliers" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{
+    "name": "ACME Industrial Supplies",
+    "contactName": "Sarah Johnson",
+    "email": "sarah@acme-industrial.com",
+    "phone": "+1-555-0101",
+    "addressLine1": "1234 Industrial Blvd",
+    "city": "Chicago",
+    "state": "IL",
+    "postalCode": "60601",
+    "country": "USA"
+  }'
+```
+
+### Listing Suppliers
+
+```bash
+# List all active suppliers
+curl "http://localhost:8000/api/v1/suppliers?is_active=true" \
+  -H "X-Tenant-Slug: your-tenant"
+
+# Search suppliers
+curl "http://localhost:8000/api/v1/suppliers?search=ACME&page=1&page_size=25" \
+  -H "X-Tenant-Slug: your-tenant"
+```
+
+### Creating Purchase Orders with Suppliers
+
+Purchase orders can reference a supplier by ID, allowing you to:
+- Auto-fill supplier contact information
+- Filter purchase orders by supplier
+- Track spending per supplier
+- Maintain supplier performance history
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/purchase-orders" \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Slug: your-tenant" \
+  -d '{
+    "supplierId": "supplier-uuid-here",
+    "priority": "normal",
+    "expectedDate": "2026-02-01",
+    "lineItems": [
+      {
+        "itemId": "item-uuid",
+        "quantityOrdered": 100,
+        "unitPrice": 9.99
+      }
+    ]
+  }'
+```
+
+### Filtering Purchase Orders by Supplier
+
+```bash
+# Get all purchase orders from a specific supplier
+curl "http://localhost:8000/api/v1/purchase-orders?supplier_id=supplier-uuid" \
+  -H "X-Tenant-Slug: your-tenant"
+
+# Search by supplier name (matches both linked suppliers and text-only supplier names)
+curl "http://localhost:8000/api/v1/purchase-orders?supplier_name=ACME" \
+  -H "X-Tenant-Slug: your-tenant"
+```
 
 ### Creating a Lot
 

@@ -169,7 +169,139 @@ def run_seeds(db: Session) -> None:
     seed_system_user(db, default_tenant)
     seed_demo_admin(db, default_tenant)
     seed_super_admin(db)
+    seed_demo_suppliers(db, default_tenant)
     print("Database seeding complete.")
+
+
+def seed_demo_suppliers(db: Session, default_tenant: Tenant) -> None:
+    """
+    Create demo supplier data for testing and development.
+
+    Creates a variety of suppliers with different characteristics to
+    demonstrate the supplier management features.
+
+    Args:
+        db: Database session
+        default_tenant: The default tenant to associate suppliers with
+    """
+    from app.models.supplier import Supplier
+
+    # Check if suppliers already exist
+    existing_count = db.query(Supplier).filter(Supplier.tenant_id == default_tenant.id).count()
+    
+    if existing_count > 0:
+        print(f"Demo suppliers already exist ({existing_count} found), skipping...")
+        return
+
+    demo_suppliers = [
+        {
+            "name": "ACME Industrial Supplies",
+            "contact_name": "Sarah Johnson",
+            "email": "sarah.j@acme-industrial.com",
+            "phone": "+1-555-0101",
+            "address_line1": "1234 Industrial Blvd",
+            "city": "Chicago",
+            "state": "IL",
+            "postal_code": "60601",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Global Tech Distributors",
+            "contact_name": "Michael Chen",
+            "email": "m.chen@globaltech.com",
+            "phone": "+1-555-0102",
+            "address_line1": "567 Tech Park Drive",
+            "address_line2": "Suite 200",
+            "city": "San Jose",
+            "state": "CA",
+            "postal_code": "95110",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Quality Parts Co.",
+            "contact_name": "Emily Rodriguez",
+            "email": "erodriguez@qualityparts.com",
+            "phone": "+1-555-0103",
+            "address_line1": "890 Manufacturing Way",
+            "city": "Detroit",
+            "state": "MI",
+            "postal_code": "48201",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Office Essentials Plus",
+            "contact_name": "David Kim",
+            "email": "dkim@officeessentials.com",
+            "phone": "+1-555-0104",
+            "address_line1": "321 Commerce Street",
+            "city": "New York",
+            "state": "NY",
+            "postal_code": "10001",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Green Packaging Solutions",
+            "contact_name": "Jennifer Martinez",
+            "email": "jmartinez@greenpack.com",
+            "phone": "+1-555-0105",
+            "address_line1": "456 Eco Lane",
+            "city": "Portland",
+            "state": "OR",
+            "postal_code": "97201",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Budget Supplies Warehouse",
+            "contact_name": "Robert Taylor",
+            "email": "rtaylor@budgetsupplies.com",
+            "phone": "+1-555-0106",
+            "address_line1": "789 Discount Drive",
+            "city": "Dallas",
+            "state": "TX",
+            "postal_code": "75201",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Premium Components Ltd",
+            "contact_name": "Amanda White",
+            "email": "awhite@premiumcomponents.com",
+            "phone": "+1-555-0107",
+            "address_line1": "159 Quality Court",
+            "city": "Boston",
+            "state": "MA",
+            "postal_code": "02101",
+            "country": "USA",
+            "is_active": True,
+        },
+        {
+            "name": "Legacy Suppliers Inc",
+            "contact_name": "Thomas Anderson",
+            "email": "tanderson@legacysuppliers.com",
+            "phone": "+1-555-0108",
+            "address_line1": "753 Heritage Blvd",
+            "city": "Philadelphia",
+            "state": "PA",
+            "postal_code": "19101",
+            "country": "USA",
+            "is_active": False,  # Inactive supplier for testing
+        },
+    ]
+
+    for supplier_data in demo_suppliers:
+        supplier = Supplier(
+            tenant_id=default_tenant.id,
+            **supplier_data
+        )
+        db.add(supplier)
+
+    db.commit()
+    print(f"Created {len(demo_suppliers)} demo suppliers")
 
 
 if __name__ == "__main__":
