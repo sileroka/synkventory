@@ -205,8 +205,15 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   onPageChange(event: any): void {
-    this.page = Math.floor(event.first / event.rows) + 1;
-    this.pageSize = event.rows;
+    // PrimeNG onPage emits { first, rows, page }
+    if (event && typeof event.page === 'number') {
+      this.page = event.page + 1; // event.page is 0-based
+    } else if (event && typeof event.first === 'number' && typeof event.rows === 'number') {
+      this.page = Math.floor(event.first / event.rows) + 1;
+    }
+    if (event && typeof event.rows === 'number') {
+      this.pageSize = event.rows;
+    }
     this.loadPurchaseOrders();
   }
 
