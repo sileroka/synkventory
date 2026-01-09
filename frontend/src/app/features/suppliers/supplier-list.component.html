@@ -24,7 +24,11 @@
     [rows]="pageSize"
     [totalRecords]="total"
     [rowsPerPageOptions]="[10, 25, 50, 100]"
-    (onPage)="page = $event.first / $event.rows + 1; pageSize = $event.rows; loadSuppliers()"
+    (onPage)="
+      page = $event.first / $event.rows + 1;
+      pageSize = $event.rows;
+      loadSuppliers()
+    "
   >
     <ng-template pTemplate="header">
       <tr>
