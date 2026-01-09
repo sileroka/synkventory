@@ -35,7 +35,6 @@ api_router.include_router(item_lots.router, prefix="/inventory", tags=["item-lot
 api_router.include_router(suppliers.router, tags=["suppliers"])
 api_router.include_router(customers.router, tags=["customers"])
 api_router.include_router(sales_orders.router, tags=["sales-orders"])
-api_router.include_router(sales_orders.router, prefix="/sales-orders", tags=["sales-orders"])
 api_router.include_router(work_orders.router, tags=["work-orders"])
 api_router.include_router(
     purchase_orders.router, prefix="/purchase-orders", tags=["purchase-orders"]

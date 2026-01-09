@@ -223,7 +223,17 @@ class SalesOrderService:
         request: Optional[Request] = None,
     ) -> Optional[SalesOrder]:
         """Update a sales order in mutable states."""
-        so = self.get_sales_order(db, so_id)
+        # Fetch directly to avoid any aliasing issues during tests
+        so = (
+            db.query(SalesOrder)
+            .filter(SalesOrder.id == str(so_id))
+            .options(
+                joinedload(SalesOrder.line_items).joinedload(SalesOrderLineItem.item),
+                joinedload(SalesOrder.customer),
+                joinedload(SalesOrder.created_by_user),
+            )
+            .first()
+        )
         if not so:
             return None
 
@@ -268,214 +278,266 @@ class SalesOrderService:
         notes: Optional[str] = None,
         request: Optional[Request] = None,
     ) -> Optional[SalesOrder]:
-            def add_line_item(
-                self,
-                db: Session,
-                sales_order_id: UUID,
-                item_id: UUID,
-                quantity: int,
-                unit_price: Decimal,
-                user_id: UUID,
-                request: Optional[Request] = None,
-            ) -> Optional[SalesOrder]:
-                """Add a line item to a sales order while in Draft or Confirmed."""
-                so = self.get_sales_order(db, sales_order_id)
-                if not so:
-                    return None
-                if so.status not in [SalesOrderStatus.DRAFT, SalesOrderStatus.CONFIRMED]:
-                    raise ValueError(f"Cannot add line items in {so.status.value} status")
+        # Fetch directly to avoid aliasing/type issues (SQLite tests store UUIDs as strings)
+        so = (
+            db.query(SalesOrder)
+            .filter(SalesOrder.id == str(so_id))
+            .options(
+                joinedload(SalesOrder.line_items).joinedload(SalesOrderLineItem.item),
+                joinedload(SalesOrder.customer),
+                joinedload(SalesOrder.created_by_user),
+            )
+            .first()
+        )
+        if not so:
+            return None
 
-                line = SalesOrderLineItem(
-                    id=str(uuid.uuid4()),
-                    tenant_id=str(so.tenant_id),
-                    sales_order=so,
-                    item_id=str(item_id),
-                    quantity_ordered=quantity,
-                    unit_price=unit_price,
-                    line_total=Decimal(str(quantity)) * unit_price,
-                    notes=None,
-                )
-                db.add(line)
-                db.flush()
+        # Validate transition
+        allowed = VALID_STATUS_TRANSITIONS.get(so.status, [])
+        if new_status not in allowed:
+            raise ValueError(f"Invalid status transition from {so.status.value} to {new_status.value}")
 
-                # Recompute totals
-                so.subtotal = sum(
-                    (li.line_total or Decimal("0")) for li in (so.line_items or [])
-                )
-                so.total_amount = so.subtotal + (so.tax_amount or 0) + (so.shipping_cost or 0)
-                so.updated_by = str(user_id)
-                db.commit()
-                db.refresh(so)
+        old_status = so.status
+        so.status = new_status
 
-                # Audit
-                audit_service.log_update(
-                    db=db,
-                    tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-                    user_id=user_id,
-                    entity_type=EntityType.SALES_ORDER,
-                    entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
-                    entity_name=so.order_number,
-                    changes={"add_line_item": {"item_id": str(item_id), "quantity": quantity, "unit_price": str(unit_price)}},
-                    request=request,
-                )
+        # Set timestamps for terminal states
+        now = datetime.utcnow()
+        if new_status == SalesOrderStatus.SHIPPED:
+            so.shipped_date = now
+        if new_status == SalesOrderStatus.CANCELLED:
+            so.cancelled_date = now
 
-                return so
+        so.updated_by = str(user_id)
+        db.commit()
+        db.refresh(so)
+
+        # Audit
+        changes = {"status": {"old": old_status.value, "new": new_status.value}}
+        if notes:
+            changes["notes"] = {"old": None, "new": notes}
+        audit_service.log_update(
+            db=db,
+            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            user_id=user_id,
+            entity_type=EntityType.SALES_ORDER,
+            entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
+            entity_name=so.order_number,
+            changes=changes,
+            request=request,
+        )
+
+        return so
+
+    def add_line_item(
+        self,
+        db: Session,
+        sales_order_id: UUID,
+        item_id: UUID,
+        quantity: int,
+        unit_price: Decimal,
+        user_id: UUID,
+        request: Optional[Request] = None,
+    ) -> Optional[SalesOrder]:
+        """Add a line item to a sales order while in Draft or Confirmed."""
+        so = self.get_sales_order(db, sales_order_id)
+        if not so:
+            return None
+        if so.status not in [SalesOrderStatus.DRAFT, SalesOrderStatus.CONFIRMED]:
+            raise ValueError(f"Cannot add line items in {so.status.value} status")
+
+        line = SalesOrderLineItem(
+            id=str(uuid.uuid4()),
+            tenant_id=str(so.tenant_id),
+            sales_order=so,
+            item_id=str(item_id),
+            quantity_ordered=quantity,
+            unit_price=unit_price,
+            line_total=Decimal(str(quantity)) * unit_price,
+            notes=None,
+        )
+        db.add(line)
+        db.flush()
+
+        # Recompute totals
+        so.subtotal = sum((li.line_total or Decimal("0")) for li in (so.line_items or []))
+        so.total_amount = so.subtotal + (so.tax_amount or 0) + (so.shipping_cost or 0)
+        so.updated_by = str(user_id)
+        db.commit()
+        db.refresh(so)
+
+        # Audit
+        audit_service.log_update(
+            db=db,
+            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            user_id=user_id,
+            entity_type=EntityType.SALES_ORDER,
+            entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
+            entity_name=so.order_number,
+            changes={
+                "add_line_item": {
+                    "item_id": str(item_id),
+                    "quantity": quantity,
+                    "unit_price": str(unit_price),
+                }
+            },
+            request=request,
+        )
+
+        return so
 
     def remove_line_item(
-                self,
-                db: Session,
-                sales_order_id: UUID,
-                line_item_id: UUID,
-                user_id: UUID,
-                request: Optional[Request] = None,
-            ) -> Optional[SalesOrder]:
-                """Remove a line item from a sales order while in Draft or Confirmed."""
-                so = self.get_sales_order(db, sales_order_id)
-                if not so:
-                    return None
-                if so.status not in [SalesOrderStatus.DRAFT, SalesOrderStatus.CONFIRMED]:
-                    raise ValueError(f"Cannot remove line items in {so.status.value} status")
+        self,
+        db: Session,
+        sales_order_id: UUID,
+        line_item_id: UUID,
+        user_id: UUID,
+        request: Optional[Request] = None,
+    ) -> Optional[SalesOrder]:
+        """Remove a line item from a sales order while in Draft or Confirmed."""
+        so = self.get_sales_order(db, sales_order_id)
+        if not so:
+            return None
+        if so.status not in [SalesOrderStatus.DRAFT, SalesOrderStatus.CONFIRMED]:
+            raise ValueError(f"Cannot remove line items in {so.status.value} status")
 
-                li = next((x for x in (so.line_items or []) if str(x.id) == str(line_item_id)), None)
-                if not li:
-                    return None
+        li = next((x for x in (so.line_items or []) if str(x.id) == str(line_item_id)), None)
+        if not li:
+            return None
 
-                db.delete(li)
-                db.flush()
+        db.delete(li)
+        db.flush()
 
-                # Recompute totals
-                so.subtotal = sum(
-                    (x.line_total or Decimal("0")) for x in (so.line_items or [])
-                )
-                so.total_amount = so.subtotal + (so.tax_amount or 0) + (so.shipping_cost or 0)
-                so.updated_by = str(user_id)
-                db.commit()
-                db.refresh(so)
+        # Recompute totals
+        so.subtotal = sum((x.line_total or Decimal("0")) for x in (so.line_items or []))
+        so.total_amount = so.subtotal + (so.tax_amount or 0) + (so.shipping_cost or 0)
+        so.updated_by = str(user_id)
+        db.commit()
+        db.refresh(so)
 
-                # Audit
-                audit_service.log_update(
-                    db=db,
-                    tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-                    user_id=user_id,
-                    entity_type=EntityType.SALES_ORDER,
-                    entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
-                    entity_name=so.order_number,
-                    changes={"remove_line_item": {"line_item_id": str(line_item_id)}},
-                    request=request,
-                )
+        # Audit
+        audit_service.log_update(
+            db=db,
+            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+            user_id=user_id,
+            entity_type=EntityType.SALES_ORDER,
+            entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
+            entity_name=so.order_number,
+            changes={"remove_line_item": {"line_item_id": str(line_item_id)}},
+            request=request,
+        )
 
-                return so
+        return so
 
     def ship_items(
-                self,
-                db: Session,
-                sales_order_id: UUID,
-                shipments: List[dict],
-                user_id: UUID,
-                request: Optional[Request] = None,
-            ) -> Optional[SalesOrder]:
-                """
-                Ship items on a sales order.
+        self,
+        db: Session,
+        sales_order_id: UUID,
+        shipments: List[dict],
+        user_id: UUID,
+        request: Optional[Request] = None,
+    ) -> Optional[SalesOrder]:
+        """
+        Ship items on a sales order.
 
-                shipments: List of {"lineItemId": UUID, "quantity": int, optional keys: "fromLocationId", "lotId"}
-                Decrements inventory, creates stock movements of type 'ship', updates quantity_shipped.
-                Marks order as Shipped when all quantities are shipped.
-                """
-                from app.models.stock_movement import StockMovement, MovementType
-                from app.models.inventory import InventoryItem
+        shipments: List of {"lineItemId": UUID, "quantity": int, optional keys: "fromLocationId", "lotId"}
+        Decrements inventory, creates stock movements of type 'ship', updates quantity_shipped.
+        Marks order as Shipped when all quantities are shipped.
+        """
+        from app.models.stock_movement import StockMovement, MovementType
+        from app.models.inventory import InventoryItem
 
-                so = self.get_sales_order(db, sales_order_id)
-                if not so:
-                    return None
-                if so.status not in [SalesOrderStatus.CONFIRMED, SalesOrderStatus.PICKED]:
-                    raise ValueError(f"Cannot ship items in {so.status.value} status")
+        so = self.get_sales_order(db, sales_order_id)
+        if not so:
+            return None
+        if so.status not in [SalesOrderStatus.CONFIRMED, SalesOrderStatus.PICKED]:
+            raise ValueError(f"Cannot ship items in {so.status.value} status")
 
-                shipped_any = False
+        shipped_any = False
 
-                for entry in shipments:
-                    li_id = str(entry.get("lineItemId") or entry.get("line_item_id"))
-                    qty = int(entry.get("quantity", 0))
-                    from_loc = entry.get("fromLocationId") or entry.get("from_location_id")
-                    lot_id = entry.get("lotId") or entry.get("lot_id")
+        for entry in shipments:
+            li_id = str(entry.get("lineItemId") or entry.get("line_item_id"))
+            qty = int(entry.get("quantity", 0))
+            from_loc = entry.get("fromLocationId") or entry.get("from_location_id")
+            lot_id = entry.get("lotId") or entry.get("lot_id")
 
-                    li = next((x for x in (so.line_items or []) if str(x.id) == li_id), None)
-                    if not li or qty <= 0:
-                        continue
+            li = next((x for x in (so.line_items or []) if str(x.id) == li_id), None)
+            if not li or qty <= 0:
+                continue
 
-                    remaining = max(0, li.quantity_ordered - li.quantity_shipped)
-                    ship_qty = min(remaining, qty)
-                    if ship_qty <= 0:
-                        continue
+            remaining = max(0, li.quantity_ordered - li.quantity_shipped)
+            ship_qty = min(remaining, qty)
+            if ship_qty <= 0:
+                continue
 
-                    # Decrement inventory
-                    item = db.query(InventoryItem).filter(InventoryItem.id == str(li.item_id)).first()
-                    if item:
-                        item.quantity = max(0, (item.quantity or 0) - ship_qty)
+            # Decrement inventory
+            item = db.query(InventoryItem).filter(InventoryItem.id == str(li.item_id)).first()
+            if item:
+                item.quantity = max(0, (item.quantity or 0) - ship_qty)
 
-                    # Update line item shipped quantity
-                    li.quantity_shipped = (li.quantity_shipped or 0) + ship_qty
+            # Update line item shipped quantity
+            li.quantity_shipped = (li.quantity_shipped or 0) + ship_qty
 
-                    # Create stock movement
-                    sm = StockMovement(
-                        id=str(uuid.uuid4()),
-                        tenant_id=str(so.tenant_id),
-                        inventory_item_id=str(li.item_id),
-                        movement_type=MovementType.SHIP,
-                        quantity=-ship_qty,
-                        from_location_id=str(from_loc) if from_loc else None,
-                        to_location_id=None,
-                        lot_id=str(lot_id) if lot_id else None,
-                        reference_number=so.order_number,
-                        notes=f"SO {so.order_number} shipment",
-                        created_by=str(user_id),
-                    )
-                    db.add(sm)
+            # Create stock movement
+            sm = StockMovement(
+                id=str(uuid.uuid4()),
+                tenant_id=str(so.tenant_id),
+                inventory_item_id=str(li.item_id),
+                movement_type=MovementType.SHIP,
+                quantity=-ship_qty,
+                from_location_id=str(from_loc) if from_loc else None,
+                to_location_id=None,
+                lot_id=str(lot_id) if lot_id else None,
+                reference_number=so.order_number,
+                notes=f"SO {so.order_number} shipment",
+                created_by=str(user_id),
+            )
+            db.add(sm)
 
-                    # Audit stock movement
-                    audit_service.log_stock_movement(
-                        db=db,
-                        tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-                        user_id=user_id,
-                        movement_type="STOCK_SHIP",
-                        item_id=UUID(str(li.item_id)),
-                        item_name=item.name if item else None,
-                        quantity_change=-ship_qty,
-                        old_quantity=(item.quantity + ship_qty) if item else 0,
-                        new_quantity=item.quantity if item else 0,
-                        from_location_id=UUID(str(from_loc)) if from_loc else None,
-                        to_location_id=None,
-                        reference_number=so.order_number,
-                        reason="Sales order shipment",
-                        request=request,
-                    )
+            # Audit stock movement
+            audit_service.log_stock_movement(
+                db=db,
+                tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+                user_id=user_id,
+                movement_type="STOCK_SHIP",
+                item_id=UUID(str(li.item_id)),
+                item_name=item.name if item else None,
+                quantity_change=-ship_qty,
+                old_quantity=(item.quantity + ship_qty) if item else 0,
+                new_quantity=item.quantity if item else 0,
+                from_location_id=UUID(str(from_loc)) if from_loc else None,
+                to_location_id=None,
+                reference_number=so.order_number,
+                reason="Sales order shipment",
+                request=request,
+            )
 
-                    shipped_any = True
+            shipped_any = True
 
-                if shipped_any:
-                    # If all items shipped, mark order as shipped
-                    all_shipped = all(
-                        (li.quantity_shipped or 0) >= (li.quantity_ordered or 0)
-                        for li in (so.line_items or [])
-                    )
-                    if all_shipped:
-                        so.status = SalesOrderStatus.SHIPPED
-                        so.shipped_date = datetime.utcnow()
-                    so.updated_by = str(user_id)
-                    db.commit()
-                    db.refresh(so)
+        if shipped_any:
+            # If all items shipped, mark order as shipped
+            all_shipped = all(
+                (li.quantity_shipped or 0) >= (li.quantity_ordered or 0)
+                for li in (so.line_items or [])
+            )
+            if all_shipped:
+                so.status = SalesOrderStatus.SHIPPED
+                so.shipped_date = datetime.utcnow()
+            so.updated_by = str(user_id)
+            db.commit()
+            db.refresh(so)
 
-                    audit_service.log_update(
-                        db=db,
-                        tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-                        user_id=user_id,
-                        entity_type=EntityType.SALES_ORDER,
-                        entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
-                        entity_name=so.order_number,
-                        changes={"shipment": {"line_items": len(shipments), "status": so.status.value}},
-                        request=request,
-                    )
+            audit_service.log_update(
+                db=db,
+                tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
+                user_id=user_id,
+                entity_type=EntityType.SALES_ORDER,
+                entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
+                entity_name=so.order_number,
+                changes={"shipment": {"line_items": len(shipments), "status": so.status.value}},
+                request=request,
+            )
 
-                return so
+        return so
 
 
 sales_order_service = SalesOrderService()
