@@ -31,11 +31,11 @@ export class SupplierService {
     pageSize: number = 50,
     search?: string
   ): Observable<{ items: ISupplier[]; total: number; page: number; pageSize: number }> {
-    let params = new HttpParams().set('page', page).set('page_size', pageSize);
+    let params = new HttpParams().set('page', String(page)).set('page_size', String(pageSize));
     if (search) params = params.set('search', search);
 
     return this.http.get<ListResponse<ISupplier>>(this.apiUrl + '/', { params }).pipe(
-      map((resp) => ({
+      map((resp: ListResponse<ISupplier>) => ({
         items: resp.data,
         total: resp.meta.totalItems,
         page: resp.meta.page,

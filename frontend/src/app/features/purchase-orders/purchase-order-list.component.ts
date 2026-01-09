@@ -30,6 +30,7 @@ import { SupplierService } from '../../services/supplier.service';
 import { ISupplier } from '../../models/supplier.model';
 import {
   IPurchaseOrderListItem,
+  IPurchaseOrder,
   IPurchaseOrderCreate,
   IPurchaseOrderStats,
   IPurchaseOrderLineItemCreate,
@@ -76,12 +77,12 @@ export class PurchaseOrderListComponent implements OnInit {
   purchaseOrders = signal<IPurchaseOrderListItem[]>([]);
   stats = signal<IPurchaseOrderStats | null>(null);
   isLoading = signal(true);
-  
+
   // Pagination
   page = 1;
   pageSize = 25;
   totalRecords = 0;
-  
+
   // Filters
   statusFilter: PurchaseOrderStatus | null = null;
   priorityFilter: PurchaseOrderPriority | null = null;
@@ -89,7 +90,7 @@ export class PurchaseOrderListComponent implements OnInit {
   supplierFilterId: string | null = null;
   showCreateSupplierDialog = signal(false);
   supplierForm: { name: string; contactName?: string; email?: string; phone?: string } = { name: '' };
-  
+
   statusOptions = [
     { label: 'All Active', value: null },
     { label: 'Draft', value: PurchaseOrderStatus.DRAFT },
@@ -100,7 +101,7 @@ export class PurchaseOrderListComponent implements OnInit {
     { label: 'Received', value: PurchaseOrderStatus.RECEIVED },
     { label: 'Cancelled', value: PurchaseOrderStatus.CANCELLED },
   ];
-  
+
   priorityOptions = [
     { label: 'All Priorities', value: null },
     { label: 'Low', value: PurchaseOrderPriority.LOW },
@@ -108,26 +109,26 @@ export class PurchaseOrderListComponent implements OnInit {
     { label: 'High', value: PurchaseOrderPriority.HIGH },
     { label: 'Urgent', value: PurchaseOrderPriority.URGENT },
   ];
-  
+
   // Create dialog
   showCreateDialog = signal(false);
   showLowStockDialog = signal(false);
-  
+
   // Create form
   newPO: IPurchaseOrderCreate = this.getEmptyPO();
   newLineItems: IPurchaseOrderLineItemCreate[] = [];
-  
+
   // Low stock
   lowStockSuggestion = signal<ILowStockSuggestion | null>(null);
   selectedLowStockItems: ILowStockItem[] = [];
   lowStockSupplierName = '';
-  
+
   // Item autocomplete
   filteredItems: IInventoryItem[] = [];
   selectedItem: IInventoryItem | null = null;
   newLineQuantity = 1;
   newLinePrice = 0;
-  
+
   // Locations
   locations = signal<ILocation[]>([]);
 
@@ -145,7 +146,7 @@ export class PurchaseOrderListComponent implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadPurchaseOrders();
@@ -156,7 +157,7 @@ export class PurchaseOrderListComponent implements OnInit {
 
   loadPurchaseOrders(): void {
     this.isLoading.set(true);
-    
+
     const filters: IPurchaseOrderFilters = {
       page: this.page,
       pageSize: this.pageSize,
@@ -165,7 +166,7 @@ export class PurchaseOrderListComponent implements OnInit {
       includeReceived: this.includeReceived,
       supplierId: this.supplierFilterId || undefined,
     };
-    
+
     this.purchaseOrderService.getPurchaseOrders(filters).subscribe({
       next: (response) => {
         this.purchaseOrders.set(response.items);
@@ -186,21 +187,22 @@ export class PurchaseOrderListComponent implements OnInit {
   loadStats(): void {
     this.purchaseOrderService.getStats().subscribe({
       next: (stats) => this.stats.set(stats),
-      error: () => {},
+      error: () => { },
     });
   }
 
   loadLocations(): void {
     this.locationService.getLocations().subscribe({
       next: (response) => this.locations.set(response.items || response),
-      error: () => {},
+      error: () => { },
     });
   }
 
   loadSuppliers(): void {
-    this.supplierService.getSuppliers(1, 200).subscribe({
-      next: (resp) => this.suppliers.set(resp.items),
-      error: () => {},
+    // Backend enforces page_size <= 100; request max 100
+    this.supplierService.getSuppliers(1, 100).subscribe({
+      next: (resp: { items: ISupplier[]; total: number; page: number; pageSize: number }) => this.suppliers.set(resp.items),
+      error: () => { },
     });
   }
 
@@ -229,7 +231,7 @@ export class PurchaseOrderListComponent implements OnInit {
   // ==========================================================================
   // CREATE DIALOG
   // ==========================================================================
-  
+
   openCreateDialog(): void {
     this.newPO = this.getEmptyPO();
     this.newLineItems = [];
@@ -254,7 +256,7 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   onSupplierSelected(supplierId: string | null): void {
-    const supplier = this.suppliers().find(s => s.id === supplierId);
+  const supplier = this.suppliers().find((s: ISupplier) => s.id === supplierId);
     if (supplier) {
       this.newPO.supplierId = supplier.id;
       this.newPO.supplierName = supplier.name;
@@ -287,7 +289,7 @@ export class PurchaseOrderListComponent implements OnInit {
       return;
     }
     this.supplierService.create({ name, contactName, email, phone }).subscribe({
-      next: (supplier) => {
+  next: (supplier: ISupplier) => {
         this.messageService.add({ severity: 'success', summary: 'Created', detail: 'Supplier created' });
         this.showCreateSupplierDialog.set(false);
         // Refresh suppliers and select the newly created one
@@ -295,7 +297,7 @@ export class PurchaseOrderListComponent implements OnInit {
         this.onSupplierSelected(supplier.id);
         this.newPO.supplierId = supplier.id;
       },
-      error: (err) => {
+  error: (err: any) => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.detail || 'Failed to create supplier' });
       },
     });
@@ -314,7 +316,7 @@ export class PurchaseOrderListComponent implements OnInit {
     this.supplierFilterId = supplierId;
     this.page = 1;
     this.loadPurchaseOrders();
-    const supplier = this.suppliers().find(s => s.id === supplierId);
+  const supplier = this.suppliers().find((s: ISupplier) => s.id === supplierId);
     if (supplierId && supplier) {
       this.messageService.add({ severity: 'info', summary: 'Filtered', detail: `Filtered by supplier: ${supplier.name}` });
     } else {
@@ -332,7 +334,7 @@ export class PurchaseOrderListComponent implements OnInit {
 
   addLineItem(): void {
     if (!this.selectedItem) return;
-    
+
     // Check if already added
     if (this.newLineItems.some(li => li.itemId === this.selectedItem!.id)) {
       this.messageService.add({
@@ -342,13 +344,13 @@ export class PurchaseOrderListComponent implements OnInit {
       });
       return;
     }
-    
+
     this.newLineItems.push({
       itemId: this.selectedItem.id!,
       quantityOrdered: this.newLineQuantity,
       unitPrice: this.newLinePrice || this.selectedItem.unitPrice,
     });
-    
+
     this.selectedItem = null;
     this.newLineQuantity = 1;
     this.newLinePrice = 0;
@@ -376,14 +378,14 @@ export class PurchaseOrderListComponent implements OnInit {
       });
       return;
     }
-    
+
     const createData: IPurchaseOrderCreate = {
       ...this.newPO,
       lineItems: this.newLineItems,
     };
-    
+
     this.purchaseOrderService.createPurchaseOrder(createData).subscribe({
-      next: (po) => {
+      next: (po: IPurchaseOrder) => {
         this.messageService.add({
           severity: 'success',
           summary: 'Created',
@@ -394,7 +396,7 @@ export class PurchaseOrderListComponent implements OnInit {
         this.loadStats();
         this.router.navigate(['/purchase-orders', po.id]);
       },
-      error: (error) => {
+  error: (error: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -407,7 +409,7 @@ export class PurchaseOrderListComponent implements OnInit {
   // ==========================================================================
   // LOW STOCK DIALOG
   // ==========================================================================
-  
+
   openLowStockDialog(): void {
     this.loadLowStockItems();
     this.selectedLowStockItems = [];
@@ -417,7 +419,7 @@ export class PurchaseOrderListComponent implements OnInit {
 
   loadLowStockItems(): void {
     this.purchaseOrderService.getLowStockSuggestions(100).subscribe({
-      next: (suggestion) => this.lowStockSuggestion.set(suggestion),
+      next: (suggestion: ILowStockSuggestion) => this.lowStockSuggestion.set(suggestion),
       error: () => {
         this.messageService.add({
           severity: 'error',
@@ -455,11 +457,11 @@ export class PurchaseOrderListComponent implements OnInit {
       });
       return;
     }
-    
+
     const itemIds = this.selectedLowStockItems.map(item => item.id);
-    
+
     this.purchaseOrderService.createFromLowStock(itemIds, this.lowStockSupplierName || undefined).subscribe({
-      next: (po) => {
+      next: (po: IPurchaseOrder) => {
         this.messageService.add({
           severity: 'success',
           summary: 'Created',
@@ -470,7 +472,7 @@ export class PurchaseOrderListComponent implements OnInit {
         this.loadStats();
         this.router.navigate(['/purchase-orders', po.id]);
       },
-      error: (error) => {
+  error: (error: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -483,7 +485,7 @@ export class PurchaseOrderListComponent implements OnInit {
   // ==========================================================================
   // HELPERS
   // ==========================================================================
-  
+
   getStatusLabel(status: string): string {
     return PurchaseOrderHelpers.getStatusLabel(status);
   }
