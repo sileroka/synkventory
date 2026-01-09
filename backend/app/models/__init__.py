@@ -27,6 +27,7 @@ from app.models.sales_order import (
     SalesOrderPriority,
 )
 from app.models.sales_order_counter import SalesOrderCounter
+from app.models.demand_forecast import DemandForecast
 
 __all__ = [
     "Tenant",
@@ -61,4 +62,5 @@ __all__ = [
     "SalesOrderStatus",
     "SalesOrderPriority",
     "SalesOrderCounter",
+    "DemandForecast",
 ]
