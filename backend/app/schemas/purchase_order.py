@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from app.schemas.supplier import SupplierResponse
+
 
 # =============================================================================
 # LINE ITEM SCHEMAS
@@ -92,6 +94,7 @@ class PurchaseOrderBase(BaseModel):
 class PurchaseOrderCreate(PurchaseOrderBase):
     """Schema for creating a purchase order."""
 
+    supplier_id: Optional[UUID] = None
     line_items: List[PurchaseOrderLineItemCreate] = Field(default_factory=list)
     requested_by_id: Optional[UUID] = None
 
@@ -127,6 +130,7 @@ class PurchaseOrderResponse(PurchaseOrderBase):
     id: UUID
     tenant_id: UUID
     po_number: str
+    supplier_id: Optional[UUID] = None
     status: str
     order_date: Optional[datetime]
     received_date: Optional[datetime]
@@ -141,6 +145,9 @@ class PurchaseOrderResponse(PurchaseOrderBase):
     updated_at: datetime
     created_by: Optional[UUID]
 
+    # Nested supplier details (if linked)
+    supplier: Optional[SupplierResponse] = None
+
 
 class PurchaseOrderListItem(BaseModel):
     """Simplified schema for list views."""
@@ -149,6 +156,7 @@ class PurchaseOrderListItem(BaseModel):
 
     id: UUID
     po_number: str
+    supplier_id: Optional[UUID] = None
     supplier_name: Optional[str]
     status: str
     priority: str
@@ -165,6 +173,9 @@ class PurchaseOrderListItem(BaseModel):
 
     # User info
     requested_by_name: Optional[str] = None
+
+    # Supplier
+    supplier: Optional[SupplierResponse] = None
 
     # Computed
     is_overdue: bool = False

@@ -22,6 +22,7 @@ from app.models.purchase_order import (
     PurchaseOrderPriority,
 )
 from app.models.stock_movement import StockMovement, MovementType
+from app.models.supplier import Supplier
 from app.models.user import User
 from app.schemas.purchase_order import (
     PurchaseOrderCreate,
@@ -108,6 +109,7 @@ class PurchaseOrderService:
         query = db.query(PurchaseOrder).options(
             joinedload(PurchaseOrder.requested_by),
             joinedload(PurchaseOrder.receiving_location),
+            joinedload(PurchaseOrder.supplier),
         )
 
         # Apply filters
@@ -171,6 +173,7 @@ class PurchaseOrderService:
                 joinedload(PurchaseOrder.approved_by),
                 joinedload(PurchaseOrder.receiving_location),
                 joinedload(PurchaseOrder.created_by_user),
+                joinedload(PurchaseOrder.supplier),
             )
             .first()
         )
@@ -191,6 +194,7 @@ class PurchaseOrderService:
                 joinedload(PurchaseOrder.requested_by),
                 joinedload(PurchaseOrder.approved_by),
                 joinedload(PurchaseOrder.receiving_location),
+                joinedload(PurchaseOrder.supplier),
             )
             .first()
         )
@@ -206,6 +210,30 @@ class PurchaseOrderService:
         """Create a new purchase order."""
         tenant = get_current_tenant()
 
+        supplier = None
+        supplier_name = data.supplier_name
+        supplier_contact = data.supplier_contact
+        supplier_email = data.supplier_email
+        supplier_phone = data.supplier_phone
+
+        if data.supplier_id:
+            supplier = (
+                db.query(Supplier)
+                .filter(
+                    Supplier.id == data.supplier_id,
+                    Supplier.tenant_id == tenant.id,
+                )
+                .first()
+            )
+
+            if not supplier:
+                raise ValueError("Supplier not found for this tenant")
+
+            supplier_name = supplier.name
+            supplier_contact = supplier.contact_name
+            supplier_email = supplier.email
+            supplier_phone = supplier.phone
+
         # Generate PO number
         po_number = self.generate_po_number(db)
 
@@ -213,10 +241,11 @@ class PurchaseOrderService:
         po = PurchaseOrder(
             tenant_id=tenant.id,
             po_number=po_number,
-            supplier_name=data.supplier_name,
-            supplier_contact=data.supplier_contact,
-            supplier_email=data.supplier_email,
-            supplier_phone=data.supplier_phone,
+            supplier_id=supplier.id if supplier else None,
+            supplier_name=supplier_name,
+            supplier_contact=supplier_contact,
+            supplier_email=supplier_email,
+            supplier_phone=supplier_phone,
             status=PurchaseOrderStatus.DRAFT,
             priority=(
                 PurchaseOrderPriority(data.priority)

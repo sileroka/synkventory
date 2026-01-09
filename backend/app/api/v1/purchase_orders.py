@@ -41,11 +41,14 @@ def _po_to_list_item(po) -> PurchaseOrderListItem:
         1 for li in (po.line_items or [])
         if li.quantity_received >= li.quantity_ordered
     ) if hasattr(po, 'line_items') and po.line_items else 0
+    supplier_details = po.supplier if hasattr(po, 'supplier') else None
+    supplier_name = po.supplier_display_name if hasattr(po, 'supplier_display_name') else po.supplier_name
     
     return PurchaseOrderListItem(
         id=po.id,
         po_number=po.po_number,
-        supplier_name=po.supplier_name,
+        supplier_id=po.supplier_id,
+        supplier_name=supplier_name,
         status=po.status.value if hasattr(po.status, 'value') else po.status,
         priority=po.priority.value if hasattr(po.priority, 'value') else po.priority,
         total_amount=po.total_amount,
@@ -58,6 +61,7 @@ def _po_to_list_item(po) -> PurchaseOrderListItem:
         items_received=items_received,
         requested_by_name=po.requested_by.name if po.requested_by else None,
         is_overdue=po.is_overdue,
+        supplier=supplier_details,
     )
 
 
@@ -83,11 +87,15 @@ def _po_to_detail(po) -> PurchaseOrderDetail:
             reorder_point=li.item.reorder_point if li.item else None,
         ))
     
+    supplier_details = po.supplier if hasattr(po, 'supplier') else None
+    supplier_name = po.supplier_display_name if hasattr(po, 'supplier_display_name') else po.supplier_name
+
     return PurchaseOrderDetail(
         id=po.id,
         tenant_id=po.tenant_id,
         po_number=po.po_number,
-        supplier_name=po.supplier_name,
+        supplier_id=po.supplier_id,
+        supplier_name=supplier_name,
         supplier_contact=po.supplier_contact,
         supplier_email=po.supplier_email,
         supplier_phone=po.supplier_phone,
@@ -114,6 +122,7 @@ def _po_to_detail(po) -> PurchaseOrderDetail:
         approved_by_name=po.approved_by.name if po.approved_by else None,
         receiving_location_name=po.receiving_location.name if po.receiving_location else None,
         is_overdue=po.is_overdue,
+        supplier=supplier_details,
     )
 
 
@@ -185,17 +194,23 @@ def create_purchase_order(
     db: Session = Depends(get_db),
 ):
     """Create a new purchase order."""
-    po = purchase_order_service.create_purchase_order(
-        db=db,
-        data=data,
-        user_id=user.id,
-        request=request,
-    )
-    
-    # Re-fetch with all relationships
-    po = purchase_order_service.get_purchase_order(db, po.id)
-    
-    return APIResponse(data=_po_to_detail(po))
+    try:
+        po = purchase_order_service.create_purchase_order(
+            db=db,
+            data=data,
+            user_id=user.id,
+            request=request,
+        )
+        
+        # Re-fetch with all relationships
+        po = purchase_order_service.get_purchase_order(db, po.id)
+        
+        return APIResponse(data=_po_to_detail(po))
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 # =============================================================================
