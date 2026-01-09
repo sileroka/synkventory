@@ -80,6 +80,12 @@ def upgrade() -> None:
     op.create_index("idx_item_consumption_item_id", "item_consumption", ["item_id"])
     op.create_index("idx_item_consumption_date", "item_consumption", ["date"])
     op.create_index("idx_item_consumption_source", "item_consumption", ["source"])
+    # Uniqueness per tenant, item, date
+    op.create_unique_constraint(
+        "uq_item_consumption_tenant_item_date",
+        "item_consumption",
+        ["tenant_id", "item_id", "date"],
+    )
 
     # Enable RLS and add policy
     op.execute("ALTER TABLE item_consumption ENABLE ROW LEVEL SECURITY;")

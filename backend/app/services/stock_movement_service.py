@@ -11,6 +11,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
+import sqlalchemy as sa
 from sqlalchemy import func as sql_func
 
 from app.core.tenant import get_current_tenant
@@ -260,18 +261,48 @@ class StockMovementService:
                 existing.updated_by = user_id
                 existing.updated_at = datetime.utcnow()
             else:
-                consumption = ItemConsumption(
-                    tenant_id=tenant.id,
-                    item_id=movement.inventory_item_id,
-                    date=today,
-                    quantity=add_qty,
-                    source=source_map.get(
-                        movement.movement_type, ConsumptionSource.OTHER
-                    ),
-                    created_by=user_id,
-                    updated_by=user_id,
-                )
-                db.add(consumption)
+                # Try Postgres ON CONFLICT upsert if dialect supports it; else insert
+                try:
+                    if db.bind and db.bind.dialect.name == "postgresql":
+                        db.execute(
+                            sa.text(
+                                """
+                                INSERT INTO item_consumption (tenant_id, item_id, date, quantity, source, created_by, updated_by)
+                                VALUES (:tenant_id, :item_id, :date, :quantity, :source, :created_by, :updated_by)
+                                ON CONFLICT (tenant_id, item_id, date)
+                                DO UPDATE SET quantity = item_consumption.quantity + EXCLUDED.quantity,
+                                              source = EXCLUDED.source,
+                                              updated_by = EXCLUDED.updated_by,
+                                              updated_at = NOW()
+                                """
+                            ),
+                            {
+                                "tenant_id": str(tenant.id),
+                                "item_id": str(movement.inventory_item_id),
+                                "date": today,
+                                "quantity": float(add_qty),
+                                "source": source_map.get(
+                                    movement.movement_type, ConsumptionSource.OTHER
+                                ).value,
+                                "created_by": str(user_id),
+                                "updated_by": str(user_id),
+                            },
+                        )
+                    else:
+                        raise Exception("non-postgres")
+                except Exception:
+                    consumption = ItemConsumption(
+                        tenant_id=tenant.id,
+                        item_id=movement.inventory_item_id,
+                        date=today,
+                        quantity=add_qty,
+                        source=source_map.get(
+                            movement.movement_type, ConsumptionSource.OTHER
+                        ),
+                        created_by=user_id,
+                        updated_by=user_id,
+                    )
+                    db.add(consumption)
 
         # Recalculate item total and update status
         item.quantity = _recalculate_total_quantity(db, movement.inventory_item_id)
