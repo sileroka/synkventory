@@ -320,7 +320,8 @@ class SalesOrderService:
                 )
 
                 return so
-            def remove_line_item(
+
+    def remove_line_item(
                 self,
                 db: Session,
                 sales_order_id: UUID,
@@ -364,7 +365,8 @@ class SalesOrderService:
                 )
 
                 return so
-            def ship_items(
+
+    def ship_items(
                 self,
                 db: Session,
                 sales_order_id: UUID,
@@ -474,49 +476,6 @@ class SalesOrderService:
                     )
 
                 return so
-        """Update sales order status respecting valid transitions."""
-        so = self.get_sales_order(db, so_id)
-        if not so:
-            return None
-
-        valid = VALID_STATUS_TRANSITIONS.get(so.status, [])
-        if new_status not in valid:
-            raise ValueError(
-                f"Cannot transition from {so.status.value} to {new_status.value}"
-            )
-
-        old_status = so.status
-        so.status = new_status
-        so.updated_by = user_id
-
-        if new_status == SalesOrderStatus.SHIPPED:
-            so.shipped_date = datetime.utcnow()
-        elif new_status == SalesOrderStatus.CANCELLED:
-            so.cancelled_date = datetime.utcnow()
-
-        if notes:
-            timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-            status_note = f"\n[{timestamp}] Status changed to {new_status.value}: {notes}"
-            so.notes = (so.notes or "") + status_note
-
-        db.commit()
-        db.refresh(so)
-
-        audit_service.log_update(
-            db=db,
-            tenant_id=uuid.UUID(str(so.tenant_id)) if not isinstance(so.tenant_id, UUID) else so.tenant_id,
-            user_id=user_id,
-            entity_type=EntityType.SALES_ORDER,
-            entity_id=UUID(str(so.id)) if not isinstance(so.id, UUID) else so.id,
-            entity_name=so.order_number,
-            changes={"status": {"old": old_status.value, "new": new_status.value}},
-            request=request,
-        )
-
-        logger.info(
-            f"SO {so.order_number} status changed: {old_status.value} -> {new_status.value}"
-        )
-        return so
 
 
 sales_order_service = SalesOrderService()

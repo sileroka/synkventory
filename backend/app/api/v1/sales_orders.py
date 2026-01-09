@@ -3,6 +3,7 @@ API endpoints for Sales Orders.
 """
 
 from typing import Optional
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -20,6 +21,7 @@ from app.schemas.sales_order import (
     SalesOrderStatusUpdate,
     SalesOrderLineItemResponse,
     SalesOrderLineItemCreate,
+    ShipItemsRequest,
 )
 from app.schemas.response import PaginatedResponse, APIResponse
 from app.services.sales_order_service import sales_order_service
@@ -111,6 +113,8 @@ def list_sales_orders(
     status: Optional[str] = None,
     priority: Optional[str] = None,
     customer_id: Optional[UUID] = None,
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -135,6 +139,8 @@ def list_sales_orders(
         status=status_enum,
         priority=priority_enum,
         customer_id=customer_id,
+        start_date=start_date,
+        end_date=end_date,
     )
 
     items = [_so_to_list_item(so) for so in sales_orders]
@@ -201,6 +207,7 @@ def update_sales_order(
 
 
 @router.put("/{so_id}/status", response_model=APIResponse[SalesOrderDetail])
+@router.put("/{so_id}/status/", response_model=APIResponse[SalesOrderDetail])
 def update_sales_order_status(
     request: Request,
     so_id: UUID,
@@ -228,3 +235,62 @@ def update_sales_order_status(
         return APIResponse(data=_so_to_detail(so))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{so_id}/line-items", response_model=APIResponse[SalesOrderDetail])
+def add_line_item_endpoint(
+    so_id: UUID,
+    data: SalesOrderLineItemCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    so = sales_order_service.add_line_item(
+        db=db,
+        sales_order_id=so_id,
+        item_id=data.item_id,
+        quantity=data.quantity_ordered,
+        unit_price=data.unit_price,
+        user_id=user.id,
+    )
+    if not so:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sales order not found")
+    so = sales_order_service.get_sales_order(db, so.id)
+    return APIResponse(data=_so_to_detail(so))
+
+
+@router.delete("/{so_id}/line-items/{line_item_id}", response_model=APIResponse[SalesOrderDetail])
+def remove_line_item_endpoint(
+    so_id: UUID,
+    line_item_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    so = sales_order_service.remove_line_item(
+        db=db,
+        sales_order_id=so_id,
+        line_item_id=line_item_id,
+        user_id=user.id,
+    )
+    if not so:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sales order not found")
+    so = sales_order_service.get_sales_order(db, so.id)
+    return APIResponse(data=_so_to_detail(so))
+
+
+@router.post("/{so_id}/ship", response_model=APIResponse[SalesOrderDetail])
+def ship_items_endpoint(
+    so_id: UUID,
+    data: ShipItemsRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    so = sales_order_service.ship_items(
+        db=db,
+        sales_order_id=so_id,
+        shipments=[s.model_dump(by_alias=True) for s in data.shipments],
+        user_id=user.id,
+    )
+    if not so:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sales order not found")
+    so = sales_order_service.get_sales_order(db, so.id)
+    return APIResponse(data=_so_to_detail(so))

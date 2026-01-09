@@ -115,6 +115,30 @@ class SalesOrderStatusUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+# =============================================================================
+# SHIPPING SCHEMAS
+# =============================================================================
+
+
+class ShipmentEntry(BaseModel):
+    """Entry for shipping items from a sales order."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    line_item_id: UUID
+    quantity: int
+    from_location_id: Optional[UUID] = None
+    lot_id: Optional[UUID] = None
+
+
+class ShipItemsRequest(BaseModel):
+    """Request payload for shipping items on a sales order."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    shipments: List[ShipmentEntry] = []
+
+
 class SalesOrderResponse(SalesOrderBase):
     """Response schema for sales order."""
 

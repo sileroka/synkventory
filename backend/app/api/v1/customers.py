@@ -151,7 +151,6 @@ def delete_customer_endpoint(
     )
     db.commit()
 
-    message = (
-        "Customer deleted" if deleted else "Customer deactivated"
-    )
+    # We currently perform soft-deactivation; reflect that in the message
+    message = "Customer deactivated"
     return MessageResponse(message=message)
