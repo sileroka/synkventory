@@ -20,6 +20,7 @@ import { SupplierDetailComponent } from './features/suppliers/supplier-detail.co
 import { CustomerListComponent } from './features/customers/customer-list.component';
 import { SalesOrderListComponent } from './features/sales-orders/sales-order-list.component';
 import { SalesOrderDetailComponent } from './features/sales-orders/sales-order-detail.component';
+import { ReorderSuggestionsComponent } from './features/forecasting/reorder-suggestions.component';
 import { QuickScanComponent } from './features/inventory/quick-scan.component';
 import { BarcodeViewComponent } from './features/inventory/barcode-view.component';
 import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
@@ -89,6 +90,7 @@ export const routes: Routes = [
   { path: 'stock-movements/transfer', redirectTo: 'reports/movements', pathMatch: 'full' },
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
+  { path: 'forecasting/reorder-suggestions', component: ReorderSuggestionsComponent, canActivate: [authGuard] },
 
   // Settings routes (Admin/Manager only)
   {

@@ -1,0 +1,13 @@
+.reorder-suggestions {
+  .controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    .control-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+}

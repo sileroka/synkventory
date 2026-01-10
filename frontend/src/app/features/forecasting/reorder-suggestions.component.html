@@ -1,0 +1,56 @@
+<div class="reorder-suggestions">
+  <p-card header="Reorder Suggestions" [style]="{ 'margin-bottom': '1rem' }">
+    <div class="controls">
+      <div class="control-group">
+        <label>Lead Time (days)</label>
+        <input type="number" [(ngModel)]="leadTimeDays" min="1" max="90" />
+        <button pButton type="button" label="Refresh" class="p-button-sm" (click)="refresh()"></button>
+      </div>
+      <div class="control-group">
+        <label>Search</label>
+        <input pInputText type="text" [(ngModel)]="search" placeholder="SKU or name" />
+      </div>
+    </div>
+  </p-card>
+
+  <p-table
+    [value]="filtered()"
+    [loading]="isLoading()"
+    [tableStyle]="{ 'min-width': '60rem' }"
+    [rowHover]="true"
+    [paginator]="true"
+    [rows]="25"
+    [responsiveLayout]="'stack'"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>SKU</th>
+        <th>Name</th>
+        <th>Current Stock</th>
+        <th>Reorder Point</th>
+        <th>Expected Demand</th>
+        <th>Lead Time</th>
+        <th>Recommended Qty</th>
+        <th>Recommended Date</th>
+        <th>Rationale</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-s>
+      <tr>
+        <td>{{ s.sku }}</td>
+        <td>{{ s.name }}</td>
+        <td>
+          <p-tag [severity]="s.currentStock <= s.reorderPoint ? 'warning' : 'success'" [value]="s.currentStock"></p-tag>
+        </td>
+        <td>{{ s.reorderPoint }}</td>
+        <td>{{ s.expectedDemand }}</td>
+        <td>{{ s.leadTimeDays }}d</td>
+        <td>
+          <p-tag [severity]="s.recommendedOrderQuantity > 0 ? 'danger' : 'success'" [value]="s.recommendedOrderQuantity"></p-tag>
+        </td>
+        <td>{{ s.recommendedOrderDate || '-' }}</td>
+        <td>{{ s.rationale }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
