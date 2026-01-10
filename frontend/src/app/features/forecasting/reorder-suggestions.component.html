@@ -73,7 +73,9 @@
         <td>{{ s.itemId }}</td>
         <td>
           <p-tag
-            [severity]="s.currentQuantity < s.forecastedNeed ? 'warning' : 'success'"
+            [severity]="
+              s.currentQuantity < s.forecastedNeed ? 'warning' : 'success'
+            "
             [value]="s.currentQuantity"
           ></p-tag>
         </td>
@@ -84,7 +86,7 @@
             [value]="s.suggestedOrderQuantity"
           ></p-tag>
         </td>
-        <td>{{ s.suggestedOrderDate || '-' }}</td>
+        <td>{{ s.suggestedOrderDate || "-" }}</td>
       </tr>
     </ng-template>
   </p-table>

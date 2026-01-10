@@ -159,6 +159,7 @@ npm start
 The frontend will be available at http://localhost:4200
 
 ## API Endpoints
+
 ### Forecasting
 
 - `GET /api/v1/forecast/reorder-suggestions` — Reorder suggestions based on forecasts.
@@ -187,7 +188,6 @@ Interpretation:
 - `DailyForecast.quantity` is the per-day predicted demand for the given future date.
 - Reorder is suggested when predicted demand over lead time exceeds current quantity (or internal reorder thresholds).
 - Suggested order quantity is the amount needed to cover forecasted need plus reorder point minus current stock.
-
 
 ### Inventory Management
 
@@ -246,7 +246,7 @@ Interpretation:
 - `GET /api/v1/sales-orders/{id}` - Get a sales order detail
 - `PUT /api/v1/sales-orders/{id}` - Update a sales order
 - `PUT /api/v1/sales-orders/{id}/status` - Update sales order status (draft→confirmed→picked→shipped)
- - `POST /api/v1/sales-orders/{id}/ship` - Ship items from a sales order (creates stock movements, audit logs)
+- `POST /api/v1/sales-orders/{id}/ship` - Ship items from a sales order (creates stock movements, audit logs)
 
 ### Health Check
 
@@ -411,7 +411,7 @@ curl -X POST "http://localhost:8000/api/v1/sales-orders" \
 
 ### Updating Sales Order Status
 
-```bash
+````bash
 # Confirm order
 curl -X PUT "http://localhost:8000/api/v1/sales-orders/{id}/status" \
   -H "Content-Type: application/json" \
@@ -443,9 +443,10 @@ curl -X POST "http://localhost:8000/api/v1/sales-orders/{id}/ship" \
       {"lineItemId": "line-uuid", "quantity": 2, "fromLocationId": "loc-uuid"}
     ]
   }'
-```
+````
 
 This will:
+
 - Create stock movements of type `sale`
 - Update `quantityShipped` on line items
 - Set order status to `shipped` when all lines are fully shipped
@@ -454,6 +455,7 @@ This will:
 ## Barcodes & Scanning
 
 Synkventory supports generating Code128 barcodes for inventory items. Each item can store:
+
 - `barcode`: the encoded value (defaults to SKU if not set)
 - `barcodeImageKey`: storage key for the generated PNG image
 
@@ -466,23 +468,26 @@ curl -X POST "http://localhost:8000/api/v1/inventory/{id}/barcode" \
 ```
 
 This will:
+
 - Generate a Code128 barcode image
 - Upload the image to storage (Spaces/S3)
 - Persist the `barcode` and `barcodeImageKey` on the item
 
 Future work:
+
 - EAN-13 support and QR codes for complex payloads
 - Mobile scanner integration and scanning UI flows (receive, pick, count)
 
 Pending:
+
 - Optional camera/scanner integration (e.g., @zxing/ngx-scanner) isn’t wired yet; current quick-scan uses a text input. If you want live scanning, we can add the dependency and a minimal camera scanner component for in-browser camera capture.
- - Full integration to resolve barcodes into item IDs and perform actual stock movement creation within PO receiving or SO picking workflows is pending. Planned updates include:
-   - Resolve barcode → item ID
-   - Create corresponding stock_movements entries with correct types and quantities
-   - Update PO/SO line allocations accordingly
-  - Testing coverage pending:
-    - Explicit DB-level tests for the unique constraint (tenant_id, barcode) to ensure conflicts raise expected errors.
-    - End-to-end tests that assert stock movements created via scan workflows once integrated.
+- Full integration to resolve barcodes into item IDs and perform actual stock movement creation within PO receiving or SO picking workflows is pending. Planned updates include:
+  - Resolve barcode → item ID
+  - Create corresponding stock_movements entries with correct types and quantities
+  - Update PO/SO line allocations accordingly
+- Testing coverage pending:
+  - Explicit DB-level tests for the unique constraint (tenant_id, barcode) to ensure conflicts raise expected errors.
+  - End-to-end tests that assert stock movements created via scan workflows once integrated.
 
 ### Lookup by Barcode
 
@@ -514,7 +519,8 @@ The lookup endpoint `GET /api/v1/inventory/by-barcode/{value}` detects this patt
 
 - Add a route to `QuickScanComponent` (e.g., `/scan`) for rapid receiving/picking/counting.
 - Include `app-barcode-view` in item detail pages and expose buttons to generate Code128/EAN‑13/QR and print labels.
-```
+
+````
 
 ### Creating a Lot
 
@@ -529,7 +535,7 @@ curl -X POST "http://localhost:8000/api/v1/inventory/items/{item_id}/lots" \
     "manufactureDate": "2025-12-01",
     "locationId": "{warehouse_location_id}"
   }
-```
+````
 
 ### Response
 

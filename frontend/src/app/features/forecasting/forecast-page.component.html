@@ -28,23 +28,71 @@
 
       <div class="row">
         <label>Window Size</label>
-        <p-inputNumber [(ngModel)]="windowSize" [min]="1" [max]="90"></p-inputNumber>
+        <p-inputNumber
+          [(ngModel)]="windowSize"
+          [min]="1"
+          [max]="90"
+        ></p-inputNumber>
         <label style="margin-left: 1rem">Periods</label>
-        <p-inputNumber [(ngModel)]="periods" [min]="1" [max]="365"></p-inputNumber>
-        <label style="margin-left: 1rem" *ngIf="method === 'exp_smoothing'">Alpha</label>
-        <p-inputNumber *ngIf="method === 'exp_smoothing'" [(ngModel)]="alpha" [min]="0.01" [max]="1" [step]="0.05"></p-inputNumber>
-        <button pButton type="button" label="Run Forecast" class="p-button-sm" (click)="runForecast()"></button>
+        <p-inputNumber
+          [(ngModel)]="periods"
+          [min]="1"
+          [max]="365"
+        ></p-inputNumber>
+        <label style="margin-left: 1rem" *ngIf="method === 'exp_smoothing'"
+          >Alpha</label
+        >
+        <p-inputNumber
+          *ngIf="method === 'exp_smoothing'"
+          [(ngModel)]="alpha"
+          [min]="0.01"
+          [max]="1"
+          [step]="0.05"
+        ></p-inputNumber>
+        <button
+          pButton
+          type="button"
+          label="Run Forecast"
+          class="p-button-sm"
+          (click)="runForecast()"
+        ></button>
       </div>
-      <div class="row" style="margin-left:auto">
+      <div class="row" style="margin-left: auto">
         <label>View</label>
-        <button pButton type="button" [outlined]="viewMode() !== 'chart'" label="Chart" class="p-button-sm" (click)="setView('chart')"></button>
-        <button pButton type="button" [outlined]="viewMode() !== 'table'" label="Table" class="p-button-sm" (click)="setView('table')"></button>
+        <button
+          pButton
+          type="button"
+          [outlined]="viewMode() !== 'chart'"
+          label="Chart"
+          class="p-button-sm"
+          (click)="setView('chart')"
+        ></button>
+        <button
+          pButton
+          type="button"
+          [outlined]="viewMode() !== 'table'"
+          label="Table"
+          class="p-button-sm"
+          (click)="setView('table')"
+        ></button>
       </div>
     </div>
 
     <div class="results" *ngIf="forecasts() as data">
-      <p-chart *ngIf="viewMode() === 'chart'" type="line" [data]="chartData()" [options]="chartOptions()" style="display:block; max-width: 100%;"></p-chart>
-      <p-table *ngIf="viewMode() === 'table'" [value]="data" [paginator]="true" [rows]="25" [rowHover]="true">
+      <p-chart
+        *ngIf="viewMode() === 'chart'"
+        type="line"
+        [data]="chartData()"
+        [options]="chartOptions()"
+        style="display: block; max-width: 100%"
+      ></p-chart>
+      <p-table
+        *ngIf="viewMode() === 'table'"
+        [value]="data"
+        [paginator]="true"
+        [rows]="25"
+        [rowHover]="true"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th>Date</th>
@@ -54,9 +102,24 @@
         </ng-template>
         <ng-template pTemplate="body" let-f>
           <tr>
-            <td>{{ f.forecastDate | date: 'yyyy-MM-dd' }}</td>
-            <td [pTooltip]="'Forecast quantity for ' + (f.forecastDate | date: 'yyyy-MM-dd')">{{ f.quantity | number:'1.0-0' }}</td>
-            <td [pTooltip]="f.method === 'moving_average' ? 'Moving Average' : 'Exponential Smoothing'">{{ f.method }}</td>
+            <td>{{ f.forecastDate | date : "yyyy-MM-dd" }}</td>
+            <td
+              [pTooltip]="
+                'Forecast quantity for ' +
+                (f.forecastDate | date : 'yyyy-MM-dd')
+              "
+            >
+              {{ f.quantity | number : "1.0-0" }}
+            </td>
+            <td
+              [pTooltip]="
+                f.method === 'moving_average'
+                  ? 'Moving Average'
+                  : 'Exponential Smoothing'
+              "
+            >
+              {{ f.method }}
+            </td>
           </tr>
         </ng-template>
       </p-table>
