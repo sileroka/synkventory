@@ -90,6 +90,8 @@ export const routes: Routes = [
   { path: 'stock-movements/transfer', redirectTo: 'reports/movements', pathMatch: 'full' },
   { path: 'reports/valuation', component: InventoryValuationComponent, canActivate: [authGuard] },
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
+  // Backward-compatibility redirect for old path
+  { path: 'forecasting/reorder-suggestions', redirectTo: 'forecast/reorder-suggestions', pathMatch: 'full' },
   { path: 'forecast/reorder-suggestions', component: ReorderSuggestionsComponent, canActivate: [authGuard] },
 
   // Settings routes (Admin/Manager only)
