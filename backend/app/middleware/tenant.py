@@ -16,7 +16,7 @@ from app.core.tenant import (
     extract_subdomain,
     set_current_tenant,
 )
-from app.db.session import SessionLocal
+from app.db.session import get_db
 from app.models.tenant import Tenant, DEFAULT_TENANT_ID
 
 
@@ -76,8 +76,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Not found"},
             )
 
-        # Look up tenant by slug (both dev and prod)
-        tenant_context = self._get_tenant_by_slug(subdomain)
+        # Look up tenant by slug (both dev and prod) using app's DB dependency override when available
+        db_session = self._get_db_session(request)
+        try:
+            tenant_context = self._get_tenant_by_slug(subdomain, db_session)
+        finally:
+            try:
+                db_session.close()
+            except Exception:
+                pass
 
         # If tenant not found or inactive, block request early
         if not tenant_context:
@@ -93,26 +100,49 @@ class TenantMiddleware(BaseHTTPMiddleware):
             # Always clear context after request
             clear_current_tenant()
 
-    def _get_tenant_by_slug(self, slug: str) -> Optional[TenantContext]:
+    def _get_tenant_by_slug(self, slug: str, db: Session) -> Optional[TenantContext]:
         """
         Look up tenant by slug using sync SQLAlchemy.
         Returns None if not found or not active.
         """
-        db: Session = SessionLocal()
+        tenant = db.query(Tenant).filter(Tenant.slug == slug).first()
+
+        if not tenant:
+            return None
+
+        if not tenant.is_active:
+            return None
+
+        return TenantContext(
+            id=tenant.id,
+            slug=tenant.slug,
+            name=tenant.name,
+            is_active=tenant.is_active,
+        )
+
+    def _get_db_session(self, request: Request) -> Session:
+        """
+        Obtain a DB session. Prefer FastAPI dependency override for get_db if present
+        (used in tests with SQLite). Fallback to SessionLocal from app.db.session.
+        """
+        # Try FastAPI dependency override
         try:
-            tenant = db.query(Tenant).filter(Tenant.slug == slug).first()
+            override = request.app.dependency_overrides.get(get_db)
+        except Exception:
+            override = None
 
-            if not tenant:
-                return None
+        if override:
+            gen = override()
+            db = next(gen)
+            # Attach generator to session for proper cleanup on close
+            def _close():
+                try:
+                    next(gen)
+                except StopIteration:
+                    pass
+            setattr(db, "_override_gen_close", _close)
+            return db
 
-            if not tenant.is_active:
-                return None
-
-            return TenantContext(
-                id=tenant.id,
-                slug=tenant.slug,
-                name=tenant.name,
-                is_active=tenant.is_active,
-            )
-        finally:
-            db.close()
+        # Fallback: instantiate SessionLocal directly
+        from app.db.session import SessionLocal
+        return SessionLocal()

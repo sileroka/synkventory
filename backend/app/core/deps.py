@@ -51,7 +51,8 @@ def get_current_user(
         raise credentials_exception
 
     # Get user from database
-    user = db.query(User).filter(User.id == UUID(token_data.user_id)).first()
+    # Compare using string ID to work across PostgreSQL (UUID) and SQLite tests (String)
+    user = db.query(User).filter(User.id == token_data.user_id).first()
 
     if not user:
         raise credentials_exception
