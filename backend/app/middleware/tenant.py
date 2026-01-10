@@ -63,12 +63,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # This also supports pytest's TestClient host ("testserver")
         header_slug = request.headers.get("x-tenant-slug") or request.headers.get("X-Tenant-Slug")
         if self.is_dev:
-            # In development/test, allow requests without subdomain; prefer header override
+            # In development/test, allow X-Tenant-Slug override or fallback to 'demo'
+            # Always look up tenant in DB to prevent cross-tenant access with a shared ID
             subdomain = header_slug or "demo"
-            used_header_override = bool(header_slug)
         else:
             subdomain = extract_subdomain(host, self.base_domain)
-            used_header_override = False
 
         # No subdomain = root domain access = block (prod only)
         if not subdomain and not self.is_dev:
@@ -77,21 +76,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Not found"},
             )
 
-        # Look up tenant (or synthesize context in dev when header override used)
-        if self.is_dev and used_header_override:
-            # In dev/tests, avoid DB lookup and use default tenant ID
-            tenant_context = TenantContext(
-                id=DEFAULT_TENANT_ID,
-                slug=subdomain,
-                name=subdomain,
-                is_active=True,
-            )
-        else:
-            tenant_context = self._get_tenant_by_slug(subdomain)
+        # Look up tenant by slug (both dev and prod)
+        tenant_context = self._get_tenant_by_slug(subdomain)
 
-        # Set context (even if None - auth will fail with generic error)
-        if tenant_context:
-            set_current_tenant(tenant_context)
+        # If tenant not found or inactive, block request early
+        if not tenant_context:
+            return JSONResponse(status_code=404, content={"detail": "Tenant not found"})
+
+        # Set tenant context
+        set_current_tenant(tenant_context)
 
         try:
             response = await call_next(request)
