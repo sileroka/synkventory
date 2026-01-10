@@ -21,6 +21,7 @@ import { CustomerListComponent } from './features/customers/customer-list.compon
 import { SalesOrderListComponent } from './features/sales-orders/sales-order-list.component';
 import { SalesOrderDetailComponent } from './features/sales-orders/sales-order-detail.component';
 import { ReorderSuggestionsComponent } from './features/forecasting/reorder-suggestions.component';
+import { ForecastPageComponent } from './features/forecasting/forecast-page.component';
 import { QuickScanComponent } from './features/inventory/quick-scan.component';
 import { BarcodeViewComponent } from './features/inventory/barcode-view.component';
 import { AuditLogsComponent } from './features/audit-logs/audit-logs.component';
@@ -92,6 +93,7 @@ export const routes: Routes = [
   { path: 'reports/movements', component: StockMovementReportComponent, canActivate: [authGuard] },
   // Backward-compatibility redirect for old path
   { path: 'forecasting/reorder-suggestions', redirectTo: 'forecast/reorder-suggestions', pathMatch: 'full' },
+  { path: 'forecast', component: ForecastPageComponent, canActivate: [authGuard] },
   { path: 'forecast/reorder-suggestions', component: ReorderSuggestionsComponent, canActivate: [authGuard] },
 
   // Settings routes (Admin/Manager only)

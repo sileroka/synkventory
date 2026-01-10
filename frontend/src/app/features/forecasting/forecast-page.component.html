@@ -1,0 +1,67 @@
+<div class="forecast-page">
+  <p-card header="Forecast Demand" [style]="{ 'margin-bottom': '1rem' }">
+    <div class="controls">
+      <div class="row">
+        <label>Item</label>
+        <p-autoComplete
+          [(ngModel)]="selectedItem"
+          [suggestions]="itemResults"
+          (completeMethod)="searchItems($event)"
+          field="name"
+          placeholder="Search items..."
+          [style]="{ width: '320px' }"
+        >
+          <ng-template let-item pTemplate="item">
+            <span>{{ item.sku }} - {{ item.name }}</span>
+          </ng-template>
+        </p-autoComplete>
+      </div>
+
+      <div class="row">
+        <label>Method</label>
+        <p-dropdown
+          [options]="methodOptions"
+          [(ngModel)]="method"
+          [style]="{ width: '220px' }"
+        ></p-dropdown>
+      </div>
+
+      <div class="row">
+        <label>Window Size</label>
+        <p-inputNumber [(ngModel)]="windowSize" [min]="1" [max]="90"></p-inputNumber>
+        <label style="margin-left: 1rem">Periods</label>
+        <p-inputNumber [(ngModel)]="periods" [min]="1" [max]="365"></p-inputNumber>
+        <label style="margin-left: 1rem" *ngIf="method === 'exp_smoothing'">Alpha</label>
+        <p-inputNumber *ngIf="method === 'exp_smoothing'" [(ngModel)]="alpha" [min]="0.01" [max]="1" [step]="0.05"></p-inputNumber>
+        <button pButton type="button" label="Run Forecast" class="p-button-sm" (click)="runForecast()"></button>
+      </div>
+    </div>
+
+    <div class="results" *ngIf="forecasts() as data">
+      <p-table [value]="data" [paginator]="true" [rows]="25" [rowHover]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Method</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-f>
+          <tr>
+            <td>{{ f.forecastDate | date: 'yyyy-MM-dd' }}</td>
+            <td>{{ f.quantity }}</td>
+            <td>{{ f.method }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="loading" *ngIf="loading()">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  </p-card>
+
+  <p-card header="Reorder Suggestions">
+    <app-reorder-suggestions></app-reorder-suggestions>
+  </p-card>
+</div>
