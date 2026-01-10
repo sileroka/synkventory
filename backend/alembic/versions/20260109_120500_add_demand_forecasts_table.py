@@ -11,36 +11,66 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
+<<<<<<< Updated upstream
 revision = '20260109_120500_add_demand_forecasts_table'
 down_revision = '20260109_120000'
+=======
+revision = "20260109_120500_add_demand_forecasts_table"
+down_revision = "20260106_010000_fix_bom_permissions"
+>>>>>>> Stashed changes
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
     op.create_table(
-        'demand_forecasts',
-        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')),
-        sa.Column('tenant_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('item_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('inventory_items.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('forecast_date', sa.Date(), nullable=False),
-        sa.Column('quantity', sa.Integer(), nullable=False),
-        sa.Column('method', sa.String(length=50), nullable=False),
-        sa.Column('confidence_low', sa.Float(), nullable=True),
-        sa.Column('confidence_high', sa.Float(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        "demand_forecasts",
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
+        sa.Column(
+            "tenant_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "item_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("inventory_items.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("forecast_date", sa.Date(), nullable=False),
+        sa.Column("quantity", sa.Integer(), nullable=False),
+        sa.Column("method", sa.String(length=50), nullable=False),
+        sa.Column("confidence_low", sa.Float(), nullable=True),
+        sa.Column("confidence_high", sa.Float(), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
     )
 
     # Indexes
     op.create_index(
-        'ix_demand_forecasts_tenant_item_date',
-        'demand_forecasts',
-        ['tenant_id', 'item_id', 'forecast_date'],
+        "ix_demand_forecasts_tenant_item_date",
+        "demand_forecasts",
+        ["tenant_id", "item_id", "forecast_date"],
         unique=False,
     )
 
+<<<<<<< Updated upstream
     # Enable RLS and add tenant isolation/admin bypass policies
     op.execute('ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;')
+=======
+    # Enable RLS and add tenant isolation policy
+    op.execute("ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;")
+>>>>>>> Stashed changes
     op.execute(
         """
         CREATE POLICY tenant_isolation_policy ON demand_forecasts
@@ -65,5 +95,5 @@ def upgrade():
 def downgrade():
     op.execute("DROP POLICY IF EXISTS demand_forecasts_admin_bypass ON demand_forecasts;")
     op.execute("DROP POLICY IF EXISTS tenant_isolation_policy ON demand_forecasts;")
-    op.drop_index('ix_demand_forecasts_tenant_item_date', table_name='demand_forecasts')
-    op.drop_table('demand_forecasts')
+    op.drop_index("ix_demand_forecasts_tenant_item_date", table_name="demand_forecasts")
+    op.drop_table("demand_forecasts")

@@ -33,7 +33,9 @@ class DemandForecast(Base):
     method = Column(String(50), nullable=False)
     confidence_low = Column(Float, nullable=True)
     confidence_high = Column(Float, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     __table_args__ = (
         Index(
