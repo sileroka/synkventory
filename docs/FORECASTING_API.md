@@ -1,8 +1,9 @@
 # Forecasting & Reorder Suggestions API
+
 ## Deprecation Notice
+
 - The legacy `/api/v1/forecasting/*` endpoints are deprecated and replaced by `/api/v1/forecast/*`.
 - Client applications should migrate to `/forecast/*`. The UI now routes to `/forecast/reorder-suggestions` and includes a client-side redirect from the old path.
-
 
 Synkventory adds basic demand forecasting and reorder suggestions to help optimize inventory levels and reduce stock-outs.
 
