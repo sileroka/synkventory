@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { TableModule } from 'primeng/table';
+import { ChartModule } from 'primeng/chart';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
@@ -29,6 +30,7 @@ import { ReorderSuggestionsComponent } from './reorder-suggestions.component';
     InputNumberModule,
     DropdownModule,
     TableModule,
+    ChartModule,
     AutoCompleteModule,
     ProgressSpinnerModule,
     ToastModule,
@@ -63,6 +65,51 @@ export class ForecastPageComponent {
     private inventoryService: InventoryService,
     private messageService: MessageService
   ) {}
+
+  // Chart data derived from forecasts
+  chartData = computed(() => {
+    const data = this.forecasts();
+    if (!data || data.length === 0) {
+      return {
+        labels: [],
+        datasets: [],
+      };
+    }
+    const labels = data.map((f) => new Date(f.forecastDate).toLocaleDateString());
+    const quantities = data.map((f) => f.quantity);
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Forecasted Quantity',
+          data: quantities,
+          fill: false,
+          borderColor: '#0D9488',
+          tension: 0.3,
+        },
+      ],
+    };
+  });
+
+  chartOptions = computed(() => ({
+    plugins: {
+      legend: {
+        display: true,
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Date' },
+      },
+      y: {
+        title: { display: true, text: 'Quantity' },
+        beginAtZero: true,
+      },
+    },
+  }));
 
   searchItems(event: AutoCompleteCompleteEvent): void {
     const query = (event.query || '').trim();

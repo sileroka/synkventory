@@ -38,6 +38,8 @@
     </div>
 
     <div class="results" *ngIf="forecasts() as data">
+      <p-chart type="line" [data]="chartData()" [options]="chartOptions()" style="display:block; max-width: 100%;"></p-chart>
+      <div style="margin-top: 1rem"></div>
       <p-table [value]="data" [paginator]="true" [rows]="25" [rowHover]="true">
         <ng-template pTemplate="header">
           <tr>
