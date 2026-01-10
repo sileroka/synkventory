@@ -320,7 +320,7 @@ export class NavigationService {
     // Fetch suggestions and update badge count + severity
     this.forecastingService.getReorderSuggestions(leadTimeDays).subscribe({
       next: (suggestions: IReorderSuggestion[]) => {
-        const count = suggestions.filter(s => (s.recommendedOrderQuantity || 0) > 0).length;
+        const count = suggestions.filter(s => (s.suggestedOrderQuantity || 0) > 0).length;
         this._reorderBadgeCount.set(count);
         this._reorderBadgeSeverity.set(count > 0 ? 'danger' : 'info');
       },
