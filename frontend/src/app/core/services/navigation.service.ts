@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import { UserRole } from '../../models/user.model';
+import { ForecastingService, IReorderSuggestion } from '../../services/forecasting.service';
 
 export type NavViewMode = 'expanded' | 'collapsed' | 'mega-menu';
 
@@ -27,6 +28,7 @@ export interface NavSection {
 })
 export class NavigationService {
   private readonly authService = inject(AuthService);
+  private readonly forecastingService = inject(ForecastingService);
 
   // Persist nav mode in localStorage
   private readonly STORAGE_KEY = 'synkventory_nav_mode';
@@ -35,6 +37,8 @@ export class NavigationService {
   private _viewMode = signal<NavViewMode>(this.loadViewMode());
   private _mobileMenuOpen = signal<boolean>(false);
   private _expandedMenuIds = signal<Set<string>>(new Set());
+  private _reorderBadgeCount = signal<number>(0);
+  private _reorderBadgeSeverity = signal<'success' | 'info' | 'warning' | 'danger'>('info');
 
   // Public readonly signals
   readonly viewMode = this._viewMode.asReadonly();
@@ -187,7 +191,18 @@ export class NavigationService {
       .filter(section => this.canAccessSection(section, userRole))
       .map(section => ({
         ...section,
-        items: section.items.filter(item => this.canAccessItem(item, userRole))
+        items: section.items
+          .filter(item => this.canAccessItem(item, userRole))
+          .map(item => {
+            if (item.id === 'forecasting-reorder') {
+              return {
+                ...item,
+                badge: this._reorderBadgeCount(),
+                badgeSeverity: this._reorderBadgeSeverity()
+              } as NavItem;
+            }
+            return item;
+          })
       }))
       .filter(section => section.items.length > 0);
   });
@@ -293,5 +308,29 @@ export class NavigationService {
 
   collapseAllSubmenus(): void {
     this._expandedMenuIds.set(new Set());
+  }
+
+  // =====================================================================
+  // Dynamic Badges
+  // =====================================================================
+  refreshReorderBadge(leadTimeDays: number = 7): void {
+    // Fetch suggestions and update badge count + severity
+    this.forecastingService.getReorderSuggestions(leadTimeDays).subscribe({
+      next: (suggestions: IReorderSuggestion[]) => {
+        const count = suggestions.filter(s => (s.recommendedOrderQuantity || 0) > 0).length;
+        this._reorderBadgeCount.set(count);
+        this._reorderBadgeSeverity.set(count > 0 ? 'danger' : 'info');
+      },
+      error: () => {
+        // On error, keep prior badge, or set info with 0
+        this._reorderBadgeCount.set(0);
+        this._reorderBadgeSeverity.set('info');
+      }
+    });
+  }
+
+  constructor() {
+    // Initial badge fetch on service creation
+    this.refreshReorderBadge();
   }
 }
