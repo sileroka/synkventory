@@ -11,15 +11,11 @@ interface ApiResponse<T> {
 
 export interface IReorderSuggestion {
   itemId: string;
-  sku: string;
-  name: string;
-  currentStock: number;
-  reorderPoint: number;
-  expectedDemand: number;
-  leadTimeDays: number;
-  recommendedOrderQuantity: number;
-  recommendedOrderDate: string | null;
-  rationale: string;
+  itemName: string;
+  currentQuantity: number;
+  forecastedNeed: number;
+  suggestedOrderQuantity: number;
+  suggestedOrderDate: string | null;
 }
 
 export interface IDailyForecast {

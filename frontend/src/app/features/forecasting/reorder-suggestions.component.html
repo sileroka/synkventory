@@ -18,7 +18,7 @@
           pInputText
           type="text"
           [(ngModel)]="search"
-          placeholder="SKU or name"
+          placeholder="Item ID or name"
         />
       </div>
       <div class="control-group" style="margin-left: auto">
@@ -52,15 +52,12 @@
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 2rem"></th>
-        <th>SKU</th>
         <th>Name</th>
-        <th>Current Stock</th>
-        <th>Reorder Point</th>
-        <th>Expected Demand</th>
-        <th>Lead Time</th>
-        <th>Recommended Qty</th>
-        <th>Recommended Date</th>
-        <th>Rationale</th>
+        <th>Item ID</th>
+        <th>Current Quantity</th>
+        <th>Forecasted Need</th>
+        <th>Suggested Qty</th>
+        <th>Suggested Date</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-s>
@@ -72,27 +69,22 @@
             (change)="toggleSelection(s.itemId, box.checked)"
           />
         </td>
-        <td>{{ s.sku }}</td>
-        <td>{{ s.name }}</td>
+        <td>{{ s.itemName }}</td>
+        <td>{{ s.itemId }}</td>
         <td>
           <p-tag
-            [severity]="
-              s.currentStock <= s.reorderPoint ? 'warning' : 'success'
-            "
-            [value]="s.currentStock"
+            [severity]="s.currentQuantity < s.forecastedNeed ? 'warning' : 'success'"
+            [value]="s.currentQuantity"
           ></p-tag>
         </td>
-        <td>{{ s.reorderPoint }}</td>
-        <td>{{ s.expectedDemand }}</td>
-        <td>{{ s.leadTimeDays }}d</td>
+        <td>{{ s.forecastedNeed }}</td>
         <td>
           <p-tag
-            [severity]="s.recommendedOrderQuantity > 0 ? 'danger' : 'success'"
-            [value]="s.recommendedOrderQuantity"
+            [severity]="s.suggestedOrderQuantity > 0 ? 'danger' : 'success'"
+            [value]="s.suggestedOrderQuantity"
           ></p-tag>
         </td>
-        <td>{{ s.recommendedOrderDate || "-" }}</td>
-        <td>{{ s.rationale }}</td>
+        <td>{{ s.suggestedOrderDate || '-' }}</td>
       </tr>
     </ng-template>
   </p-table>

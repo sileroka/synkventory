@@ -51,7 +51,7 @@ export class ReorderSuggestionsComponent implements OnInit {
     const items = this.suggestions();
     if (!q) return items;
     return items.filter(
-      (s) => s.sku.toLowerCase().includes(q) || (s.name || '').toLowerCase().includes(q)
+      (s) => s.itemId.toLowerCase().includes(q) || (s.itemName || '').toLowerCase().includes(q)
     );
   });
 
