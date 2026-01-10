@@ -125,3 +125,4 @@ class EntityType:
     SALES_ORDER = "SALES_ORDER"
     REPORT = "REPORT"
     SYSTEM = "SYSTEM"
+    CYCLE_COUNT = "CYCLE_COUNT"
