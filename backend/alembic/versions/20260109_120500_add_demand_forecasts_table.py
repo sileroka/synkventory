@@ -2,7 +2,7 @@
 Add demand_forecasts table with RLS
 
 Revision ID: 20260109_120500_add_demand_forecasts_table
-Revises: 20260106_010000
+Revises: 20260106_010000_fix_bom_permissions
 Create Date: 2026-01-09 12:05:00
 """
 
@@ -11,13 +11,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-<<<<<<< Updated upstream
-revision = '20260109_120500_add_demand_forecasts_table'
-down_revision = '20260109_120000'
-=======
 revision = "20260109_120500_add_demand_forecasts_table"
 down_revision = "20260106_010000_fix_bom_permissions"
->>>>>>> Stashed changes
 branch_labels = None
 depends_on = None
 
@@ -64,13 +59,8 @@ def upgrade():
         unique=False,
     )
 
-<<<<<<< Updated upstream
     # Enable RLS and add tenant isolation/admin bypass policies
-    op.execute('ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;')
-=======
-    # Enable RLS and add tenant isolation policy
     op.execute("ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;")
->>>>>>> Stashed changes
     op.execute(
         """
         CREATE POLICY tenant_isolation_policy ON demand_forecasts

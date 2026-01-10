@@ -197,7 +197,8 @@ export class NavigationService {
         items: section.items
           .filter(item => this.canAccessItem(item, userRole))
           .map(item => {
-            if (item.id === 'forecasting-reorder') {
+            // Apply dynamic badge to Reorder Suggestions item
+            if (item.id === 'forecast-reorder') {
               return {
                 ...item,
                 badge: this._reorderBadgeCount(),

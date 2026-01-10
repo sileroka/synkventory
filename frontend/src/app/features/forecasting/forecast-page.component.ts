@@ -139,8 +139,16 @@ export class ForecastPageComponent {
       this.messageService.add({ severity: 'warn', summary: 'Select Item', detail: 'Choose an item to forecast.' });
       return;
     }
+    if (!this.selectedItem.id) {
+      this.messageService.add({ severity: 'warn', summary: 'Missing ID', detail: 'Selected item has no ID.' });
+      return;
+    }
     this.loading.set(true);
+<<<<<<< Updated upstream
     const itemId = this.selectedItem.id!;
+=======
+    const itemId = this.selectedItem.id as string;
+>>>>>>> Stashed changes
     const done = () => this.loading.set(false);
     if (this.method === 'moving_average') {
       this.forecastingService.runMovingAverage(itemId, this.windowSize, this.periods).subscribe({
