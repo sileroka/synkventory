@@ -2,6 +2,8 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import { UserRole } from '../../models/user.model';
 import { ForecastingService, IReorderSuggestion } from '../../services/forecasting.service';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 export type NavViewMode = 'expanded' | 'collapsed' | 'mega-menu';
 
@@ -29,6 +31,7 @@ export interface NavSection {
 export class NavigationService {
   private readonly authService = inject(AuthService);
   private readonly forecastingService = inject(ForecastingService);
+  private readonly router = inject(Router);
 
   // Persist nav mode in localStorage
   private readonly STORAGE_KEY = 'synkventory_nav_mode';
@@ -332,5 +335,15 @@ export class NavigationService {
   constructor() {
     // Initial badge fetch on service creation
     this.refreshReorderBadge();
+
+    // Refresh badge on route changes
+    this.router.events.pipe(filter(evt => evt instanceof NavigationEnd)).subscribe(() => {
+      this.refreshReorderBadge();
+    });
+
+    // Periodic refresh every 5 minutes
+    setInterval(() => {
+      this.refreshReorderBadge();
+    }, 5 * 60 * 1000);
   }
 }
