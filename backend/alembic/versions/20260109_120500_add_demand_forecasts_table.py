@@ -2,7 +2,7 @@
 Add demand_forecasts table with RLS
 
 Revision ID: 20260109_120500_add_demand_forecasts_table
-Revises: 20260106_010000_fix_bom_permissions
+Revises: 20260106_010000
 Create Date: 2026-01-09 12:05:00
 """
 
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '20260109_120500_add_demand_forecasts_table'
-down_revision = '20260106_010000_fix_bom_permissions'
+down_revision = '20260106_010000'
 branch_labels = None
 depends_on = None
 
@@ -39,19 +39,31 @@ def upgrade():
         unique=False,
     )
 
-    # Enable RLS and add tenant isolation policy
+    # Enable RLS and add tenant isolation/admin bypass policies
     op.execute('ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;')
     op.execute(
         """
         CREATE POLICY tenant_isolation_policy ON demand_forecasts
             FOR ALL TO synkventory_app
-            USING (tenant_id = current_setting('app.current_tenant_id', true)::UUID)
-            WITH CHECK (tenant_id = current_setting('app.current_tenant_id', true)::UUID);
+            USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::UUID)
+            WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::UUID);
+        """
+    )
+    op.execute(
+        """
+        CREATE POLICY demand_forecasts_admin_bypass ON demand_forecasts
+            FOR ALL TO synkventory_app
+            USING (current_setting('app.is_admin', true) = 'true')
+            WITH CHECK (current_setting('app.is_admin', true) = 'true');
         """
     )
 
+    # Grant permissions to app role
+    op.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON demand_forecasts TO synkventory_app;")
+
 
 def downgrade():
+    op.execute("DROP POLICY IF EXISTS demand_forecasts_admin_bypass ON demand_forecasts;")
     op.execute("DROP POLICY IF EXISTS tenant_isolation_policy ON demand_forecasts;")
     op.drop_index('ix_demand_forecasts_tenant_item_date', table_name='demand_forecasts')
     op.drop_table('demand_forecasts')
