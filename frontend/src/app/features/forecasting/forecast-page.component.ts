@@ -144,11 +144,7 @@ export class ForecastPageComponent {
       return;
     }
     this.loading.set(true);
-<<<<<<< Updated upstream
-    const itemId = this.selectedItem.id!;
-=======
     const itemId = this.selectedItem.id as string;
->>>>>>> Stashed changes
     const done = () => this.loading.set(false);
     if (this.method === 'moving_average') {
       this.forecastingService.runMovingAverage(itemId, this.windowSize, this.periods).subscribe({
