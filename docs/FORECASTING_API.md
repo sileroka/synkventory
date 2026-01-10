@@ -3,7 +3,7 @@
 ## Deprecation Notice
 
 - The legacy `/api/v1/forecasting/*` endpoints are deprecated and replaced by `/api/v1/forecast/*`.
-- Client applications should migrate to `/forecast/*`. The UI now routes to `/forecast/reorder-suggestions` and includes a client-side redirect from the old path.
+- Client applications should migrate to `/forecast/*`. The UI now routes to `/forecast` and `/forecast/reorder-suggestions`, with a client-side redirect from the old path.
 
 Synkventory adds basic demand forecasting and reorder suggestions to help optimize inventory levels and reduce stock-outs.
 
@@ -30,15 +30,11 @@ Response: `APIResponse<ReorderSuggestion[]>`
 `ReorderSuggestion` fields (camelCase):
 
 - `itemId: string`
-- `sku: string`
-- `name: string`
-- `currentStock: number`
-- `reorderPoint: number`
-- `expectedDemand: number` (sum of forecast across lead time)
-- `leadTimeDays: number`
-- `recommendedOrderQuantity: number`
-- `recommendedOrderDate: string | null` (ISO date)
-- `rationale: string` (e.g., "Stock at/below reorder point" or "Stock below expected demand over lead time")
+- `itemName: string`
+- `currentQuantity: number`
+- `forecastedNeed: number`
+- `suggestedOrderQuantity: number`
+- `suggestedOrderDate: string | null` (ISO date)
 
 Example:
 
@@ -47,57 +43,39 @@ curl -H "X-Tenant-Slug: demo" \
   "http://localhost:8000/api/v1/forecast/reorder-suggestions?lead_time_days=7"
 ```
 
-### POST `/api/v1/forecast/items/{item_id}` (method: `moving_average`)
+### POST `/api/v1/forecast/items/{item_id}`
 
-Computes and stores a simple moving average forecast for an item and returns daily predictions. Uses the last N days of consumption (SHIP stock movements) to predict the next `periods` days.
+Computes and stores a forecast for an item and returns daily predictions. Uses the last N days of consumption (SHIP stock movements).
 
-Body: none (parameters via query)
+Body: `ForecastRequest` (JSON)
 
-Query params:
-
-- `window_size` (optional, default: `7`): Number of recent days to average.
-- `periods` (optional, default: `14`): Number of future days to predict.
-
-Response: `APIResponse<DailyForecast[]>`
-
-`DailyForecast` fields (camelCase):
-
-- `forecastDate: string` (ISO date)
-- `quantity: number`
-- `method: string` ("moving_average")
-
-Example:
-
-```bash
-curl -X POST -H "X-Tenant-Slug: demo" \
-  "http://localhost:8000/api/v1/forecast/items/ITEM_UUID?method=moving_average&window_size=7&periods=14"
+```json
+{
+  "method": "moving_average", // or "exp_smoothing"
+  "windowSize": 7,
+  "periods": 14,
+  "alpha": 0.3 // optional, for exp_smoothing only
+}
 ```
 
-### POST `/api/v1/forecast/items/{item_id}` (method: `exp_smoothing`)
-
-Computes and stores a single exponential smoothing forecast for an item and returns daily predictions.
-
-Body: none (parameters via query)
-
-Query params:
-
-- `window_size` (optional, default: `7`)
-- `periods` (optional, default: `14`)
-- `alpha` (optional, default: `0.3`, range `(0, 1]`): Smoothing factor.
-
 Response: `APIResponse<DailyForecast[]>`
 
 `DailyForecast` fields (camelCase):
 
 - `forecastDate: string` (ISO date)
 - `quantity: number`
-- `method: string` ("exp_smoothing")
+- `method: string` ("moving_average" or "exp_smoothing")
 
-Example:
+Examples:
 
 ```bash
-curl -X POST -H "X-Tenant-Slug: demo" \
-  "http://localhost:8000/api/v1/forecast/items/ITEM_UUID?method=exp_smoothing&window_size=7&periods=14&alpha=0.3"
+curl -X POST -H "Content-Type: application/json" -H "X-Tenant-Slug: demo" \
+  -d '{"method":"moving_average","windowSize":7,"periods":14}' \
+  "http://localhost:8000/api/v1/forecast/items/ITEM_UUID"
+
+curl -X POST -H "Content-Type: application/json" -H "X-Tenant-Slug: demo" \
+  -d '{"method":"exp_smoothing","windowSize":7,"periods":14,"alpha":0.3}' \
+  "http://localhost:8000/api/v1/forecast/items/ITEM_UUID"
 ```
 
 ## How Forecasts Are Computed
@@ -111,8 +89,8 @@ curl -X POST -H "X-Tenant-Slug: demo" \
 
 - **Expected Demand:** Sum of forecasted quantities for the next `lead_time_days` days. If no forecasts exist, the system calculates moving average forecasts on the fly.
 - **Current Stock:** Uses `InventoryItem.total_quantity` (sum of lots if present, otherwise the `quantity` field).
-- **Reorder Trigger:** Occurs when `currentStock <= reorderPoint` OR `currentStock <= expectedDemand`.
-- **Recommended Quantity:** `max(expectedDemand + reorderPoint - currentStock, 0)`.
+- **Reorder Trigger:** Occurs when `currentQuantity <= forecastedNeed` (or below internal reorder point if still tracked).
+- **Recommended Quantity:** `max(forecastedNeed + reorderPoint - currentStock, 0)`.
 - **Recommended Date:** Today if a reorder is recommended; otherwise `null`.
 
 ## Notes & Best Practices

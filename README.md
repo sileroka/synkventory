@@ -159,6 +159,35 @@ npm start
 The frontend will be available at http://localhost:4200
 
 ## API Endpoints
+### Forecasting
+
+- `GET /api/v1/forecast/reorder-suggestions` — Reorder suggestions based on forecasts.
+- `POST /api/v1/forecast/items/{item_id}` — Compute forecasts (moving average or exponential smoothing) with JSON body.
+
+Examples:
+
+```bash
+# Moving average forecast
+curl -X POST -H "Content-Type: application/json" -H "X-Tenant-Slug: demo" \
+  -d '{"method":"moving_average","windowSize":7,"periods":14}' \
+  http://localhost:8000/api/v1/forecast/items/ITEM_UUID
+
+# Exponential smoothing forecast
+curl -X POST -H "Content-Type: application/json" -H "X-Tenant-Slug: demo" \
+  -d '{"method":"exp_smoothing","windowSize":7,"periods":14,"alpha":0.3}' \
+  http://localhost:8000/api/v1/forecast/items/ITEM_UUID
+
+# Reorder suggestions
+curl -H "X-Tenant-Slug: demo" \
+  "http://localhost:8000/api/v1/forecast/reorder-suggestions?lead_time_days=7"
+```
+
+Interpretation:
+
+- `DailyForecast.quantity` is the per-day predicted demand for the given future date.
+- Reorder is suggested when predicted demand over lead time exceeds current quantity (or internal reorder thresholds).
+- Suggested order quantity is the amount needed to cover forecasted need plus reorder point minus current stock.
+
 
 ### Inventory Management
 
