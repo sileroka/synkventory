@@ -213,8 +213,18 @@ export class PurchaseOrderService {
   /**
    * Get low stock suggestions for reordering.
    */
-  getLowStockSuggestions(limit: number = 50): Observable<ILowStockSuggestion> {
-    const params = new HttpParams().set('limit', limit.toString());
+  getLowStockSuggestions(
+    limit: number = 50,
+    leadTimeDays?: number,
+    safetyStock?: number
+  ): Observable<ILowStockSuggestion> {
+    let params = new HttpParams().set('limit', limit.toString());
+    if (leadTimeDays !== undefined) {
+      params = params.set('lead_time_days', leadTimeDays.toString());
+    }
+    if (safetyStock !== undefined) {
+      params = params.set('safety_stock', safetyStock.toString());
+    }
     return this.http
       .get<ApiResponse<ILowStockSuggestion>>(`${this.apiUrl}/low-stock`, { params })
       .pipe(map((response) => response.data));

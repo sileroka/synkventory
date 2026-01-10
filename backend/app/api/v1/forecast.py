@@ -21,6 +21,7 @@ from app.schemas.forecast import (
     DailyForecast,
     DemandForecastResponse,
     ReorderSuggestion,
+    ForecastRequest,
 )
 from app.services.forecast_service import (
     compute_moving_average_forecast,
@@ -34,10 +35,7 @@ router = APIRouter(prefix="/forecast", dependencies=[Depends(get_current_user)])
 @router.post("/items/{item_id}", response_model=APIResponse[List[DailyForecast]])
 def recompute_item_forecasts(
     item_id: UUID,
-    method: str = Query("moving_average", pattern="^(moving_average|exp_smoothing)$"),
-    window_size: int = Query(7, ge=1, le=90),
-    periods: int = Query(14, ge=1, le=365),
-    alpha: float = Query(0.3, gt=0.0, le=1.0),
+    request: ForecastRequest,
     user: User = Depends(get_current_user),
     tenant: TenantContext = Depends(require_tenant),
     db: Session = Depends(get_db),
@@ -51,6 +49,11 @@ def recompute_item_forecasts(
     )
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    method = request.method
+    window_size = request.window_size
+    periods = request.periods
+    alpha = request.alpha or 0.3
 
     if method == "moving_average":
         preds = compute_moving_average_forecast(
@@ -91,15 +94,9 @@ def get_item_forecasts(
     )
     models = [
         DemandForecastResponse(
-            id=str(df.id),
-            tenantId=str(df.tenant_id),
-            itemId=str(df.item_id),
             forecastDate=df.forecast_date,
             quantity=df.quantity,
             method=df.method,
-            confidenceLow=df.confidence_low,
-            confidenceHigh=df.confidence_high,
-            createdAt=df.created_at.isoformat() if df.created_at else date.today().isoformat(),
         )
         for df in forecasts
     ]
@@ -143,15 +140,11 @@ def get_reorder_suggestions(
     models = [
         ReorderSuggestion(
             itemId=s["itemId"],
-            sku=s["sku"],
-            name=s["name"],
-            currentStock=s["currentStock"],
-            reorderPoint=s["reorderPoint"],
-            expectedDemand=s["expectedDemand"],
-            leadTimeDays=s["leadTimeDays"],
-            recommendedOrderQuantity=s["recommendedOrderQuantity"],
-            recommendedOrderDate=s["recommendedOrderDate"],
-            rationale=s["rationale"],
+            itemName=s["name"],
+            currentQuantity=s["currentStock"],
+            forecastedNeed=s["expectedDemand"],
+            suggestedOrderQuantity=s["recommendedOrderQuantity"],
+            suggestedOrderDate=s["recommendedOrderDate"],
         )
         for s in suggestions
     ]

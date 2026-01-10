@@ -400,6 +400,30 @@
         <strong>{{ lowStockSuggestion()!.totalItems }}</strong> items are below
         reorder point. Select items to create a purchase order.
       </p>
+      <div class="forecast-controls">
+        <div class="control">
+          <label for="leadTimeDays">Lead Time (days)</label>
+          <p-inputNumber
+            id="leadTimeDays"
+            [(ngModel)]="leadTimeDays"
+            [min]="0"
+            [showButtons]="true"
+            [style]="{ width: '140px' }"
+            (onInput)="loadLowStockItems()"
+          ></p-inputNumber>
+        </div>
+        <div class="control">
+          <label for="safetyStock">Safety Stock</label>
+          <p-inputNumber
+            id="safetyStock"
+            [(ngModel)]="safetyStock"
+            [min]="0"
+            [showButtons]="true"
+            [style]="{ width: '140px' }"
+            (onInput)="loadLowStockItems()"
+          ></p-inputNumber>
+        </div>
+      </div>
       <div class="bulk-actions">
         <p-button
           label="Select All"

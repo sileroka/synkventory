@@ -42,12 +42,9 @@ export class ForecastingService {
   }
 
   runMovingAverage(itemId: string, windowSize: number = 7, periods: number = 14): Observable<IDailyForecast[]> {
-    const params = new HttpParams()
-      .set('method', 'moving_average')
-      .set('window_size', String(windowSize))
-      .set('periods', String(periods));
+    const body = { method: 'moving_average', windowSize, periods };
     return this.http
-      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, null, { params })
+      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, body)
       .pipe(map((resp) => resp.data));
   }
 
@@ -57,13 +54,9 @@ export class ForecastingService {
     periods: number = 14,
     alpha: number = 0.3
   ): Observable<IDailyForecast[]> {
-    const params = new HttpParams()
-      .set('method', 'exp_smoothing')
-      .set('window_size', String(windowSize))
-      .set('periods', String(periods))
-      .set('alpha', String(alpha));
+    const body = { method: 'exp_smoothing', windowSize, periods, alpha };
     return this.http
-      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, null, { params })
+      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, body)
       .pipe(map((resp) => resp.data));
   }
 }

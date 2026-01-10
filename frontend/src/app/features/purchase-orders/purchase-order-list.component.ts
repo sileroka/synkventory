@@ -122,6 +122,9 @@ export class PurchaseOrderListComponent implements OnInit {
   lowStockSuggestion = signal<ILowStockSuggestion | null>(null);
   selectedLowStockItems: ILowStockItem[] = [];
   lowStockSupplierName = '';
+  // Forecast params for low-stock suggestions
+  leadTimeDays = 14;
+  safetyStock = 0;
 
   // Item autocomplete
   filteredItems: IInventoryItem[] = [];
@@ -418,7 +421,7 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   loadLowStockItems(): void {
-    this.purchaseOrderService.getLowStockSuggestions(100).subscribe({
+    this.purchaseOrderService.getLowStockSuggestions(100, this.leadTimeDays, this.safetyStock).subscribe({
       next: (suggestion: ILowStockSuggestion) => this.lowStockSuggestion.set(suggestion),
       error: () => {
         this.messageService.add({
