@@ -28,6 +28,7 @@ from app.models.sales_order import (
 )
 from app.models.sales_order_counter import SalesOrderCounter
 from app.models.demand_forecast import DemandForecast
+from app.models.cycle_count import CycleCount, CycleCountLineItem, CycleCountStatus
 
 __all__ = [
     "Tenant",
@@ -63,4 +64,7 @@ __all__ = [
     "SalesOrderPriority",
     "SalesOrderCounter",
     "DemandForecast",
+    "CycleCount",
+    "CycleCountLineItem",
+    "CycleCountStatus",
 ]
