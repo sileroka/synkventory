@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -12,8 +12,10 @@ import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { Router } from '@angular/router';
 
 import { ForecastingService, IReorderSuggestion } from '../../services/forecasting.service';
+import { PurchaseOrderService } from '../../services/purchase-order.service';
 
 @Component({
   selector: 'app-reorder-suggestions',
@@ -41,6 +43,8 @@ export class ReorderSuggestionsComponent implements OnInit {
   // Filters/controls
   leadTimeDays = 7;
   search = '';
+  supplierName = '';
+  selectedIds = signal<Set<string>>(new Set());
 
   filtered = computed(() => {
     const q = this.search.trim().toLowerCase();
@@ -51,7 +55,12 @@ export class ReorderSuggestionsComponent implements OnInit {
     );
   });
 
-  constructor(private forecastingService: ForecastingService, private messageService: MessageService) {}
+  private router = inject(Router);
+  constructor(
+    private forecastingService: ForecastingService,
+    private purchaseOrderService: PurchaseOrderService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     this.loadSuggestions();
@@ -73,5 +82,33 @@ export class ReorderSuggestionsComponent implements OnInit {
 
   refresh(): void {
     this.loadSuggestions();
+  }
+
+  toggleSelection(itemId: string, checked: boolean): void {
+    this.selectedIds.update((ids) => {
+      const next = new Set(ids);
+      if (checked) next.add(itemId); else next.delete(itemId);
+      return next;
+    });
+  }
+
+  createPurchaseOrder(): void {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'No Items', detail: 'Select one or more items.' });
+      return;
+    }
+    this.isLoading.set(true);
+    this.purchaseOrderService.createFromLowStock(ids, this.supplierName || undefined).subscribe({
+      next: (po) => {
+        this.isLoading.set(false);
+        this.messageService.add({ severity: 'success', summary: 'Purchase Order Created', detail: po.poNumber });
+        this.router.navigate(['/purchase-orders', po.id]);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to create purchase order' });
+      },
+    });
   }
 }

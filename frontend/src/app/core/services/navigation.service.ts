@@ -132,6 +132,12 @@ export class NavigationService {
           label: 'Stock Movements',
           icon: 'pi-history',
           route: '/reports/movements'
+        },
+        {
+          id: 'forecasting-reorder',
+          label: 'Reorder Suggestions',
+          icon: 'pi-chart-line',
+          route: '/forecasting/reorder-suggestions'
         }
       ]
     },

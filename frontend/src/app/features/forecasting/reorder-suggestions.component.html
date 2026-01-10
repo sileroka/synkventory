@@ -10,6 +10,11 @@
         <label>Search</label>
         <input pInputText type="text" [(ngModel)]="search" placeholder="SKU or name" />
       </div>
+      <div class="control-group" style="margin-left:auto">
+        <label>Supplier</label>
+        <input pInputText type="text" [(ngModel)]="supplierName" placeholder="Supplier name (optional)" />
+        <button pButton type="button" label="Create Purchase Order" class="p-button-sm p-button-success" (click)="createPurchaseOrder()"></button>
+      </div>
     </div>
   </p-card>
 
@@ -24,6 +29,7 @@
   >
     <ng-template pTemplate="header">
       <tr>
+        <th style="width:2rem"></th>
         <th>SKU</th>
         <th>Name</th>
         <th>Current Stock</th>
@@ -37,6 +43,9 @@
     </ng-template>
     <ng-template pTemplate="body" let-s>
       <tr>
+        <td>
+          <input type="checkbox" (change)="toggleSelection(s.itemId, $event.target.checked)" />
+        </td>
         <td>{{ s.sku }}</td>
         <td>{{ s.name }}</td>
         <td>
