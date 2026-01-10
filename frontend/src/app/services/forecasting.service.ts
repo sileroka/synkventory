@@ -30,7 +30,7 @@ export interface IDailyForecast {
 
 @Injectable({ providedIn: 'root' })
 export class ForecastingService {
-  private readonly apiUrl = `${environment.apiUrl}/forecasting`;
+  private readonly apiUrl = `${environment.apiUrl}/forecast`;
 
   constructor(private http: HttpClient) {}
 
@@ -42,9 +42,12 @@ export class ForecastingService {
   }
 
   runMovingAverage(itemId: string, windowSize: number = 7, periods: number = 14): Observable<IDailyForecast[]> {
-    const params = new HttpParams().set('window_size', String(windowSize)).set('periods', String(periods));
+    const params = new HttpParams()
+      .set('method', 'moving_average')
+      .set('window_size', String(windowSize))
+      .set('periods', String(periods));
     return this.http
-      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}/moving-average`, null, { params })
+      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, null, { params })
       .pipe(map((resp) => resp.data));
   }
 
@@ -55,11 +58,12 @@ export class ForecastingService {
     alpha: number = 0.3
   ): Observable<IDailyForecast[]> {
     const params = new HttpParams()
+      .set('method', 'exp_smoothing')
       .set('window_size', String(windowSize))
       .set('periods', String(periods))
       .set('alpha', String(alpha));
     return this.http
-      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}/exp-smoothing`, null, { params })
+      .post<ApiResponse<IDailyForecast[]>>(`${this.apiUrl}/items/${itemId}`, null, { params })
       .pipe(map((resp) => resp.data));
   }
 }

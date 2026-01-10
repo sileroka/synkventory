@@ -141,10 +141,10 @@ export class NavigationService {
           route: '/reports/movements'
         },
         {
-          id: 'forecasting-reorder',
+          id: 'forecast-reorder',
           label: 'Reorder Suggestions',
           icon: 'pi-chart-line',
-          route: '/forecasting/reorder-suggestions'
+          route: '/forecast/reorder-suggestions'
         }
       ]
     },

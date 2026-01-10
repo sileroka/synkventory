@@ -4,16 +4,38 @@
       <div class="control-group">
         <label>Lead Time (days)</label>
         <input type="number" [(ngModel)]="leadTimeDays" min="1" max="90" />
-        <button pButton type="button" label="Refresh" class="p-button-sm" (click)="refresh()"></button>
+        <button
+          pButton
+          type="button"
+          label="Refresh"
+          class="p-button-sm"
+          (click)="refresh()"
+        ></button>
       </div>
       <div class="control-group">
         <label>Search</label>
-        <input pInputText type="text" [(ngModel)]="search" placeholder="SKU or name" />
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="search"
+          placeholder="SKU or name"
+        />
       </div>
-      <div class="control-group" style="margin-left:auto">
+      <div class="control-group" style="margin-left: auto">
         <label>Supplier</label>
-        <input pInputText type="text" [(ngModel)]="supplierName" placeholder="Supplier name (optional)" />
-        <button pButton type="button" label="Create Purchase Order" class="p-button-sm p-button-success" (click)="createPurchaseOrder()"></button>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="supplierName"
+          placeholder="Supplier name (optional)"
+        />
+        <button
+          pButton
+          type="button"
+          label="Create Purchase Order"
+          class="p-button-sm p-button-success"
+          (click)="createPurchaseOrder()"
+        ></button>
       </div>
     </div>
   </p-card>
@@ -29,7 +51,7 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th style="width:2rem"></th>
+        <th style="width: 2rem"></th>
         <th>SKU</th>
         <th>Name</th>
         <th>Current Stock</th>
@@ -44,20 +66,31 @@
     <ng-template pTemplate="body" let-s>
       <tr>
         <td>
-          <input type="checkbox" (change)="toggleSelection(s.itemId, $event.target.checked)" />
+          <input
+            type="checkbox"
+            (change)="toggleSelection(s.itemId, $event.target.checked)"
+          />
         </td>
         <td>{{ s.sku }}</td>
         <td>{{ s.name }}</td>
         <td>
-          <p-tag [severity]="s.currentStock <= s.reorderPoint ? 'warning' : 'success'" [value]="s.currentStock"></p-tag>
+          <p-tag
+            [severity]="
+              s.currentStock <= s.reorderPoint ? 'warning' : 'success'
+            "
+            [value]="s.currentStock"
+          ></p-tag>
         </td>
         <td>{{ s.reorderPoint }}</td>
         <td>{{ s.expectedDemand }}</td>
         <td>{{ s.leadTimeDays }}d</td>
         <td>
-          <p-tag [severity]="s.recommendedOrderQuantity > 0 ? 'danger' : 'success'" [value]="s.recommendedOrderQuantity"></p-tag>
+          <p-tag
+            [severity]="s.recommendedOrderQuantity > 0 ? 'danger' : 'success'"
+            [value]="s.recommendedOrderQuantity"
+          ></p-tag>
         </td>
-        <td>{{ s.recommendedOrderDate || '-' }}</td>
+        <td>{{ s.recommendedOrderDate || "-" }}</td>
         <td>{{ s.rationale }}</td>
       </tr>
     </ng-template>
