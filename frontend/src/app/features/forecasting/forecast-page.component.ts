@@ -9,6 +9,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { TableModule } from 'primeng/table';
 import { ChartModule } from 'primeng/chart';
+import { TooltipModule } from 'primeng/tooltip';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
@@ -31,6 +32,7 @@ import { ReorderSuggestionsComponent } from './reorder-suggestions.component';
     DropdownModule,
     TableModule,
     ChartModule,
+    TooltipModule,
     AutoCompleteModule,
     ProgressSpinnerModule,
     ToastModule,
@@ -54,6 +56,7 @@ export class ForecastPageComponent {
   // State
   forecasts = signal<IDailyForecast[] | null>(null);
   loading = signal(false);
+  viewMode = signal<'chart' | 'table'>('chart');
 
   methodOptions = [
     { label: 'Moving Average', value: 'moving_average' },
@@ -98,6 +101,10 @@ export class ForecastPageComponent {
       },
       tooltip: {
         enabled: true,
+        callbacks: {
+          title: (items: any[]) => (items && items.length ? items[0].label : ''),
+          label: (item: any) => `Qty: ${item.parsed.y}`,
+        },
       },
     },
     scales: {
@@ -110,6 +117,10 @@ export class ForecastPageComponent {
       },
     },
   }));
+
+  setView(mode: 'chart' | 'table'): void {
+    this.viewMode.set(mode);
+  }
 
   searchItems(event: AutoCompleteCompleteEvent): void {
     const query = (event.query || '').trim();
