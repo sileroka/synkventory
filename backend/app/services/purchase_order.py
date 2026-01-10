@@ -3,7 +3,7 @@ Service layer for Purchase Order operations.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import List, Optional, Tuple
 from uuid import UUID
@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.tenant import get_current_tenant
 from app.models.audit_log import EntityType
 from app.models.inventory import InventoryItem
+from app.models.demand_forecast import DemandForecast
 from app.models.purchase_order import (
     PurchaseOrder,
     PurchaseOrderLineItem,
@@ -34,6 +35,10 @@ from app.schemas.purchase_order import (
 )
 from app.services.audit import audit_service
 from app.services.lot import lot_service
+from app.services.forecast_service import (
+    compute_moving_average_forecast,
+    DEFAULT_MOVING_AVG_WINDOW,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -789,40 +794,89 @@ class PurchaseOrderService:
         self,
         db: Session,
         limit: int = 50,
+        lead_time_days: int = 7,
+        safety_stock: int = 0,
     ) -> LowStockSuggestion:
-        """Get items below reorder point for PO suggestions."""
-        # Find items below reorder point
-        low_stock = (
+        """Get items that need reordering, considering forecasted demand.
+
+        Includes items when either:
+        - Current stock is at/below reorder point, or
+        - Forecasted demand over `lead_time_days` exceeds current stock.
+
+        Recommended order quantity uses:
+        (forecasted_quantity + safety_stock) - current_stock
+        Fallback to simple shortage-based suggestion when forecast is zero.
+        """
+
+        today = date.today()
+
+        # Candidate items: those with reorder_point > 0 or low current stock
+        candidates = (
             db.query(InventoryItem)
-            .filter(
-                InventoryItem.quantity <= InventoryItem.reorder_point,
-                InventoryItem.reorder_point > 0,
-            )
-            .order_by((InventoryItem.reorder_point - InventoryItem.quantity).desc())
-            .limit(limit)
+            .filter(InventoryItem.reorder_point > 0)
+            .order_by(InventoryItem.name.asc())
+            .limit(max(limit, 1))
             .all()
         )
 
-        items = []
+        items: List[LowStockItem] = []
         total_estimate = Decimal("0")
 
-        for item in low_stock:
-            shortage = item.reorder_point - item.quantity
-            # Suggest ordering 2x the shortage or at least to reorder point
-            suggested_qty = max(shortage * 2, item.reorder_point)
+        for item in candidates:
+            current_stock = int(item.total_quantity or 0)
+            reorder_point = int(item.reorder_point or 0)
+
+            # Sum existing forecasts for next lead_time_days
+            forecast_sum = (
+                db.query(func.coalesce(func.sum(DemandForecast.quantity), 0))
+                .filter(DemandForecast.item_id == item.id)
+                .filter(DemandForecast.forecast_date >= today + timedelta(days=1))
+                .filter(DemandForecast.forecast_date <= today + timedelta(days=lead_time_days))
+                .scalar()
+            ) or 0
+
+            # Fallback: compute moving average forecasts if none
+            if forecast_sum <= 0 and lead_time_days > 0:
+                preds = compute_moving_average_forecast(
+                    db=db,
+                    tenant_id=get_current_tenant().id,
+                    item_id=item.id,
+                    window_size=DEFAULT_MOVING_AVG_WINDOW,
+                    periods=lead_time_days,
+                )
+                forecast_sum = sum(qty for _, qty in preds)
+
+            # Determine if item needs reorder by either rule
+            needs_reorder = (current_stock <= reorder_point) or (forecast_sum > current_stock)
+
+            if not needs_reorder:
+                continue
+
+            # Recommended quantity based on forecast and safety stock
+            recommended_qty = max((forecast_sum + int(safety_stock)) - current_stock, 0)
+
+            # If forecast is still zero, use shortage-based suggestion to reach reorder_point
+            if recommended_qty == 0:
+                shortage = max(reorder_point - current_stock, 0)
+                # Suggest 2x shortage or at least to reorder point (legacy behavior)
+                recommended_qty = max(shortage * 2, reorder_point, 0)
+            else:
+                shortage = max((forecast_sum + int(safety_stock)) - current_stock, 0)
+
+            suggested_qty = int(max(recommended_qty, 0))
 
             low_item = LowStockItem(
                 id=item.id,
                 name=item.name,
                 sku=item.sku,
-                current_quantity=item.quantity,
-                reorder_point=item.reorder_point,
-                unit_price=item.unit_price,
-                shortage=shortage,
+                current_quantity=current_stock,
+                reorder_point=reorder_point,
+                unit_price=float(item.unit_price or 0.0),
+                shortage=int(shortage),
                 suggested_quantity=suggested_qty,
             )
             items.append(low_item)
-            total_estimate += Decimal(str(item.unit_price)) * Decimal(
+            total_estimate += Decimal(str(item.unit_price or 0)) * Decimal(
                 str(suggested_qty)
             )
 

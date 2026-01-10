@@ -264,11 +264,15 @@ def get_purchase_order_stats(
 @router.get("/low-stock", response_model=APIResponse[LowStockSuggestion])
 def get_low_stock_suggestions(
     limit: int = Query(50, ge=1, le=200),
+    lead_time_days: int = Query(7, ge=1, le=90),
+    safety_stock: int = Query(0, ge=0, le=10000),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get low stock items that need reordering."""
-    suggestion = purchase_order_service.get_low_stock_items(db, limit=limit)
+    """Get low stock items that need reordering, considering forecasted demand."""
+    suggestion = purchase_order_service.get_low_stock_items(
+        db, limit=limit, lead_time_days=lead_time_days, safety_stock=safety_stock
+    )
     return APIResponse(data=suggestion)
 
 
