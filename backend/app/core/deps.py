@@ -2,6 +2,7 @@
 Authentication dependencies for FastAPI routes.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
@@ -14,6 +15,8 @@ from app.core.tenant import get_current_tenant, TenantContext
 from app.db.session import get_db
 from app.models.user import User
 
+logger = logging.getLogger(__name__)
+
 
 def get_current_user(
     access_token: Optional[str] = Cookie(None, alias="access_token"),
@@ -21,6 +24,10 @@ def get_current_user(
 ) -> User:
     """
     Dependency to get the current authenticated user.
+
+    SECURITY: Validates that the JWT token's tenant_id matches the current
+    request's tenant context. This prevents users from accessing other tenants
+    by simply changing the subdomain while keeping their auth cookie.
 
     Usage:
         @router.get("/protected")
@@ -45,9 +52,20 @@ def get_current_user(
     if token_data.exp < datetime.now(timezone.utc):
         raise credentials_exception
 
-    # Verify tenant context matches token
+    # CRITICAL SECURITY CHECK: Verify tenant context matches token
+    # This prevents cross-tenant access when cookies are shared across subdomains
     tenant = get_current_tenant()
-    if not tenant or str(tenant.id) != token_data.tenant_id:
+    if not tenant:
+        logger.warning("No tenant context available for authenticated request")
+        raise credentials_exception
+
+    if str(tenant.id) != token_data.tenant_id:
+        # User is trying to access a different tenant than they're authenticated for
+        # This can happen if they change subdomain while logged in
+        logger.warning(
+            f"Cross-tenant access attempt: token tenant {token_data.tenant_id} "
+            f"!= request tenant {tenant.id} (user: {token_data.email})"
+        )
         raise credentials_exception
 
     # Get user from database

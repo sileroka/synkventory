@@ -27,6 +27,9 @@ services:
       # Database - DO provides DATABASE_URL automatically for managed databases
       DATABASE_URL: ${DATABASE_URL}
       
+      # Environment mode - CRITICAL for security
+      ENVIRONMENT: "production"
+      
       # Application settings
       PROJECT_NAME: ${PROJECT_NAME:-Synkventory API}
       VERSION: ${VERSION:-1.0.0}
@@ -35,6 +38,10 @@ services:
       
       # Security
       SECRET_KEY: ${SECRET_KEY}
+      
+      # Multi-tenancy
+      BASE_DOMAIN: ${BASE_DOMAIN:-synkventory.com}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.synkventory.com}
       
       # CORS - set to your DO app URL
       CORS_ORIGINS: ${CORS_ORIGINS:-https://synkventory.ondigitalocean.app}

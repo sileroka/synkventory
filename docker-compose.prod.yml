@@ -61,8 +61,12 @@ services:
       # Override for docker networking (if using local db service)
       POSTGRES_SERVER: db
       # Production settings
+      ENVIRONMENT: "production"
       DEBUG: "false"
       LOG_LEVEL: INFO
+      # Multi-tenancy settings
+      BASE_DOMAIN: ${BASE_DOMAIN:-synkventory.com}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.synkventory.com}
     depends_on:
       db:
         condition: service_healthy

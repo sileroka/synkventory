@@ -97,6 +97,7 @@ def client(db: Session) -> Generator[TestClient, None, None]:
     Create a test client with database dependency override.
 
     Uses the db fixture to ensure fresh database for each test.
+    Automatically includes X-Tenant-Slug header for the test tenant.
     """
 
     def override_get_db():
@@ -116,6 +117,17 @@ def client(db: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_current_user] = override_get_current_user
 
     with TestClient(app) as test_client:
+        # Wrap the test client to automatically add X-Tenant-Slug header
+        original_request = test_client.request
+
+        def request_with_tenant(method, url, **kwargs):
+            headers = kwargs.get("headers", {})
+            if "X-Tenant-Slug" not in headers and "x-tenant-slug" not in headers:
+                headers["X-Tenant-Slug"] = "test-tenant"
+            kwargs["headers"] = headers
+            return original_request(method, url, **kwargs)
+
+        test_client.request = request_with_tenant
         yield test_client
 
     app.dependency_overrides.clear()

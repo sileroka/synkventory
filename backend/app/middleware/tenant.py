@@ -2,10 +2,13 @@
 Tenant middleware for subdomain-based multi-tenancy.
 """
 
+import logging
 import os
 from typing import Callable, Optional
 
 from fastapi import Request, Response
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -63,14 +66,25 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # This also supports pytest's TestClient host ("testserver")
         header_slug = request.headers.get("x-tenant-slug") or request.headers.get("X-Tenant-Slug")
         if self.is_dev:
-            # In development/test, allow X-Tenant-Slug override or fallback to 'demo'
-            # Always look up tenant in DB to prevent cross-tenant access with a shared ID
-            subdomain = header_slug or "demo"
+            # In development/test, allow X-Tenant-Slug header override
+            # Do NOT fall back to a default tenant - require explicit tenant
+            if header_slug:
+                subdomain = header_slug
+            else:
+                # Try to extract from host even in dev (e.g., demo.localhost:4200)
+                subdomain = extract_subdomain(host, self.base_domain)
+                # For localhost without subdomain, check header is required
+                if not subdomain and ("localhost" in host or "testserver" in host):
+                    # No tenant specified - block the request
+                    return JSONResponse(
+                        status_code=400,
+                        content={"detail": "Tenant not specified. Use X-Tenant-Slug header in development."},
+                    )
         else:
             subdomain = extract_subdomain(host, self.base_domain)
 
-        # No subdomain = root domain access = block (prod only)
-        if not subdomain and not self.is_dev:
+        # No subdomain = root domain access = block
+        if not subdomain:
             return JSONResponse(
                 status_code=404,
                 content={"detail": "Not found"},
@@ -88,6 +102,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # If tenant not found or inactive, block request early
         if not tenant_context:
+            logger.warning(f"Tenant not found for subdomain: {subdomain}")
             return JSONResponse(status_code=404, content={"detail": "Tenant not found"})
 
         # Set tenant context
